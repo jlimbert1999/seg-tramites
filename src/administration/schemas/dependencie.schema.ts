@@ -7,13 +7,13 @@ class Institution {
         type: String,
         required: true
     })
-    name: string;
+    nombre: string;
 
     @Prop({
         type: String,
         required: true
     })
-    initials: string;
+    sigla: string;
 }
 
 
@@ -23,7 +23,7 @@ export class Dependency extends Document {
         type: String,
         required: true
     })
-    name: string;
+    nombre: string;
 
     @Prop({
         type: String,
@@ -31,28 +31,29 @@ export class Dependency extends Document {
         unique: true,
         uppercase: true
     })
-    initials: string;
+    sigla: string;
 
     @Prop({
         type: String,
         required: true,
         unique: true
     })
-    code: string
+    codigo: string
 
     @Prop({
         type: Boolean,
         default: true
     })
-    active: boolean
+    activo: boolean
 
     @Prop({
+        _id: false,
         type: Institution,
         default: true
     })
-    institution: {
-        name: string;
-        initials: string
+    institucion: {
+        nombre: string;
+        sigla: string
     }
 }
 

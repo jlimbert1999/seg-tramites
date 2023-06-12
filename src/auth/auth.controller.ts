@@ -4,7 +4,6 @@ import { AuthDto } from './dto/auth.dto';
 import { GetUser } from './decorators/get-user.decorator';
 import { Account } from 'src/administration/schemas/account.schema';
 import { Auth } from './decorators/auth.decorator';
-import { ValidResources } from './interfaces/valid-resources.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +17,7 @@ export class AuthController {
   }
 
   @Get()
-  @Auth(ValidResources.CUENTAS)
+  @Auth()
   async verifyAuth(@GetUser() account: Account) {
     return await this.authService.checkAuthStatus(account._id)
   }

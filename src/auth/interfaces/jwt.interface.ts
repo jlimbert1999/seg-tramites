@@ -1,4 +1,7 @@
 export interface JwtPayload {
     id_account: string
-    code?: string
+    officer: {
+        fullname: string,
+        jobtitle: string
+    }
 }

@@ -19,13 +19,16 @@ export class AuthService {
     async loginUser(authDto: AuthDto) {
         const account = await this.accountModel.findOne({ login: authDto.login })
             .populate('rol')
-            .populate('dependencia')
+            .populate('funcionario')
         if (!account) throw new BadRequestException('login o password incorrectos')
         if (!bcrypt.compareSync(authDto.password, account.password)) throw new BadRequestException('login o password incorrectos')
         if (account._id == '639dde6d495c82b3794d6606') return {
             token: this.getToken({
                 id_account: account._id,
-                code: ''
+                officer: {
+                    fullname: 'ADMINISTRADOR',
+                    jobtitle: ''
+                }
             }),
             resources: account.rol.privileges.map(privilege => privilege.resource)
         }
@@ -33,7 +36,10 @@ export class AuthService {
         return {
             token: this.getToken({
                 id_account: account._id,
-                code: account.dependencia.code
+                officer: {
+                    fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
+                    jobtitle: account.funcionario.cargo
+                }
             }),
             resources: account.rol.privileges.map(privilege => privilege.resource)
         }
@@ -41,35 +47,155 @@ export class AuthService {
 
     async checkAuthStatus(id_account: string) {
         const account = await this.accountModel.findById(id_account, 'rol funcionario dependencia')
-            .populate('funcionario')
-            .populate('rol')
-            .populate('dependencia')
+            .select(['funcionario', 'rol', 'dependencia', 'activo'])
+            .populate('funcionario', 'nombre paterno materno cargo')
+            .populate('rol', 'privileges')
+            .populate('dependencia', 'codigo')
         const resources = account.rol.privileges.map(privilege => privilege.resource)
         if (id_account == '639dde6d495c82b3794d6606')
             return {
-                fullname: `ADMINISTRADOR`,
-                jobtitle: 'Configuraciones',
-                resources,
-                menu: this.getMenu(),
                 token: this.getToken({
-                    id_account: account._id
-                })
+                    id_account: account._id,
+                    officer: {
+                        fullname: 'ADMINISTRADOR',
+                        jobtitle: ''
+                    }
+                }),
+                menu: this.getMenu(resources),
+                resources
             }
         return {
-            fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`.trim(),
-            jobtitle: account.funcionario.cargo,
-            resources,
-            menu: this.getMenu(),
             token: this.getToken({
                 id_account: account._id,
-                code: account.dependencia.code
-            })
+                officer: {
+                    fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
+                    jobtitle: account.funcionario.cargo
+                }
+            }),
+            menu: this.getMenu(resources),
+            code: account.dependencia.codigo,
+            resources
         }
     }
     getToken(payload: JwtPayload) {
         return this.jwtService.sign(payload)
     }
-    getMenu() {
-        return []
+    getMenu(resources: string[]) {
+        const menu = []
+        resources.forEach(resource => {
+            switch (resource) {
+                case 'cuentas':
+                    menu.push(
+                        {
+                            text: "Cuentas",
+                            icon: "account_circle",
+                            routerLink: "configuraciones/cuentas",
+                        }
+                    )
+                    break;
+                case 'usuarios':
+                    menu.push(
+                        {
+                            text: "Funcionarios",
+                            icon: "person",
+                            routerLink: "configuraciones/funcionarios",
+                        },
+                    )
+                    break;
+                case 'roles':
+                    menu.push(
+                        {
+                            text: "Roles",
+                            icon: "badge",
+                            routerLink: "configuraciones/roles",
+                        },
+                    )
+                    break
+                case 'instituciones':
+                    menu.push(
+                        {
+                            text: "Instituciones",
+                            icon: "apartment",
+                            routerLink: "configuraciones/instituciones",
+                        },
+                    )
+                    break
+                case 'dependencias':
+                    menu.push(
+                        {
+                            text: "Dependencias",
+                            icon: "holiday_village",
+                            routerLink: "configuraciones/dependencias",
+                        }
+                    )
+                    break
+                case 'tipos':
+                    menu.push(
+                        {
+                            text: "Tipos",
+                            icon: "folder_copy",
+                            routerLink: "configuraciones/tipos",
+                        },
+                    )
+                    break;
+                case 'externos':
+                    menu.push(
+                        {
+                            text: "Externos",
+                            icon: "folder_shared",
+                            routerLink: "tramites/externos",
+                        }
+                    )
+                    break;
+                case 'internos':
+                    menu.push(
+                        {
+                            text: "Internos",
+                            icon: "topic",
+                            routerLink: "tramites/internos"
+                        }
+                    )
+                    break;
+                case 'entradas':
+                    menu.push(
+                        {
+                            text: "Bandeja entrada",
+                            icon: "drafts",
+                            routerLink: "bandejas/entrada",
+                        },
+                    )
+                    break;
+                case 'salidas':
+                    menu.push(
+                        {
+                            text: "Bandeja salida",
+                            icon: "mail",
+                            routerLink: "bandejas/salida",
+                        },
+                    )
+                    break;
+                case 'archivos':
+                    menu.push(
+                        {
+                            text: "Archivos",
+                            icon: "file_copy",
+                            routerLink: "archivos",
+                        },
+                    )
+                    break;
+                case 'busquedas':
+                    menu.push(
+                        {
+                            text: "Busquedas",
+                            icon: "search",
+                            routerLink: "busquedas",
+                        },
+                    )
+                    break;
+                default:
+                    break;
+            }
+        })
+        return menu
     }
 }
