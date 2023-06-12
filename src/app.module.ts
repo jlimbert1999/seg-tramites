@@ -7,8 +7,9 @@ import { AdministrationModule } from './administration/administration.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost/nest'),
+    MongooseModule.forRoot('mongodb://127.0.0.1:27017/new-seg-tramitesDB'),
     AuthModule,
+    
     AdministrationModule    
   ],
   controllers: [AppController],

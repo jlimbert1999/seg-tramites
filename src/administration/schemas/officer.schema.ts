@@ -8,25 +8,25 @@ export class Officer extends Document {
         required: true,
         uppercase: true
     })
-    firstName: string;
+    nombre: string;
 
     @Prop({
         type: String,
         uppercase: true
     })
-    middleName: string;
+    paterno: string;
 
     @Prop({
         type: String,
         uppercase: true
     })
-    lastName: string;
+    materno: string;
 
     @Prop({
         type: Number,
         required: true,
     })
-    telephone: number
+    telefono: number
 
     @Prop({
         type: Number,
@@ -38,26 +38,26 @@ export class Officer extends Document {
     @Prop({
         type: String
     })
-    addres: string
+    direccion: string
 
     @Prop({
         type: String,
         required: true,
         uppercase: true
     })
-    jobtitle: string
+    cargo: string
 
     @Prop({
         type: Boolean,
         default: true
     })
-    active: boolean
+    activo: boolean
 
     @Prop({
         type: Boolean,
         default: false
     })
-    hasAccount: boolean
+    cuenta: boolean
 }
 
 export const OfficerSchema = SchemaFactory.createForClass(Officer);

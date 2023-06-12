@@ -10,6 +10,8 @@ export class AccountService {
     }
 
     async findByLogin(login: string) {
-        return await this.accountModel.findOne({ login }).populate('rol')
+        return await this.accountModel.findOne({ login })
+            .populate('rol')
+            .populate('dependencia')
     }
 }

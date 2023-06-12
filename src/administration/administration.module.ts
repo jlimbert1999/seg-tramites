@@ -13,6 +13,7 @@ import { Officer, OfficerSchema } from './schemas/officer.schema';
 import { DependencieService } from './services/dependencie.service';
 import { Account, AccountSchema } from './schemas/account.schema';
 import { Dependency, DependencySchema } from './schemas/dependencie.schema';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   controllers: [AccountController, DependencieController, OfficerController, TypeProcedureController, RoleController],
@@ -23,7 +24,9 @@ import { Dependency, DependencySchema } from './schemas/dependencie.schema';
       { name: Officer.name, schema: OfficerSchema },
       { name: Account.name, schema: AccountSchema },
       { name: Dependency.name, schema: DependencySchema },
-    ])],
-  exports: [AccountService]
+    ]),
+    AuthModule
+  ],
+  exports: [MongooseModule]
 })
 export class AdministrationModule { }
