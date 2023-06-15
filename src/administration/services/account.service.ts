@@ -5,13 +5,25 @@ import { Model } from 'mongoose';
 
 @Injectable()
 export class AccountService {
-    constructor(@InjectModel(Account.name) private accountModel: Model<Account>) {
+    constructor(
+        @InjectModel(Account.name) private accountModel: Model<Account>
+    ) {
 
     }
 
-    async findByLogin(login: string) {
-        return await this.accountModel.findOne({ login })
-            .populate('rol')
-            .populate('dependencia')
+    async findAll(limit: number, offset: number) {
+        offset = offset * limit
+        const [accounts, length] = await Promise.all(
+            [
+                this.accountModel.find({ _id: { $ne: process.env.ID_ROOT } }, { password: 0 })
+                    .skip(offset)
+                    .limit(limit)
+                    .sort({ _id: -1 })
+                    .populate('dependencia')
+                    .populate('funcionario'),
+                this.accountModel.count({ _id: { $ne: process.env.ID_ROOT } })
+            ]
+        )
+        return { accounts, length }
     }
 }

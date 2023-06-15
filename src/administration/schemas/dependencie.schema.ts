@@ -1,21 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-
-
-class Institution {
-    @Prop({
-        type: String,
-        required: true
-    })
-    nombre: string;
-
-    @Prop({
-        type: String,
-        required: true
-    })
-    sigla: string;
-}
-
+import mongoose, { Document } from 'mongoose';
+import { Institution } from './institution.schema';
 
 @Schema({ collection: 'dependencias' })
 export class Dependency extends Document {
@@ -47,14 +32,10 @@ export class Dependency extends Document {
     activo: boolean
 
     @Prop({
-        _id: false,
-        type: Institution,
-        default: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: Institution.name
     })
-    institucion: {
-        nombre: string;
-        sigla: string
-    }
+    institucion: Institution
 }
 
 export const DependencySchema = SchemaFactory.createForClass(Dependency);

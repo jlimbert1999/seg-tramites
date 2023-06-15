@@ -1,0 +1,6 @@
+export * from './dependencie.controller'
+export * from './account.controller'
+export * from './institution.controller'
+export * from './officer.controller'
+export * from './role.controller'
+export * from './type-procedure.controller'

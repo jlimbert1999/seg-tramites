@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
@@ -14,8 +14,8 @@ export class AuthService {
         private jwtService: JwtService,
         @InjectModel(Account.name) private accountModel: Model<Account>
     ) {
-
     }
+
     async loginUser(authDto: AuthDto) {
         const account = await this.accountModel.findOne({ login: authDto.login })
             .populate('rol')
@@ -25,6 +25,7 @@ export class AuthService {
         if (account._id == '639dde6d495c82b3794d6606') return {
             token: this.getToken({
                 id_account: account._id,
+                id_dependencie: '',
                 officer: {
                     fullname: 'ADMINISTRADOR',
                     jobtitle: ''
@@ -36,6 +37,7 @@ export class AuthService {
         return {
             token: this.getToken({
                 id_account: account._id,
+                id_dependencie: account.dependencia._id,
                 officer: {
                     fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
                     jobtitle: account.funcionario.cargo
@@ -47,15 +49,17 @@ export class AuthService {
 
     async checkAuthStatus(id_account: string) {
         const account = await this.accountModel.findById(id_account, 'rol funcionario dependencia')
-            .select(['funcionario', 'rol', 'dependencia', 'activo'])
             .populate('funcionario', 'nombre paterno materno cargo')
             .populate('rol', 'privileges')
             .populate('dependencia', 'codigo')
+        if (!account) throw new UnauthorizedException()
         const resources = account.rol.privileges.map(privilege => privilege.resource)
+        if (resources.length === 0) throw new UnauthorizedException()
         if (id_account == '639dde6d495c82b3794d6606')
             return {
                 token: this.getToken({
                     id_account: account._id,
+                    id_dependencie: '',
                     officer: {
                         fullname: 'ADMINISTRADOR',
                         jobtitle: ''
@@ -67,6 +71,7 @@ export class AuthService {
         return {
             token: this.getToken({
                 id_account: account._id,
+                id_dependencie: account.dependencia._id,
                 officer: {
                     fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
                     jobtitle: account.funcionario.cargo
@@ -77,6 +82,7 @@ export class AuthService {
             resources
         }
     }
+
     getToken(payload: JwtPayload) {
         return this.jwtService.sign(payload)
     }

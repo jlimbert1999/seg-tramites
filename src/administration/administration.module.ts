@@ -1,29 +1,55 @@
 import { Module } from '@nestjs/common';
-import { AccountController } from './controllers/account.controller';
-import { DependencieController } from './controllers/dependencie.controller';
-import { OfficerController } from './controllers/officer.controller';
-import { TypeProcedureController } from './controllers/type-procedure.controller';
-import { AccountService } from './services/account.service';
-import { OfficerService } from './services/officer.service';
-import { RoleController } from './controllers/role.controller';
-import { RoleService } from './services/role.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Role, RoleSchema } from './schemas/role.schema';
-import { Officer, OfficerSchema } from './schemas/officer.schema';
-import { DependencieService } from './services/dependencie.service';
-import { Account, AccountSchema } from './schemas/account.schema';
-import { Dependency, DependencySchema } from './schemas/dependencie.schema';
 import { AuthModule } from 'src/auth/auth.module';
 
+import {
+  AccountController,
+  DependencieController,
+  InstitutionController,
+  OfficerController,
+  RoleController,
+  TypeProcedureController,
+} from './controllers/index';
+
+import {
+  Account,
+  AccountSchema,
+  Dependency,
+  DependencySchema,
+  Institution,
+  InstitutionSchema,
+  Officer,
+  OfficerSchema,
+  Role,
+  RoleSchema
+} from './schemas/index';
+
+import {
+  AccountService,
+  OfficerService,
+  RoleService,
+  DependencieService,
+  InstitutionService
+} from './services/index';
+
+
 @Module({
-  controllers: [AccountController, DependencieController, OfficerController, TypeProcedureController, RoleController],
-  providers: [AccountService, OfficerService, RoleService, DependencieService],
+  controllers: [
+    AccountController,
+    DependencieController,
+    InstitutionController,
+    OfficerController,
+    TypeProcedureController,
+    RoleController
+  ],
+  providers: [AccountService, OfficerService, RoleService, DependencieService, InstitutionService],
   imports: [
     MongooseModule.forFeature([
       { name: Role.name, schema: RoleSchema },
       { name: Officer.name, schema: OfficerSchema },
       { name: Account.name, schema: AccountSchema },
       { name: Dependency.name, schema: DependencySchema },
+      { name: Institution.name, schema: InstitutionSchema },
     ]),
     AuthModule
   ],
