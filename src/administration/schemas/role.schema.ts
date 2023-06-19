@@ -28,6 +28,9 @@ class Privileges {
     })
     resource: string;
 
+    @Prop({ type: [String] })
+    actions: string[]
+
     @Prop({ type: Boolean, default: false })
     create: boolean
 

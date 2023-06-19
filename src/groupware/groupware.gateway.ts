@@ -9,6 +9,7 @@ export class GroupwareGateway {
 
   @SubscribeMessage('createGroupware')
   create(@MessageBody() createGroupwareDto: CreateGroupwareDto) {
+    console.log(createGroupwareDto);
     return this.groupwareService.create(createGroupwareDto);
   }
 

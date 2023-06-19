@@ -4,7 +4,7 @@ import { AuthModule } from 'src/auth/auth.module';
 
 import {
   AccountController,
-  DependencieController,
+  DependencyController,
   InstitutionController,
   OfficerController,
   RoleController,
@@ -36,7 +36,7 @@ import {
 @Module({
   controllers: [
     AccountController,
-    DependencieController,
+    DependencyController,
     InstitutionController,
     OfficerController,
     TypeProcedureController,

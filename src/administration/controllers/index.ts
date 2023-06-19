@@ -1,4 +1,4 @@
-export * from './dependencie.controller'
+export * from './dependency.controller'
 export * from './account.controller'
 export * from './institution.controller'
 export * from './officer.controller'

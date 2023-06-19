@@ -6,7 +6,8 @@ import { Institution } from './institution.schema';
 export class Dependency extends Document {
     @Prop({
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     })
     nombre: string;
 
