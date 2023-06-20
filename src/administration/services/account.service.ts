@@ -8,7 +8,6 @@ export class AccountService {
     constructor(
         @InjectModel(Account.name) private accountModel: Model<Account>
     ) {
-
     }
 
     async findAll(limit: number, offset: number) {

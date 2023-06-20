@@ -1,14 +1,14 @@
 import { Type } from "class-transformer";
-import { IsArray, IsBoolean, IsNotEmpty, IsString, ValidateNested } from "class-validator"
+import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsString, ValidateNested } from "class-validator"
 
-export class CreateInstitutionDto {
+export class CreateRoleDto {
     @IsNotEmpty()
     @IsString()
     role: string
 
-    @IsNotEmpty()
-    @IsString()
+    @IsArray()
     @ValidateNested({ each: true })
+    @ArrayMinSize(1)
     @Type(() => Privileges)
     privileges: Privileges[]
 }

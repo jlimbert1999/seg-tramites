@@ -33,7 +33,7 @@ export class Officer extends Document {
         required: true,
         unique: true
     })
-    dni: number
+    dni: string
 
     @Prop({
         type: String
