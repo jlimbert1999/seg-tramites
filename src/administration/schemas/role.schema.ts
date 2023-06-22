@@ -15,6 +15,7 @@ class Privileges {
             'usuarios',
             'cuentas',
             'roles',
+            'cargos',
             'instituciones',
             'dependencias',
             'reportes',
@@ -56,7 +57,6 @@ export class Role extends Document {
 
     @Prop({ _id: false, type: mongoose.Types.Array })
     privileges: Privileges[]
-
 }
 
 export const RoleSchema = SchemaFactory.createForClass(Role);

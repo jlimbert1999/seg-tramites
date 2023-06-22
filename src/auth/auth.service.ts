@@ -117,6 +117,15 @@ export class AuthService {
                         },
                     )
                     break
+                case 'cargos':
+                    menu.push(
+                        {
+                            text: "Cargos",
+                            icon: "badge",
+                            routerLink: "configuraciones/cargos",
+                        },
+                    )
+                    break
                 case 'instituciones':
                     menu.push(
                         {
