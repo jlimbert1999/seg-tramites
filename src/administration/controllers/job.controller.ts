@@ -14,7 +14,7 @@ export class JobController {
     async searchSuperior(
         @Param('text') text: string
     ) {
-        return await this.jobService.searchSuperior(text)
+        return await this.jobService.searchDependents(text)
     }
 
     @Get()
@@ -34,9 +34,8 @@ export class JobController {
     @Put('/:id')
     async edit(
         @Param('id') id: string,
-        @Body() job: any
+        @Body() job: UpdateJobDto
     ) {
-        // return await this.jobService.eidt(id, job)
-        console.log(job);
+        return await this.jobService.eidt(id, job)
     }
 }

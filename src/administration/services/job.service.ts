@@ -12,9 +12,9 @@ export class JobService {
 
     }
 
-    async searchSuperior(text: string) {
+    async searchDependents(text: string) {
         const regex = new RegExp(text, 'i')
-        return this.jobModel.find({ nombre: regex }).limit(5)
+        return this.jobModel.find({ superior: { $exists: true }, nombre: regex }).limit(5)
     }
 
     async get(limit: number, offset: number) {
@@ -25,6 +25,7 @@ export class JobService {
             ]
         )
         return { jobs, length }
+
     }
     async search(limit: number, offset: number, text: string) {
         offset = offset * limit
