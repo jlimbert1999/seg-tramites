@@ -10,8 +10,11 @@ export class Job extends Document {
     })
     nombre: string;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'cargos' })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'cargos', default: null })
     superior: Job;
+
+    @Prop({ type: Boolean, default: false })
+    isRoot: boolean;
 }
 export const JobSchema = SchemaFactory.createForClass(Job);
 
