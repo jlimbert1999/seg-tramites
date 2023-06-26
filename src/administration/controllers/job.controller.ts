@@ -7,8 +7,8 @@ import { CreateJobDto } from '../dto/create-job.dto';
 export class JobController {
 
     constructor(private readonly jobService: JobService) {
-
     }
+
     @Get('/organization')
     async getOrganization(
     ) {
@@ -61,6 +61,4 @@ export class JobController {
     ) {
         return await this.jobService.edit(id, job)
     }
-
-   
 }

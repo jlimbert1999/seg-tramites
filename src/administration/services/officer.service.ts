@@ -10,7 +10,7 @@ import { Job, JobSchema } from '../schemas/job.schema';
 export class OfficerService {
     constructor(
         @InjectModel(Officer.name) private officerModel: Model<Officer>,
-        @InjectModel(Job.name) private jobSchema: Model<Job>,
+        @InjectModel(Job.name) private jobModel: Model<Job>,
 
     ) {
     }
@@ -29,12 +29,15 @@ export class OfficerService {
                 this.officerModel.count()
             ]
         )
-        // const jobs = await this.officerModel.find({}, 'cargo')
-        // for (const job of jobs) {
-        //     const createdJob = new this.jobSchema({ nombre: job.cargo })
-        //     await createdJob.save()
+        console.log(officers);
+        // const officers = await this.officerModel.find({})
+        // for (const officer of officers) {
+        //     const job = await this.jobModel.findOne({ nombre: officer.oldcargo })
+        //     if (job) {
+        //         await this.officerModel.findByIdAndUpdate(officer._id, { cargo: job._id })
+        //     }
         // }
-        // console.log('end');
+
         return { officers, length }
     }
 

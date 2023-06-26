@@ -40,7 +40,8 @@ export class AuthService {
                 id_dependencie: account.dependencia._id,
                 officer: {
                     fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
-                    jobtitle: account.funcionario.cargo
+                    //TODO = CHANGE FOR JOB POPULATE IN OIFFCER
+                    jobtitle: ''
                 }
             }),
             resources: account.rol.privileges.map(privilege => privilege.resource)
@@ -74,7 +75,7 @@ export class AuthService {
                 id_dependencie: account.dependencia._id,
                 officer: {
                     fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
-                    jobtitle: account.funcionario.cargo
+                    jobtitle: ''
                 }
             }),
             menu: this.getMenu(resources),
@@ -122,7 +123,18 @@ export class AuthService {
                         {
                             text: "Cargos",
                             icon: "badge",
-                            routerLink: "configuraciones/cargos",
+                            children: [
+                                {
+                                    text: "Registros",
+                                    icon: "badge",
+                                    routerLink: "configuraciones/cargos"
+                                },
+                                {
+                                    text: "Organigrama",
+                                    icon: "badge",
+                                    routerLink: "configuraciones/organigrama"
+                                },
+                            ]
                         },
                     )
                     break

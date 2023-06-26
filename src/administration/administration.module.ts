@@ -34,6 +34,8 @@ import {
 import { Job, JobSchema } from './schemas/job.schema';
 import { JobService } from './services/job.service';
 import { JobController } from './controllers/job.controller';
+import { TypeProcedureService } from './services/type-procedure.service';
+import { TypeProcedure, TypeProcedureSchema } from './schemas/type-procedure.schema';
 
 
 @Module({
@@ -46,7 +48,7 @@ import { JobController } from './controllers/job.controller';
     RoleController,
     JobController
   ],
-  providers: [AccountService, OfficerService, RoleService, DependencieService, InstitutionService, JobService],
+  providers: [AccountService, OfficerService, RoleService, DependencieService, InstitutionService, JobService, TypeProcedureService],
   imports: [
     MongooseModule.forFeature([
       { name: Job.name, schema: JobSchema },
@@ -55,6 +57,7 @@ import { JobController } from './controllers/job.controller';
       { name: Account.name, schema: AccountSchema },
       { name: Dependency.name, schema: DependencySchema },
       { name: Institution.name, schema: InstitutionSchema },
+      { name: TypeProcedure.name, schema: TypeProcedureSchema },
     ]),
     AuthModule
   ],

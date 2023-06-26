@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
+import { Job } from './job.schema';
 
 @Schema({ collection: 'funcionarios' })
 export class Officer extends Document {
@@ -45,7 +46,13 @@ export class Officer extends Document {
         required: true,
         uppercase: true
     })
-    cargo: string
+    oldcargo: string
+
+    @Prop({
+        type: mongoose.Schema.Types.ObjectId,
+        ref: Job.name
+    })
+    cargo: Job
 
     @Prop({
         type: Boolean,
@@ -58,6 +65,11 @@ export class Officer extends Document {
         default: false
     })
     cuenta: boolean
+
+    @Prop({
+        type: String
+    })
+    imgUrl?: string
 }
 
 export const OfficerSchema = SchemaFactory.createForClass(Officer);

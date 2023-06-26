@@ -107,10 +107,10 @@ export class JobService {
             }
         ])
         for (const element of data) {
-            const superiorOfficer = await this.officerModel.findOne({ cargo: new RegExp(element.nombre, 'i') })
+            const superiorOfficer = await this.officerModel.findOne({ cargo: element._id })
             element.officer = superiorOfficer
             for (const [index, dependents] of element.organigram.entries()) {
-                const dependentOfficer = await this.officerModel.findOne({ cargo: dependents.nombre })
+                const dependentOfficer = await this.officerModel.findOne({ cargo: dependents._id })
                 element.organigram[index].officer = dependentOfficer
             }
         }
@@ -148,6 +148,6 @@ export class JobService {
     createUrlImgOfficer(officer: Officer | null): string {
         if (!officer) return 'https://cdn.balkan.app/shared/empty-img-white.svg'
         // TODO =  CHANGE FOR IMG SAVE URl OFFICER
-        return 'https://cdn.balkan.app/shared/2.jpg'
+        return 'https://img.freepik.com/free-icon/user_318-159711.jpg'
     }
 }
