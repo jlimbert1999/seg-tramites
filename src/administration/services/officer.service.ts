@@ -18,6 +18,7 @@ export class OfficerService {
         const { dni } = officer
         const duplicate = await this.officerModel.findOne({ dni })
         if (duplicate) throw new BadRequestException('El dni introducido ya existe');
+        if (!officer.cargo) delete officer.cargo
         const createdOfficer = new this.officerModel(officer)
         return await createdOfficer.save()
     }
@@ -25,7 +26,11 @@ export class OfficerService {
     async get(limit: number, offset: number) {
         const [officers, length] = await Promise.all(
             [
-                this.officerModel.find({}).sort({ _id: -1 }).skip(offset).limit(limit),
+                this.officerModel.find({})
+                    .sort({ _id: -1 })
+                    .skip(offset)
+                    .limit(limit)
+                    .populate('cargo', 'nombre'),
                 this.officerModel.count()
             ]
         )
@@ -49,6 +54,7 @@ export class OfficerService {
             const duplicate = await this.officerModel.findOne({ dni })
             if (duplicate) throw new BadRequestException('El dni introducido ya existe');
         }
-        return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true })
+        if (officer.cargo)
+            return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true })
     }
 }

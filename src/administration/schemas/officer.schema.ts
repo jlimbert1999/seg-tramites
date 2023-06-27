@@ -52,7 +52,7 @@ export class Officer extends Document {
         type: mongoose.Schema.Types.ObjectId,
         ref: Job.name
     })
-    cargo: Job
+    cargo?: Job | null
 
     @Prop({
         type: Boolean,

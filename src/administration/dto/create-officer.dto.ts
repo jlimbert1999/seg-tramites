@@ -29,11 +29,15 @@ export class CreateOfficerDto {
 
     @IsNotEmpty()
     @IsString()
-    cargo: string
+    @IsOptional()
+    cargo?: string
 
     @IsBoolean()
     @IsOptional()
     cuenta: boolean
+
+    @IsOptional()
+    imgUrl?: string
 
 }
 

@@ -38,6 +38,31 @@ export class JobService {
         @InjectModel(Officer.name) private officerModel: Model<Officer>
     ) {
     }
+    async searchJobForUser(text: string) {
+        const regex = new RegExp(text, 'i')
+        return await this.jobModel.aggregate([
+            {
+                $lookup: {
+                    from: "funcionarios",
+                    localField: "_id",
+                    foreignField: "cargo",
+                    as: "funcionario"
+                }
+            },
+            {
+                $match: {
+                    "funcionario": { $size: 0 },
+                    nombre: regex
+                }
+            },
+            { $limit: 5 },
+            {
+                $project: {
+                    "funcionario": 0
+                }
+            }
+        ])
+    }
     async searchDependents(text: string) {
         const regex = new RegExp(text, 'i')
         return this.jobModel.find({ superior: null, isRoot: false, nombre: regex }).limit(5)

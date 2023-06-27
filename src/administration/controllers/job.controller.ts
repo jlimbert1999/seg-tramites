@@ -9,6 +9,13 @@ export class JobController {
     constructor(private readonly jobService: JobService) {
     }
 
+    @Get('/search/job/officer/:text')
+    async searchJobForOfficer(
+        @Param('text') text: string
+    ) {
+        return await this.jobService.searchJobForUser(text)
+    }
+
     @Get('/organization')
     async getOrganization(
     ) {
