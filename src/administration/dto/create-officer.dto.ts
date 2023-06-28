@@ -10,7 +10,6 @@ export class CreateOfficerDto {
     @IsString()
     paterno: string
 
-    @IsNotEmpty()
     @IsOptional()
     @IsString()
     materno: string
@@ -37,7 +36,7 @@ export class CreateOfficerDto {
     cuenta: boolean
 
     @IsOptional()
-    imgUrl?: string
+    imageUrl?: string
 
 }
 

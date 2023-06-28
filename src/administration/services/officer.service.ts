@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Officer } from '../schemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateOfficerDto } from '../dto/create-officer.dto';
 import { UpdateOfficerDto } from '../dto/update-officer.dto';
 import { Job, JobSchema } from '../schemas/job.schema';
+import { v4 as uuidv4 } from 'uuid';
+import { join } from 'path';
+import * as fs from 'fs';
+
 
 @Injectable()
 export class OfficerService {
@@ -14,13 +18,75 @@ export class OfficerService {
 
     ) {
     }
-    async add(officer: CreateOfficerDto) {
+    async add(officer: CreateOfficerDto, image: Express.Multer.File | undefined) {
         const { dni } = officer
         const duplicate = await this.officerModel.findOne({ dni })
         if (duplicate) throw new BadRequestException('El dni introducido ya existe');
+        // TODO implementar carga de imagen
+        // if (image) {
+        //     const imageUrl = this.saveImageFileSystem(image)
+        //     officer.imageUrl = imageUrl
+        // }
         if (!officer.cargo) delete officer.cargo
         const createdOfficer = new this.officerModel(officer)
         return await createdOfficer.save()
+    }
+
+    async search(limit: number, offset: number, text: string) {
+        offset = offset * limit
+        const regex = new RegExp(text, 'i')
+        const dataPaginated = await this.officerModel.aggregate([
+            {
+                $lookup: {
+                    from: 'cargos',
+                    localField: "cargo",
+                    foreignField: "_id",
+                    as: "cargo"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$cargo",
+                    preserveNullAndEmptyArrays: true // Incluye funcionarios sin cargo asignado
+                }
+            },
+            {
+                $addFields: {
+                    "fullname": {
+                        $concat: [
+                            "$nombre",
+                            " ",
+                            { $ifNull: ["$paterno", ""] },
+                            " ",
+                            { $ifNull: ["$materno", ""] },
+                        ],
+                    },
+                },
+            },
+            {
+                $match: {
+                    $or: [
+                        { 'fullname': regex },
+                        { 'cargo.nombre': regex }
+                    ]
+                }
+            },
+
+            { $sort: { _id: -1 } },
+            {
+                $facet: {
+                    paginatedResults: [{ $skip: offset }, { $limit: limit }],
+                    totalCount: [
+                        {
+                            $count: 'count'
+                        }
+                    ]
+                }
+            },
+        ])
+        const officers = dataPaginated[0].paginatedResults
+        const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0
+        return { officers, length }
     }
 
     async get(limit: number, offset: number) {
@@ -34,15 +100,6 @@ export class OfficerService {
                 this.officerModel.count()
             ]
         )
-        console.log(officers);
-        // const officers = await this.officerModel.find({})
-        // for (const officer of officers) {
-        //     const job = await this.jobModel.findOne({ nombre: officer.oldcargo })
-        //     if (job) {
-        //         await this.officerModel.findByIdAndUpdate(officer._id, { cargo: job._id })
-        //     }
-        // }
-
         return { officers, length }
     }
 
@@ -56,5 +113,19 @@ export class OfficerService {
         }
         if (officer.cargo)
             return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true })
+    }
+    saveImageFileSystem(file: Express.Multer.File): string {
+        try {
+            const extensionFile = file.originalname.split('.').at(-1)
+            const fileName = `${uuidv4()}.${extensionFile}`
+            const filePath = join(__dirname, '..', '..', '..', 'uploads/officers', fileName);
+            fs.writeFileSync(filePath, file.buffer);
+            return filePath
+        }
+        catch (error) {
+            console.log('[SERVER]: Error save file', error);
+            throw new InternalServerErrorException({ message: 'No se pudo guardar la imagen' })
+        }
+
     }
 }

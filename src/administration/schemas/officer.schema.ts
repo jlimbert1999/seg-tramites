@@ -41,12 +41,6 @@ export class Officer extends Document {
     })
     direccion: string
 
-    @Prop({
-        type: String,
-        required: true,
-        uppercase: true
-    })
-    oldcargo: string
 
     @Prop({
         type: mongoose.Schema.Types.ObjectId,
