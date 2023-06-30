@@ -8,6 +8,7 @@ import { Job, JobSchema } from '../schemas/job.schema';
 import { v4 as uuidv4 } from 'uuid';
 import { join } from 'path';
 import * as fs from 'fs';
+import { JobChanges } from '../schemas/jobChanges.schema';
 
 
 @Injectable()
@@ -15,21 +16,8 @@ export class OfficerService {
     constructor(
         @InjectModel(Officer.name) private officerModel: Model<Officer>,
         @InjectModel(Job.name) private jobModel: Model<Job>,
-
+        @InjectModel(JobChanges.name) private jobChangesSchema: Model<JobChanges>,
     ) {
-    }
-    async add(officer: CreateOfficerDto, image: Express.Multer.File | undefined) {
-        const { dni } = officer
-        const duplicate = await this.officerModel.findOne({ dni })
-        if (duplicate) throw new BadRequestException('El dni introducido ya existe');
-        // TODO implementar carga de imagen
-        // if (image) {
-        //     const imageUrl = this.saveImageFileSystem(image)
-        //     officer.imageUrl = imageUrl
-        // }
-        if (!officer.cargo) delete officer.cargo
-        const createdOfficer = new this.officerModel(officer)
-        return await createdOfficer.save()
     }
 
     async search(limit: number, offset: number, text: string) {
@@ -103,6 +91,20 @@ export class OfficerService {
         return { officers, length }
     }
 
+    async add(officer: CreateOfficerDto, image: Express.Multer.File | undefined) {
+        const { dni } = officer
+        const duplicate = await this.officerModel.findOne({ dni })
+        if (duplicate) throw new BadRequestException('El dni introducido ya existe');
+        // TODO implementar carga de imagen
+        // if (image) {
+        //     const imageUrl = this.saveImageFileSystem(image)
+        //     officer.imageUrl = imageUrl
+        // }
+        if (!officer.cargo) delete officer.cargo
+        const createdOfficer = new this.officerModel(officer)
+        return await createdOfficer.save()
+    }
+
     async edit(id_officer: string, officer: UpdateOfficerDto) {
         const { dni } = officer
         const officerDb = await this.officerModel.findById(id_officer)
@@ -111,21 +113,12 @@ export class OfficerService {
             const duplicate = await this.officerModel.findOne({ dni })
             if (duplicate) throw new BadRequestException('El dni introducido ya existe');
         }
-        if (officer.cargo)
-            return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true })
-    }
-    saveImageFileSystem(file: Express.Multer.File): string {
-        try {
-            const extensionFile = file.originalname.split('.').at(-1)
-            const fileName = `${uuidv4()}.${extensionFile}`
-            const filePath = join(__dirname, '..', '..', '..', 'uploads/officers', fileName);
-            fs.writeFileSync(filePath, file.buffer);
-            return filePath
+        if (officerDb.cargo._id != officer.cargo) {
+            console.log('change officer job event');
+            console.log(officerDb.cargo, officer.cargo);
         }
-        catch (error) {
-            console.log('[SERVER]: Error save file', error);
-            throw new InternalServerErrorException({ message: 'No se pudo guardar la imagen' })
-        }
+        return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true })
 
     }
+
 }

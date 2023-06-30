@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { OfficerService } from '../services';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateOfficerDto } from '../dto/create-officer.dto';
+import { UpdateOfficerDto } from '../dto/update-officer.dto';
 
 @Controller('officer')
-export class OfficerController {
+export class OfficerController {z
     constructor(
         private readonly officerService: OfficerService,
 
@@ -27,6 +28,13 @@ export class OfficerController {
     @UseInterceptors(FileInterceptor('image'))
     async add(@Body() body: CreateOfficerDto, @UploadedFile() file: Express.Multer.File) {
         return this.officerService.add(body, file)
+    }
+
+    @Put('/:id')
+    async edit(
+        @Param('id') id_officer: string,
+        @Body() officer: UpdateOfficerDto) {
+        return await this.officerService.edit(id_officer, officer)
     }
 
 

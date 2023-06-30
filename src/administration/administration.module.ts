@@ -36,6 +36,7 @@ import { JobService } from './services/job.service';
 import { JobController } from './controllers/job.controller';
 import { TypeProcedureService } from './services/type-procedure.service';
 import { TypeProcedure, TypeProcedureSchema } from './schemas/type-procedure.schema';
+import { JobChanges, JobChangesSchema } from './schemas/jobChanges.schema';
 
 
 @Module({
@@ -58,6 +59,7 @@ import { TypeProcedure, TypeProcedureSchema } from './schemas/type-procedure.sch
       { name: Dependency.name, schema: DependencySchema },
       { name: Institution.name, schema: InstitutionSchema },
       { name: TypeProcedure.name, schema: TypeProcedureSchema },
+      { name: JobChanges.name, schema: JobChangesSchema }
     ]),
     AuthModule
   ],

@@ -107,6 +107,7 @@ export class JobService {
         }
         return newJob
     }
+
     async edit(id: string, job: UpdateJobDto) {
         const { dependents, ...values } = job
         for (const dependent of dependents) {
@@ -114,6 +115,8 @@ export class JobService {
         }
         return this.jobModel.findByIdAndUpdate(id, values, { new: true })
     }
+
+
 
 
     async getOrganization() {
