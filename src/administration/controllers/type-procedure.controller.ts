@@ -1,5 +1,6 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { TypeProcedureService } from '../services/type-procedure.service';
+import { CreateTypeProcedureDto } from '../dto/create-typeProcedure.dto';
 
 @Controller('type-procedure')
 export class TypeProcedureController {
@@ -19,4 +20,8 @@ export class TypeProcedureController {
         return await this.typeProcedureService.search(limit, offset, text)
     }
 
+    @Post()
+    async add(@Body() typeProcedure: CreateTypeProcedureDto) {
+        return await this.typeProcedureService.add(typeProcedure)
+    }
 }

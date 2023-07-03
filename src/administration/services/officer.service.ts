@@ -16,7 +16,7 @@ export class OfficerService {
     constructor(
         @InjectModel(Officer.name) private officerModel: Model<Officer>,
         @InjectModel(Job.name) private jobModel: Model<Job>,
-        @InjectModel(JobChanges.name) private jobChangesSchema: Model<JobChanges>,
+        @InjectModel(JobChanges.name) private jobChangesModel: Model<JobChanges>,
     ) {
     }
 
@@ -35,7 +35,7 @@ export class OfficerService {
             {
                 $unwind: {
                     path: "$cargo",
-                    preserveNullAndEmptyArrays: true // Incluye funcionarios sin cargo asignado
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
@@ -55,6 +55,7 @@ export class OfficerService {
                 $match: {
                     $or: [
                         { 'fullname': regex },
+                        { 'dni': regex },
                         { 'cargo.nombre': regex }
                     ]
                 }
@@ -100,25 +101,50 @@ export class OfficerService {
         //     const imageUrl = this.saveImageFileSystem(image)
         //     officer.imageUrl = imageUrl
         // }
-        if (!officer.cargo) delete officer.cargo
         const createdOfficer = new this.officerModel(officer)
-        return await createdOfficer.save()
+        const officerDB = await createdOfficer.save()
+        if (officerDB.cargo) {
+            const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officerDB.cargo })
+            await createdEvent.save()
+        }
+        return officerDB
     }
 
     async edit(id_officer: string, officer: UpdateOfficerDto) {
         const { dni } = officer
-        const officerDb = await this.officerModel.findById(id_officer)
-        if (!officerDb) throw new BadRequestException('El funcionario no existe')
-        if (officerDb.dni !== dni) {
+        const officerDB = await this.officerModel.findById(id_officer)
+        if (!officerDB) throw new BadRequestException('El funcionario no existe')
+        if (officerDB.dni !== dni) {
             const duplicate = await this.officerModel.findOne({ dni })
             if (duplicate) throw new BadRequestException('El dni introducido ya existe');
         }
-        if (officerDb.cargo._id != officer.cargo) {
-            console.log('change officer job event');
-            console.log(officerDb.cargo, officer.cargo);
+        if (!officerDB.cargo && officer.cargo) {
+            const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo })
+            await createdEvent.save()
         }
-        return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true })
-
+        else if (officerDB.cargo && !officer.cargo) {
+            await this.officerModel.findByIdAndUpdate(officerDB._id, { $unset: { cargo: 1 } })
+        }
+        else if (officerDB.cargo._id != officer.cargo) {
+            const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo })
+            await createdEvent.save()
+        }
+        return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true }).populate('cargo')
+    }
+    async delete(id_officer: string) {
+        const officerDB = await this.officerModel.findById(id_officer);
+        if (!officerDB) throw new BadRequestException('El funcionario no existe')
+        return await this.officerModel.findByIdAndUpdate(id_officer, { activo: !officerDB.activo }, { new: true })
     }
 
+    async getOfficerWorkHistory(id_officer: string, limit: number, offset: number) {
+        return await this.jobChangesModel.find({ officer: id_officer })
+            .skip(offset)
+            .limit(limit)
+            .sort({ date: -1 })
+            .populate('job', 'nombre')
+            .populate('officer', 'nombre paterno materno')
+    }
 }
+
+

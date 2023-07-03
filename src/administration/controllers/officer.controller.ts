@@ -1,11 +1,12 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { OfficerService } from '../services';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateOfficerDto } from '../dto/create-officer.dto';
 import { UpdateOfficerDto } from '../dto/update-officer.dto';
 
 @Controller('officer')
-export class OfficerController {z
+export class OfficerController {
+    z
     constructor(
         private readonly officerService: OfficerService,
 
@@ -17,6 +18,13 @@ export class OfficerController {z
         @Query('offset', ParseIntPipe) offset: number,
         @Param('text') text: string) {
         return await this.officerService.search(limit, offset, text)
+    }
+    @Get('history/:id')
+    async getWorkHistory(
+        @Param('id') id_officer: string,
+        @Query('limit', ParseIntPipe) limit: number,
+        @Query('offset', ParseIntPipe) offset: number) {
+        return await this.officerService.getOfficerWorkHistory(id_officer, limit, offset)
     }
 
     @Get()
@@ -35,6 +43,12 @@ export class OfficerController {z
         @Param('id') id_officer: string,
         @Body() officer: UpdateOfficerDto) {
         return await this.officerService.edit(id_officer, officer)
+    }
+
+    @Delete('/:id')
+    async delete(
+        @Param('id') id_officer: string) {
+        return await this.officerService.delete(id_officer)
     }
 
 

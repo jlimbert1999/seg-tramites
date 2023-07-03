@@ -15,11 +15,9 @@ export class CreateOfficerDto {
     materno: string
 
     @IsNotEmpty()
-    @IsString()
     dni: string
 
     @IsNotEmpty()
-    @IsString()
     telefono: string
 
     @IsNotEmpty()
