@@ -9,6 +9,20 @@ export class TypeProcedureService {
     constructor(@InjectModel(TypeProcedure.name) private typeProcedureModel: Model<TypeProcedure>,) {
 
     }
+    async getSegmentsOfTypesProcedures() {
+        return await this.typeProcedureModel.aggregate([
+            {
+                $group: {
+                    _id: "$segmento"
+                }
+            },
+            {
+                $project: {
+                    'segmento': 1
+                }
+            }
+        ])
+    }
     async search(limit: number, offset: number, text: string) {
         offset = offset * limit
         const regex = new RegExp(text, 'i')

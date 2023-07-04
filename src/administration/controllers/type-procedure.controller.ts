@@ -6,11 +6,6 @@ import { CreateTypeProcedureDto } from '../dto/create-typeProcedure.dto';
 export class TypeProcedureController {
     constructor(private readonly typeProcedureService: TypeProcedureService) {
     }
-    @Get()
-    async get(@Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number) {
-        return await this.typeProcedureService.get(limit, offset)
-    }
-
     @Get('/search/:text')
     async search(
         @Query('limit', ParseIntPipe) limit: number,
@@ -18,6 +13,15 @@ export class TypeProcedureController {
         @Param('text') text: string
     ) {
         return await this.typeProcedureService.search(limit, offset, text)
+    }
+    @Get('/segments')
+    async getSegments(
+    ) {
+        return await this.typeProcedureService.getSegmentsOfTypesProcedures()
+    }u
+    @Get()
+    async get(@Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number) {
+        return await this.typeProcedureService.get(limit, offset)
     }
 
     @Post()
