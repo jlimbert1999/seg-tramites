@@ -1,4 +1,4 @@
-import { BadRequestException, Get, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Dependency } from '../schemas/dependencie.schema';
 import { Model } from 'mongoose';
@@ -12,7 +12,6 @@ export class DependencieService {
     ) {
     }
 
-    @Get()
     async get(limit: number, offset: number) {
         offset = offset * limit
         const [dependencies, length] = await Promise.all(
@@ -68,4 +67,8 @@ export class DependencieService {
         return newDependency.activo
     };
 
+
+    async getActiveDependenciesOfInstitution(id_institution) {
+        return await this.dependencyModel.find({ institucion: id_institution, activo: true })
+    }
 }

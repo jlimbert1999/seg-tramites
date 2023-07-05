@@ -46,7 +46,10 @@ export class TypeProcedure extends Document {
     activo: boolean;
 
     @Prop({ _id: false, type: mongoose.Types.Array })
-    privileges: Requirements[]
+    oldrequerimientos: Requirements[]
+
+    @Prop({ type: [String] })
+    requerimientos: string[]
 
 }
 export const TypeProcedureSchema = SchemaFactory.createForClass(TypeProcedure);
