@@ -12,6 +12,9 @@ export class RoleService {
         @InjectModel(Role.name) private roleModel: Model<Role>
     ) {
     }
+    async getActiveRoles() {
+        return await this.roleModel.find({})
+    }
     async get(limit: number, offset: number) {
         offset = offset * limit
         const [roles, length] = await Promise.all(

@@ -20,6 +20,7 @@ export interface organizationData {
     }[];
     officer: Officer | null;
 }
+
 export interface orgChartData {
     name: string;
     data: {

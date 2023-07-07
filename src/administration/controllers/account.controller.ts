@@ -2,7 +2,8 @@ import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ValidResources } from 'src/auth/interfaces/valid-resources.interface';
 import { AccountService } from '../services/account.service';
-import { DependencieService, InstitutionService } from '../services';
+import { DependencieService, InstitutionService, RoleService } from '../services';
+import { JobService } from '../services/job.service';
 
 @Controller('accounts')
 @Auth(ValidResources.CUENTAS)
@@ -11,8 +12,21 @@ export class AccountController {
         private readonly accountService: AccountService,
         private readonly institutionService: InstitutionService,
         private readonly dependencieService: DependencieService,
+        private readonly roleService: RoleService,
+        private readonly jobService: JobService,
+
     ) {
 
+    }
+    @Get('roles')
+    async getRoles() {
+        return await this.roleService.getActiveRoles()
+    }
+    @Get('jobs/:text')
+    async getJob(
+        @Param('text') text: string
+    ) {
+        return await this.jobService.searchJobForUser(text)
     }
     @Get('institutions')
     async getInstitutions() {

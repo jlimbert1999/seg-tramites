@@ -20,7 +20,6 @@ export class AccountService {
         if (text) {
             query['$or'] = [
                 { "funcionario.fullname": new RegExp(text, 'i') },
-                { "funcionario.cargo": new RegExp(text, 'i') },
                 { "funcionario.dni": new RegExp(text, 'i') }
             ]
         }
@@ -59,14 +58,21 @@ export class AccountService {
             {
                 $lookup: {
                     from: "funcionarios",
-                    localField: "funcionario",
-                    foreignField: "_id",
+                    let: { funcionarioId: "$funcionario" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$_id", "$$funcionarioId"] },
+                            },
+                        },
+                    ],
                     as: "funcionario",
                 },
             },
             {
                 $unwind: {
                     path: "$funcionario",
+                    preserveNullAndEmptyArrays: true
                 },
             },
             {
@@ -80,7 +86,7 @@ export class AccountService {
                             { $ifNull: ["$funcionario.materno", ""] },
                         ],
                     },
-                },
+                }
             },
             {
                 $match: query
@@ -105,7 +111,7 @@ export class AccountService {
         offset = offset * limit
         const [accounts, length] = await Promise.all(
             [
-                this.accountModel.find({ _id: { $ne: process.env.ID_ROOT } }, { password: 0 })
+                this.accountModel.find({ _id: { $ne: '639dde6d495c82b3794d6606' } }, { password: 0 })
                     .skip(offset)
                     .limit(limit)
                     .sort({ _id: -1 })
