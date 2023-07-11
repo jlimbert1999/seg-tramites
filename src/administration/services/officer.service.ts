@@ -101,6 +101,7 @@ export class OfficerService {
         //     const imageUrl = this.saveImageFileSystem(image)
         //     officer.imageUrl = imageUrl
         // }
+        if (!officer.cargo || officer.cargo === '') delete officer.cargo
         const createdOfficer = new this.officerModel(officer)
         const officerDB = await createdOfficer.save()
         if (officerDB.cargo) {
@@ -144,6 +145,34 @@ export class OfficerService {
             .sort({ date: -1 })
             .populate('job', 'nombre')
             .populate('officer', 'nombre paterno materno')
+    }
+    async findOfficersWithoutAccount(text: string) {
+        const regex = new RegExp(text, 'i')
+        const officers = await this.officerModel.aggregate([
+            {
+                $addFields: {
+                    fullname: {
+                        $concat: ["$nombre", " ", "$paterno", " ", { $ifNull: ["$materno", ""] }]
+                    }
+                },
+            },
+            {
+                $match: {
+                    cuenta: false,
+                    activo: true,
+                    $or: [
+                        { fullname: regex },
+                        { dni: regex }
+                    ]
+                }
+            },
+            { $limit: 5 }
+        ]);
+        return await this.officerModel.populate(officers, { path: 'cargo' })
+    }
+
+    markOfficerWithAccount(id_officer: string) {
+        return this.officerModel.findByIdAndUpdate(id_officer, { cuenta: true })
     }
 }
 

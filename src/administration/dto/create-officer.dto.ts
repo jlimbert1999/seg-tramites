@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator"
+import { IsBoolean, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator"
 
 export class CreateOfficerDto {
 
@@ -23,9 +23,8 @@ export class CreateOfficerDto {
     @IsNotEmpty()
     @IsString()
     direccion: string
-
-    @IsNotEmpty()
-    @IsString()
+    
+    @IsMongoId()
     @IsOptional()
     cargo?: string
 

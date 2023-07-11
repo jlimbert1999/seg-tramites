@@ -1,9 +1,11 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ValidResources } from 'src/auth/interfaces/valid-resources.interface';
 import { AccountService } from '../services/account.service';
 import { DependencieService, InstitutionService, RoleService } from '../services';
 import { JobService } from '../services/job.service';
+import { CreateOfficerDto } from '../dto/create-officer.dto';
+import { CreateAccountDto } from '../dto/create-account.dto';
 
 @Controller('accounts')
 @Auth(ValidResources.CUENTAS)
@@ -38,6 +40,10 @@ export class AccountController {
     ) {
         return await this.dependencieService.getActiveDependenciesOfInstitution(id_institucion)
     }
+    @Get('officers/assign/:text')
+    async searchOfficersForAssign(@Param('text') text: string) {
+        return await this.accountService.findOfficersForAssign(text)
+    }
     @Get('search')
     async search(
         @Query('institution') id_institucion: string,
@@ -53,5 +59,19 @@ export class AccountController {
     @Get()
     async findAll(@Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number) {
         return await this.accountService.findAll(limit, offset)
+    }
+    @Post()
+    async create(
+        @Body('officer') officer: CreateOfficerDto,
+        @Body('account') account: CreateAccountDto
+    ) {
+        return await this.accountService.createAccountWithOfficer(officer, account)
+    }
+
+    @Post('assign')
+    async createAccountWithAssignment(
+        @Body() account: CreateAccountDto
+    ) {
+        return await this.accountService.createAccountWithAssignment(account)
     }
 }
