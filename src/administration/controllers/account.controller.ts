@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ValidResources } from 'src/auth/interfaces/valid-resources.interface';
 import { AccountService } from '../services/account.service';
@@ -6,6 +6,7 @@ import { DependencieService, InstitutionService, RoleService } from '../services
 import { JobService } from '../services/job.service';
 import { CreateOfficerDto } from '../dto/create-officer.dto';
 import { CreateAccountDto } from '../dto/create-account.dto';
+import { UpdateAccountDto } from '../dto/update-account.dto';
 
 @Controller('accounts')
 @Auth(ValidResources.CUENTAS)
@@ -67,11 +68,32 @@ export class AccountController {
     ) {
         return await this.accountService.createAccountWithOfficer(officer, account)
     }
+    @Put('/:id_account')
+    async update(
+        @Param('id_account') id_account: string,
+        @Body() account: UpdateAccountDto
+    ) {
+        return await this.accountService.update(id_account, account)
+    }
 
     @Post('assign')
     async createAccountWithAssignment(
         @Body() account: CreateAccountDto
     ) {
         return await this.accountService.createAccountWithAssignment(account)
+    }
+    @Delete('unlink/:id_account')
+    async unlinkAccountOfficer(
+        @Param('id_account') id_account: string
+    ) {
+        return await this.accountService.unlinkAccountOfficer(id_account)
+    }
+
+    @Put('assign/:id_account')
+    async assignAccountOfficer(
+        @Param('id_account') id_account: string,
+        @Body('id_officer') id_officer: string
+    ) {
+        return await this.accountService.assingAccountOfficer(id_account, id_officer)
     }
 }

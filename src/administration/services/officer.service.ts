@@ -171,8 +171,8 @@ export class OfficerService {
         return await this.officerModel.populate(officers, { path: 'cargo' })
     }
 
-    markOfficerWithAccount(id_officer: string) {
-        return this.officerModel.findByIdAndUpdate(id_officer, { cuenta: true })
+    async markOfficerWithAccount(id_officer: string, hasAccount: boolean) {
+        return await this.officerModel.findByIdAndUpdate(id_officer, { cuenta: hasAccount })
     }
 }
 

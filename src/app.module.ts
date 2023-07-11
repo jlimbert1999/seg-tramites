@@ -8,7 +8,7 @@ import { GroupwareModule } from './groupware/groupware.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017/new-seg-tramitesDB'),
+    MongooseModule.forRoot('mongodb://127.0.0.1:27017/test-seg-tramites'),
     AuthModule,
     AdministrationModule,
     GroupwareModule

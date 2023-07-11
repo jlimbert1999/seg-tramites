@@ -6,6 +6,7 @@ import { Account } from '../schemas/account.schema';
 import { CreateAccountDto } from '../dto/create-account.dto';
 import { OfficerService } from './officer.service';
 import { CreateOfficerDto } from '../dto/create-officer.dto';
+import { UpdateAccountDto } from '../dto/update-account.dto';
 @Injectable()
 export class AccountService {
     constructor(
@@ -97,6 +98,19 @@ export class AccountService {
                 $match: query
             },
             {
+                $lookup: {
+                    from: "cargos",
+                    localField: "funcionario.cargo",
+                    foreignField: "_id",
+                    as: "funcionario.cargo",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$funcionario.cargo",
+                },
+            },
+            {
                 $facet: {
                     paginatedResults: [{ $skip: offset }, { $limit: limit }],
                     totalCount: [
@@ -125,7 +139,13 @@ export class AccountService {
                             path: 'institucion'
                         }
                     })
-                    .populate('funcionario'),
+                    .populate({
+                        path: 'funcionario',
+                        populate: {
+                            path: 'cargo',
+                            select: 'nombre'
+                        }
+                    }),
                 this.accountModel.count({ _id: { $ne: process.env.ID_ROOT } })
             ]
         )
@@ -144,7 +164,7 @@ export class AccountService {
         if (!account.funcionario) throw new BadRequestException('No se selecciono ningun funcionario para crear la cuenta')
         const assignedAccountDB = await this.accountModel.findOne({ funcionario: account.funcionario })
         if (assignedAccountDB) throw new BadRequestException('El funcionario seleccionado ya esta asignado a una cuenta')
-        await this.officerService.markOfficerWithAccount(account.funcionario)
+        await this.officerService.markOfficerWithAccount(account.funcionario, true)
         return await this.create(account.funcionario, account)
     }
     async create(id_officer: string, account: CreateAccountDto) {
@@ -162,7 +182,10 @@ export class AccountService {
                 }
             },
             {
-                path: 'funcionario'
+                path: 'funcionario',
+                populate: {
+                    path: 'cargo'
+                }
             }
         ])
         delete createdAccount.password
@@ -171,13 +194,67 @@ export class AccountService {
     async findOfficersForAssign(text: string) {
         return await this.officerService.findOfficersWithoutAccount(text)
     }
+    async update(id_account: string, account: UpdateAccountDto) {
+        const accountDB = await this.accountModel.findById(id_account)
+        if (!accountDB) throw new BadRequestException('La cuenta no existe')
+        if (accountDB.login !== account.login) {
+            const duplicateLogin = await this.accountModel.findOne({ login: account.login })
+            if (duplicateLogin) throw new BadRequestException('El login introducido ya existe')
+        }
+        if (account.password) {
+            const salt = bcrypt.genSaltSync();
+            const encryptedPassword = bcrypt.hashSync(account.password, salt);
+            account.password = encryptedPassword;
+        }
+        let updatedAccount = await this.accountModel.findByIdAndUpdate(id_account, account, { new: true })
+            .populate({
+                path: 'dependencia',
+                populate: {
+                    path: 'institucion'
+                }
+            })
+            .populate({
+                path: 'funcionario',
+                populate: {
+                    path: 'cargo'
+                }
+            })
+        updatedAccount = updatedAccount.toObject()
+        delete updatedAccount.password
+        return updatedAccount
+    }
+
     async unlinkAccountOfficer(id_account: string) {
         const accountDB = await this.accountModel.findById(id_account)
-        if (!accountDB) throw new BadRequestException('la cuenta seleccionada no existe')
-        if (!accountDB.funcionario) throw new BadRequestException('la cuenta ya ha sido desvinculada')
-        await this.accountModel.findByIdAndUpdate(id_account, { activo: false, $unset: { funcionario: 1 } })
-        // await this.of.findByIdAndUpdate(cuenta.funcionario, { cuenta: false })
-        return 'La cuenta fue desvinculada'
+        if (!accountDB) throw new BadRequestException('La cuenta seleccionada no existe')
+        if (!accountDB.funcionario) throw new BadRequestException('La cuenta ya ha sido desvinculada')
+        const updatedAccount = await this.accountModel.findByIdAndUpdate(id_account, { activo: false, $unset: { funcionario: 1 } }, { new: true }).populate({
+            path: 'dependencia',
+            populate: {
+                path: 'institucion'
+            }
+        })
+        await this.officerService.markOfficerWithAccount(accountDB.funcionario._id, false)
+        return updatedAccount
+    }
 
+    async assingAccountOfficer(id_account: string, id_officer: string) {
+        const accountDB = await this.accountModel.findById(id_account).populate('funcionario')
+        if (!accountDB) throw new BadRequestException('La cuenta seleccionada no existe')
+        if (accountDB.funcionario) throw new BadRequestException(`La cuenta ya ha sido asignanda a ${accountDB.funcionario.nombre} ${accountDB.funcionario.paterno} ${accountDB.funcionario.materno}`)
+        await this.officerService.markOfficerWithAccount(id_officer, true)
+        return await this.accountModel.findByIdAndUpdate(id_account, { funcionario: id_officer, activo: true }, { new: true })
+            .populate({
+                path: 'dependencia',
+                populate: {
+                    path: 'institucion'
+                }
+            })
+            .populate({
+                path: 'funcionario',
+                populate: {
+                    path: 'cargo'
+                }
+            })
     }
 }
