@@ -6,6 +6,7 @@ import { Model } from 'mongoose';
 import { JwtPayload } from './interfaces/jwt.interface';
 import { Account } from 'src/administration/schemas/account.schema';
 import { AuthDto } from './dto/auth.dto';
+import { UpdateMyAccountDto } from './dto/my-account.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +20,12 @@ export class AuthService {
     async loginUser(authDto: AuthDto) {
         const account = await this.accountModel.findOne({ login: authDto.login })
             .populate('rol')
-            .populate('funcionario')
+            .populate({
+                path: 'funcionario',
+                populate: {
+                    path: 'cargo'
+                }
+            })
         if (!account) throw new BadRequestException('login o password incorrectos')
         if (!bcrypt.compareSync(authDto.password, account.password)) throw new BadRequestException('login o password incorrectos')
         if (account._id == '639dde6d495c82b3794d6606') return {
@@ -28,20 +34,19 @@ export class AuthService {
                 id_dependencie: '',
                 officer: {
                     fullname: 'ADMINISTRADOR',
-                    jobtitle: ''
+                    jobtitle: 'Configuraciones'
                 }
             }),
             resources: account.rol.privileges.map(privilege => privilege.resource)
         }
-        if (!account.activo || !account.funcionario) throw new BadRequestException('la cuenta ha sido deshabilitada')
+        if (!account.activo || !account.funcionario) throw new BadRequestException('La cuenta ha sido deshabilitada')
         return {
             token: this.getToken({
                 id_account: account._id,
                 id_dependencie: account.dependencia._id,
                 officer: {
                     fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
-                    //TODO = CHANGE FOR JOB POPULATE IN OIFFCER
-                    jobtitle: ''
+                    jobtitle: account.funcionario.cargo ? account.funcionario.cargo.nombre : ''
                 }
             }),
             resources: account.rol.privileges.map(privilege => privilege.resource)
@@ -49,10 +54,15 @@ export class AuthService {
     }
 
     async checkAuthStatus(id_account: string) {
-        const account = await this.accountModel.findById(id_account, 'rol funcionario dependencia')
-            .populate('funcionario', 'nombre paterno materno cargo')
-            .populate('rol', 'privileges')
-            .populate('dependencia', 'codigo')
+        const account = await this.accountModel.findById(id_account)
+            .populate('rol')
+            .populate('dependencia')
+            .populate({
+                path: 'funcionario',
+                populate: {
+                    path: 'cargo'
+                }
+            })
         if (!account) throw new UnauthorizedException()
         const resources = account.rol.privileges.map(privilege => privilege.resource)
         if (resources.length === 0) throw new UnauthorizedException()
@@ -63,25 +73,63 @@ export class AuthService {
                     id_dependencie: '',
                     officer: {
                         fullname: 'ADMINISTRADOR',
-                        jobtitle: ''
+                        jobtitle: 'Configuraciones'
                     }
                 }),
                 menu: this.getMenu(resources),
                 resources
             }
+        if (!account.activo || !account.funcionario) throw new UnauthorizedException('La cuenta ha sido deshabilitada')
         return {
             token: this.getToken({
                 id_account: account._id,
                 id_dependencie: account.dependencia._id,
                 officer: {
                     fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
-                    jobtitle: ''
+                    jobtitle: account.funcionario.cargo ? account.funcionario.cargo.nombre : ''
                 }
             }),
             menu: this.getMenu(resources),
             code: account.dependencia.codigo,
             resources
         }
+    }
+    async getMyAuthDetails(id_account: string) {
+        return await this.accountModel.findById(id_account)
+            .populate({
+                path: 'funcionario',
+                populate: {
+                    path: 'cargo'
+                }
+            })
+            .populate({
+                path: 'dependencia',
+                select: 'nombre codigo',
+                populate: {
+                    path: 'institucion',
+                    select: 'nombre'
+                }
+            }).select('-password -rol')
+    }
+    async updateMyAccount(id_account: string, data: UpdateMyAccountDto) {
+        const { password } = data
+        const salt = bcrypt.genSaltSync();
+        const encryptedPassword = bcrypt.hashSync(password.toString(), salt);
+        return await this.accountModel.findByIdAndUpdate(id_account, { password: encryptedPassword }, { new: true })
+            .populate({
+                path: 'funcionario',
+                populate: {
+                    path: 'cargo'
+                }
+            })
+            .populate({
+                path: 'dependencia',
+                select: 'nombre codigo',
+                populate: {
+                    path: 'institucion',
+                    select: 'nombre'
+                }
+            }).select('-password -rol')
     }
 
     getToken(payload: JwtPayload) {

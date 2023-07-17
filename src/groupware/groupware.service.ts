@@ -1,11 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { CreateGroupwareDto } from './dto/create-groupware.dto';
 import { UpdateGroupwareDto } from './dto/update-groupware.dto';
+import { userSocket } from './interfaces/user-socket.interface';
 
 @Injectable()
 export class GroupwareService {
-  create(createGroupwareDto: CreateGroupwareDto) {
-    return 'This action adds a new groupware';
+  users: userSocket[] = []
+
+
+  addUser(id_socket: string, userSocket: userSocket) {
+    console.log(this.users);
+    const indexFound = this.users.findIndex(user => user.id_account == userSocket.id_account)
+    if (indexFound === -1) {
+      userSocket.socketIds.push(id_socket)
+      this.users.push(userSocket);
+    }
+    else {
+      this.users[indexFound].socketIds.push(id_socket)
+    }
+
   }
 
   findAll() {
