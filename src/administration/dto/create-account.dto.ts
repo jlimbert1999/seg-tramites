@@ -1,4 +1,4 @@
-import { IsAlphanumeric, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator"
+import { IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator"
 
 export class CreateAccountDto {
 
@@ -7,7 +7,6 @@ export class CreateAccountDto {
     login: string
 
     @IsNotEmpty()
-    @IsAlphanumeric()
     password: string
 
     @IsMongoId()

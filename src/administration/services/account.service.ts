@@ -71,6 +71,16 @@ export class AccountService {
                                 $expr: { $eq: ["$_id", "$$funcionarioId"] },
                             },
                         },
+                        {
+                            $lookup: {
+                                from: "cargos",
+                                localField: "cargo",
+                                foreignField: "_id",
+                                as: "cargo",
+                            },
+                        },
+
+
                     ],
                     as: "funcionario",
                 },
@@ -82,33 +92,32 @@ export class AccountService {
                 },
             },
             {
+                $unwind: {
+                    path: "$funcionario.cargo",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
                 $addFields: {
                     "funcionario.fullname": {
-                        $concat: [
-                            "$funcionario.nombre",
-                            " ",
-                            { $ifNull: ["$funcionario.paterno", ""] },
-                            " ",
-                            { $ifNull: ["$funcionario.materno", ""] },
-                        ],
+                        $cond: {
+                            if: { $eq: [{ $type: "$funcionario" }, "object"] },
+                            then: {
+                                $concat: [
+                                    "$funcionario.nombre",
+                                    " ",
+                                    { $ifNull: ["$funcionario.paterno", ""] },
+                                    " ",
+                                    { $ifNull: ["$funcionario.materno", ""] },
+                                ]
+                            },
+                            else: "$$REMOVE"
+                        }
                     },
                 }
             },
             {
                 $match: query
-            },
-            {
-                $lookup: {
-                    from: "cargos",
-                    localField: "funcionario.cargo",
-                    foreignField: "_id",
-                    as: "funcionario.cargo",
-                },
-            },
-            {
-                $unwind: {
-                    path: "$funcionario.cargo",
-                },
             },
             {
                 $facet: {
@@ -120,7 +129,7 @@ export class AccountService {
                     ]
                 }
             }
-        ]);
+        ])
         const accounts = data[0].paginatedResults
         const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0
         return { accounts, length }
@@ -203,7 +212,7 @@ export class AccountService {
         }
         if (account.password) {
             const salt = bcrypt.genSaltSync();
-            const encryptedPassword = bcrypt.hashSync(account.password, salt);
+            const encryptedPassword = bcrypt.hashSync(account.password.toString(), salt);
             account.password = encryptedPassword;
         }
         let updatedAccount = await this.accountModel.findByIdAndUpdate(id_account, account, { new: true })
