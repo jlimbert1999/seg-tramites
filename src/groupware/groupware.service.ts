@@ -9,7 +9,6 @@ export class GroupwareService {
 
 
   addUser(id_socket: string, userSocket: userSocket) {
-    console.log(this.users);
     const indexFound = this.users.findIndex(user => user.id_account == userSocket.id_account)
     if (indexFound === -1) {
       userSocket.socketIds.push(id_socket)
@@ -18,7 +17,6 @@ export class GroupwareService {
     else {
       this.users[indexFound].socketIds.push(id_socket)
     }
-
   }
 
   findAll() {

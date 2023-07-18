@@ -48,8 +48,6 @@ export class TypeProcedure extends Document {
     @Prop({ _id: false, type: mongoose.Types.Array })
     oldrequerimientos: Requirements[]
 
-    @Prop({ type: [String] })
-    requerimientos: string[]
 
 }
 export const TypeProcedureSchema = SchemaFactory.createForClass(TypeProcedure);
