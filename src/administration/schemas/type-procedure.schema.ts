@@ -45,8 +45,8 @@ export class TypeProcedure extends Document {
     })
     activo: boolean;
 
-    @Prop({ _id: false, type: mongoose.Types.Array })
-    oldrequerimientos: Requirements[]
+    @Prop({ type: mongoose.Types.Array, default: [] })
+    requerimientos: Requirements[]
 
 
 }

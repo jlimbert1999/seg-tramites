@@ -2,25 +2,45 @@ import { Injectable } from '@nestjs/common';
 import { CreateGroupwareDto } from './dto/create-groupware.dto';
 import { UpdateGroupwareDto } from './dto/update-groupware.dto';
 import { userSocket } from './interfaces/user-socket.interface';
+import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
+
 
 @Injectable()
 export class GroupwareService {
-  users: userSocket[] = []
+  users: userSocket[]
+  constructor() {
+    this.users = []
+  }
 
 
-  addUser(id_socket: string, userSocket: userSocket) {
-    const indexFound = this.users.findIndex(user => user.id_account == userSocket.id_account)
+  addUser(id_socket: string, payloadToken: JwtPayload) {
+    const indexFound = this.users.findIndex(user => user.id_account == payloadToken.id_account)
     if (indexFound === -1) {
-      userSocket.socketIds.push(id_socket)
-      this.users.push(userSocket);
+      const newUserSocket: userSocket = {
+        socketIds: [id_socket],
+        id_account: payloadToken.id_account,
+        id_dependency: payloadToken.id_dependencie,
+        officer: payloadToken.officer
+      }
+      this.users.push(newUserSocket);
     }
     else {
       this.users[indexFound].socketIds.push(id_socket)
     }
   }
 
-  findAll() {
-    return `This action returns all groupware`;
+  removeUser(id_socket: string, id_account: string) {
+    const indexFound = this.users.findIndex(acc => acc.id_account === id_account);
+    if (indexFound !== -1) {
+      const mySocketConections = this.users[indexFound].socketIds.filter(element => element !== id_socket)
+      this.users[indexFound].socketIds = mySocketConections
+      if (mySocketConections.length === 0) {
+        this.users = this.users.filter(user => user.id_account !== id_account)
+      }
+    }
+  }
+  getAll() {
+    return this.users
   }
 
   findOne(id: number) {

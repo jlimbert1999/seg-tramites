@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TypeProcedure } from '../schemas/type-procedure.schema';
@@ -27,7 +27,7 @@ export class TypeProcedureService {
     async search(limit: number, offset: number, text: string) {
         offset = offset * limit
         const regex = new RegExp(text, 'i')
-        const [roles, length] = await Promise.all(
+        const [typesProcedures, length] = await Promise.all(
             [
                 this.typeProcedureModel.find({ nombre: regex })
                     .skip(offset)
@@ -35,7 +35,7 @@ export class TypeProcedureService {
                 this.typeProcedureModel.count({ nombre: regex })
             ]
         )
-        return { roles, length }
+        return { typesProcedures, length }
     }
     async get(limit: number, offset: number) {
         offset = offset * limit
@@ -48,19 +48,6 @@ export class TypeProcedureService {
                 this.typeProcedureModel.count({})
             ]
         )
-        // update in mongodb db.tipos_tramites.updateMany({}, {$rename:{'requerimientos':'oldrequerimientos'}})
-        // const typeProcedure = await this.typeProcedureModel.find({})
-        // for (const type of typeProcedure) {
-        //     let requeriments = []
-        //     if (type.tipo === 'EXTERNO') {
-        //         requeriments = type.oldrequerimientos.map(el => el.nombre)
-        //         await this.typeProcedureModel.findByIdAndUpdate(type._id, { requerimientos: requeriments })
-
-        //     }
-        //     else {
-        //         await this.typeProcedureModel.findByIdAndUpdate(type._id, { requerimientos: [] })
-        //     }
-        // }
         return { typesProcedures, length }
     }
     async add(typeProcedure: CreateTypeProcedureDto) {
@@ -69,6 +56,11 @@ export class TypeProcedureService {
     }
     async edit(id_typeProcedure: string, typeProcedure: UpdateTypeProcedureDto) {
         return this.typeProcedureModel.findByIdAndUpdate(id_typeProcedure, typeProcedure, { new: true })
+    }
+    async delete(id_typeProcedure: string) {
+        const typeProcedureDB = await this.typeProcedureModel.findById(id_typeProcedure);
+        if (!typeProcedureDB) throw new BadRequestException('El tipo de tramite no existe')
+        return this.typeProcedureModel.findByIdAndUpdate(id_typeProcedure, { activo: !typeProcedureDB.activo }, { new: true })
     }
 
 }

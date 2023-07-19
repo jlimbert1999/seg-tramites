@@ -147,6 +147,13 @@ export class AuthService {
                             routerLink: "configuraciones/cuentas",
                         }
                     )
+                    menu.push(
+                        {
+                            text: "Grupo de trabajo",
+                            icon: "account_circle",
+                            routerLink: "configuraciones/groupware",
+                        }
+                    )
                     break;
                 case 'usuarios':
                     menu.push(
@@ -179,7 +186,7 @@ export class AuthService {
                                 },
                                 {
                                     text: "Organigrama",
-                                    icon: "badge",
+                                    icon: "schema",
                                     routerLink: "configuraciones/organigrama"
                                 },
                             ]

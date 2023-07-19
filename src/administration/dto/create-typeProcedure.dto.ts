@@ -1,10 +1,14 @@
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsString, ValidateNested } from "class-validator";
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
-class CreateRequirementDto {
+export class CreateRequirementDto {
     @IsNotEmpty()
     @IsString()
     nombre: string;
+
+    @IsBoolean()
+    @IsOptional()
+    activo: boolean
 }
 
 export class CreateTypeProcedureDto {

@@ -13,36 +13,31 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
   @WebSocketServer()
   server: Server;
 
-
   constructor(
     private readonly groupwareService: GroupwareService,
     private readonly jwtService: JwtService
   ) { }
-  handleConnection(client: Socket, ...args: any[]) {
+
+  handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth.token
       const decoded = this.jwtService.verify(token);
-      console.log(decoded);
+      client.handshake.auth['id_account'] = decoded.id_account
       this.groupwareService.addUser(client.id, decoded)
-      // next();
+      this.server.emit('listar', this.groupwareService.getAll())
     } catch (error) {
       client.disconnect()
     }
   }
   handleDisconnect(client: Socket) {
-    console.log(client.id);
+    this.groupwareService.removeUser(client.id, client.handshake.auth['id_account'])
   }
 
   @SubscribeMessage('createGroupware')
   create(@MessageBody() createGroupwareDto: CreateGroupwareDto) {
-    console.log(createGroupwareDto);
     // return this.groupwareService.create(createGroupwareDto);
   }
 
-  @SubscribeMessage('findAllGroupware')
-  findAll() {
-    return this.groupwareService.findAll();
-  }
 
   @SubscribeMessage('findOneGroupware')
   findOne(@MessageBody() id: number) {
