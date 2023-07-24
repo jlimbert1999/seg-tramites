@@ -63,4 +63,9 @@ export class TypeProcedureService {
         return this.typeProcedureModel.findByIdAndUpdate(id_typeProcedure, { activo: !typeProcedureDB.activo }, { new: true })
     }
 
+
+    async getTypeProceduresBySegments(segment: string) {
+        return await this.typeProcedureModel.find({ segmento: segment.toUpperCase() })
+    }
+
 }

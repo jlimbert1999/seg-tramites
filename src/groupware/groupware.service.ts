@@ -29,13 +29,13 @@ export class GroupwareService {
     }
   }
 
-  removeUser(id_socket: string, id_account: string) {
-    const indexFound = this.users.findIndex(acc => acc.id_account === id_account);
+  removeUser(id_socket: string) {
+    const indexFound = this.users.findIndex(acc => acc.socketIds.includes(id_socket));
     if (indexFound !== -1) {
       const mySocketConections = this.users[indexFound].socketIds.filter(element => element !== id_socket)
       this.users[indexFound].socketIds = mySocketConections
       if (mySocketConections.length === 0) {
-        this.users = this.users.filter(user => user.id_account !== id_account)
+        this.users = this.users.filter(user => user.id_account !== this.users[indexFound].id_account)
       }
     }
   }

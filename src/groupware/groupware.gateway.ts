@@ -1,9 +1,10 @@
 import { WebSocketGateway, SubscribeMessage, MessageBody, OnGatewayConnection, WebSocketServer, OnGatewayDisconnect } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
 import { GroupwareService } from './groupware.service';
 import { CreateGroupwareDto } from './dto/create-groupware.dto';
 import { UpdateGroupwareDto } from './dto/update-groupware.dto';
-import { Server, Socket } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
+
 
 @WebSocketGateway(
   { cors: true }
@@ -22,15 +23,16 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     try {
       const token = client.handshake.auth.token
       const decoded = this.jwtService.verify(token);
-      client.handshake.auth['id_account'] = decoded.id_account
       this.groupwareService.addUser(client.id, decoded)
       this.server.emit('listar', this.groupwareService.getAll())
     } catch (error) {
       client.disconnect()
+      return
     }
   }
   handleDisconnect(client: Socket) {
-    this.groupwareService.removeUser(client.id, client.handshake.auth['id_account'])
+    this.groupwareService.removeUser(client.id)
+    this.server.emit('listar', this.groupwareService.getAll())
   }
 
   @SubscribeMessage('createGroupware')
