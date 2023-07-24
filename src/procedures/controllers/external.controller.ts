@@ -1,9 +1,11 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ExternalService } from '../services/external.service';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ValidResources } from 'src/auth/interfaces/valid-resources.interface';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { TypeProcedureService } from 'src/administration/services/type-procedure.service';
+import { CreateExternalProcedureDto } from '../dto/external.dto';
+import { Account } from 'src/administration/schemas';
 
 @Controller('external')
 @Auth(ValidResources.EXTERNOS)
@@ -33,6 +35,13 @@ export class ExternalController {
     ) {
 
         return await this.externalService.findAll(limit, offset, id_account)
+    }
+    @Post()
+    async add(
+        @GetUser() account: Account,
+        @Body() procedure: CreateExternalProcedureDto
+    ) {
+        return await this.externalService.create(procedure, account)
     }
 
 

@@ -13,6 +13,11 @@ export class TypeProcedureService {
     async getSegmentsOfTypesProcedures() {
         return await this.typeProcedureModel.aggregate([
             {
+                $match: {
+                    activo: true
+                }
+            },
+            {
                 $group: {
                     _id: "$segmento"
                 }
@@ -65,7 +70,7 @@ export class TypeProcedureService {
 
 
     async getTypeProceduresBySegments(segment: string) {
-        return await this.typeProcedureModel.find({ segmento: segment.toUpperCase() })
+        return await this.typeProcedureModel.find({ segmento: segment.toUpperCase(), activo: true })
     }
 
 }

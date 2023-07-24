@@ -1,5 +1,4 @@
 import { UseGuards, applyDecorators } from '@nestjs/common';
-
 import { AuthGuard } from '@nestjs/passport';
 import { RoleProtected } from './rol-protected.decorator';
 import { ValidResources } from '../interfaces/valid-resources.interface';

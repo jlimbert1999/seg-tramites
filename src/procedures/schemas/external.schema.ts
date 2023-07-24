@@ -9,7 +9,9 @@ enum StateProcedure {
     CONCLUIDO = 'CONCLUIDO',
     ANULADO = 'ANULADO',
 }
-class Applicant {
+
+@Schema({ _id: false })
+class Applicant extends Document {
     @Prop({
         type: String,
         required: true,
@@ -48,9 +50,15 @@ class Applicant {
         required: true,
     })
     tipo: string;
+
+    @Prop({
+        type: String
+    })
+    documento: string;
 }
 
-class Representative {
+@Schema({ _id: false })
+class Representative extends Document {
     @Prop({
         type: String,
         required: true,
@@ -86,11 +94,10 @@ class Representative {
     dni: string;
 
     @Prop({
-        type: String,
-        enum: ['JURIDICO', 'NATURAL'],
-        required: true,
+        type: String
     })
-    tipo: string;
+    documento: string;
+
 }
 const ApplicantSchema = SchemaFactory.createForClass(Applicant);
 const RepresentativeSchema = SchemaFactory.createForClass(Representative);

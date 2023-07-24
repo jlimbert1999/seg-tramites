@@ -18,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     async validate(payload: JwtPayload): Promise<Account> {
         const { id_account } = payload
-        const account = await this.accountModel.findById(id_account).select('funcionario activo rol')
+        const account = await this.accountModel.findById(id_account).select('-password')
             .populate('rol')
         if (!account) throw new UnauthorizedException('Token invalido, vuelva a iniciar sesion')
         if (account.rol.privileges.length === 0) throw new UnauthorizedException('Esta cuenta no tiene ningun permiso asignado')
