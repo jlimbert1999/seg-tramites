@@ -3,7 +3,6 @@ import { IsOptional, IsDefined, IsNotEmptyObject, IsObject, ValidateNested, IsSt
 import { RepresentativeDto, ApplicantDto } from "./create-external.dto"
 
 export class UpdateExternalProcedureDto {
-   
 
     @IsOptional()
     @IsDefined()

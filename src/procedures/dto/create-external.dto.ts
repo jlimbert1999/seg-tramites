@@ -50,10 +50,6 @@ export class RepresentativeDto {
 
     @IsString()
     @IsNotEmpty()
-    tipo: string;
-
-    @IsString()
-    @IsNotEmpty()
     documento?: string;
 }
 export class CreateExternalProcedureDto {

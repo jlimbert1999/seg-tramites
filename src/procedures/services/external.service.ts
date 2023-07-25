@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ExternalProcedure } from '../schemas/external.schema';
 import { Model } from 'mongoose';
+import { ExternalProcedure } from '../schemas/external.schema';
 import { CreateExternalProcedureDto } from '../dto/create-external.dto';
 import { Account, Dependency } from 'src/administration/schemas';
 import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
 import { UpdateExternalProcedureDto } from '../dto/update-external.dto';
+import { Observation, groupProcedure } from '../schemas/observations.schema';
 
 @Injectable()
 export class ExternalService {
@@ -13,6 +14,7 @@ export class ExternalService {
         @InjectModel(ExternalProcedure.name) private externalProcedureModel: Model<ExternalProcedure>,
         @InjectModel(TypeProcedure.name) private typeProcedure: Model<TypeProcedure>,
         @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
+        @InjectModel(Observation.name) private observationModel: Model<Observation>,
     ) {
     }
 
@@ -38,6 +40,22 @@ export class ExternalService {
 
     async update(id_procedure: string, procedure: UpdateExternalProcedureDto) {
         return this.externalProcedureModel.findByIdAndUpdate(id_procedure, procedure, { new: true }).populate('tipo_tramite')
+    }
+
+    async getAllDataProcedure(id_procedure: string) {
+        const procedure = await this.externalProcedureModel.findById(id_procedure)
+            .populate('tipo_tramite', 'nombre')
+            .populate({
+                path: 'cuenta',
+                select: '_id',
+                populate: {
+                    path: 'funcionario',
+                    select: 'nombre paterno materno cargo',
+                }
+            })
+        if (!procedure) throw new BadRequestException('El tramite no existe')
+        const observations = await this.observationModel.find({ group: groupProcedure.tramites_externos, procedure: id_procedure })
+        return { procedure, observations }
     }
 
     async generateAlterno(account: Account, id_typeProcedure: string) {
