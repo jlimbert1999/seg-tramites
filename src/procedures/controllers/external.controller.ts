@@ -7,7 +7,7 @@ import { TypeProcedureService } from 'src/administration/services/type-procedure
 import { Account } from 'src/administration/schemas';
 import { CreateExternalProcedureDto } from '../dto/create-external.dto';
 import { UpdateExternalProcedureDto } from '../dto/update-external.dto';
-import { OutService } from 'src/shipping/services/out.service';
+import { OutboxService } from '../services';
 
 @Controller('external')
 @Auth(ValidResources.EXTERNOS)
@@ -15,7 +15,7 @@ export class ExternalController {
     constructor(
         private readonly externalService: ExternalService,
         private readonly typeProcedure: TypeProcedureService,
-        private outService: OutService
+        private readonly outboxService: OutboxService
     ) {
     }
 
@@ -31,6 +31,14 @@ export class ExternalController {
         return await this.typeProcedure.getTypeProceduresBySegments(segment)
     }
 
+    @Get('search/:text')
+    async search(
+        @GetUser('_id') id_account: string,
+        @Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number,
+        @Param('text') text: string
+    ) {
+        return await this.externalService.search(limit, offset, id_account, text)
+    }
     @Get()
     async get(
         @GetUser('_id') id_account: string,
@@ -39,6 +47,7 @@ export class ExternalController {
 
         return await this.externalService.findAll(limit, offset, id_account)
     }
+
     @Post()
     async add(
         @GetUser() account: Account,
@@ -56,12 +65,17 @@ export class ExternalController {
     }
 
 
-    @Put('/:id_procedure')
+    @Get('/:id_procedure')
     async getOne(
-        @Param('id_procedure') id_procedure: string,
-        @Body() procedure: UpdateExternalProcedureDto
+        @Param('id_procedure') id_procedure: string
     ) {
-        // return await this.externalService.getAllDataProcedure(id_procedure, procedure)
+        const { procedure, observations } = await this.externalService.getAllDataProcedure(id_procedure)
+        const workflow = await this.outboxService.getWorkflow(id_procedure)
+        return {
+            procedure,
+            observations,
+            workflow
+        }
     }
 
 }

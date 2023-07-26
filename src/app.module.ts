@@ -6,7 +6,6 @@ import { AuthModule } from './auth/auth.module';
 import { AdministrationModule } from './administration/administration.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { ProceduresModule } from './procedures/procedures.module';
-import { ShippingModule } from './shipping/shipping.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { ShippingModule } from './shipping/shipping.module';
     AdministrationModule,
     GroupwareModule,
     ProceduresModule,
-    ShippingModule
   ],
   controllers: [AppController],
   providers: [AppService],

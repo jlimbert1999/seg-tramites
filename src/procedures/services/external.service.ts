@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { ExternalProcedure } from '../schemas/external.schema';
 import { CreateExternalProcedureDto } from '../dto/create-external.dto';
 import { Account, Dependency } from 'src/administration/schemas';
@@ -18,13 +18,84 @@ export class ExternalService {
     ) {
     }
 
+    async search(limit: number, offset: number, id_account: string, text: string) {
+        const regex = new RegExp(text, 'i')
+        const data = await this.externalProcedureModel.aggregate([
+            {
+                $match: {
+                    cuenta: new mongoose.Types.ObjectId(id_account),
+                    estado: { $ne: 'ANULADO' },
+                },
+            },
+            {
+                $addFields: {
+                    "solicitante.fullname": {
+                        $concat: [
+                            "$solicitante.nombre",
+                            " ",
+                            { $ifNull: ["$solicitante.paterno", ""] },
+                            " ",
+                            { $ifNull: ["$solicitante.materno", ""] },
+                        ],
+                    },
+                },
+            },
+            {
+                $match: {
+                    $or: [
+                        { "solicitante.fullname": regex },
+                        { alterno: regex },
+                        { detalle: regex }
+                    ],
+                },
+            },
+            {
+                $lookup: {
+                    from: 'tipos_tramites',
+                    localField: "tipo_tramite",
+                    foreignField: "_id",
+                    as: "tipo_tramite"
+                }
+            },
+            {
+                $unwind: {
+                    path: '$tipo_tramite'
+                }
+            },
+            {
+                $project: {
+                    "solicitante.fullname": 0,
+                    'requerimientos': 0,
+                    "tipo_tramite.requerimientos": 0,
+                    "tipo_tramite.segmento": 0,
+                    "tipo_tramite.tipo": 0,
+                    "tipo_tramite.activo": 0,
+                }
+            },
+            {
+                $facet: {
+                    paginatedResults: [{ $skip: offset }, { $limit: limit }],
+                    totalCount: [
+                        {
+                            $count: 'count'
+                        }
+                    ]
+                }
+            }
+        ]);
+        const procedures = data[0].paginatedResults
+        const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0
+        return { procedures, length }
+
+    }
     async findAll(limit: number, offset: number, id_account: string) {
         const [procedures, total] = await Promise.all([
             await this.externalProcedureModel.find({ cuenta: id_account, estado: { $ne: 'ANULADO' } })
+                .select('-requerimientos')
                 .sort({ _id: -1 })
                 .skip(offset)
                 .limit(limit)
-                .populate('tipo_tramite'),
+                .populate('tipo_tramite', 'nombre'),
             await this.externalProcedureModel.count({ cuenta: id_account, estado: { $ne: 'ANULADO' } })
         ])
         return { procedures, total }
@@ -34,7 +105,7 @@ export class ExternalService {
         const alterno = await this.generateAlterno(acccount, procedure.tipo_tramite)
         const createdProcedure = new this.externalProcedureModel({ alterno, cuenta: acccount._id, ...procedure })
         await createdProcedure.save()
-        await createdProcedure.populate('tipo_tramite')
+        await createdProcedure.populate('tipo_tramite', 'nombre')
         return createdProcedure
     }
 

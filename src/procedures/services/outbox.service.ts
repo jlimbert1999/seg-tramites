@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Out } from '../schemas/out.schema';
 import { Model } from 'mongoose';
+import { Outbox } from '../schemas';
 
 @Injectable()
-export class OutService {
+export class OutboxService {
     constructor(
-        @InjectModel(Out.name) private outModel: Model<Out>,
-    ) {
-
-    }
-    async getWorkflowProcedure(id_procedure: string) {
+        @InjectModel(Outbox.name) private outModel: Model<Outbox>,
+    ) { }
+    
+    async getWorkflow(id_procedure: string) {
         return await this.outModel.find({ tramite: id_procedure }).select('-_id -__v')
             .populate({
                 path: 'emisor.cuenta',

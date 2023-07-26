@@ -3,9 +3,8 @@ import mongoose, { Document } from 'mongoose';
 import { Account, Officer } from 'src/administration/schemas';
 import { ExternalProcedure } from 'src/procedures/schemas/external.schema';
 
-
-@Schema({ collection: 'bandeja_entradas' })
-export class In extends Document {
+@Schema({ collection: 'bandeja_salidas' })
+export class Outbox extends Document {
     @Prop({
         type: {
             cuenta: {
@@ -22,6 +21,7 @@ export class In extends Document {
         cuenta: Account,
         funcionario: Officer
     };
+
     @Prop({
         type: {
             cuenta: {
@@ -67,15 +67,30 @@ export class In extends Document {
 
     @Prop({
         type: Date,
-        required: true,
+        required: true
     })
     fecha_envio: Date
+
+    @Prop({
+        type: Date
+    })
+    fecha_recibido: Date
 
     @Prop({
         type: Boolean
     })
     recibido: boolean
 
+    @Prop({
+        type: String
+    })
+    motivo_rechazo: string
+
+    @Prop({
+        type: String
+    })
+    numero_interno: string
+
 }
 
-export const InSchema = SchemaFactory.createForClass(In);
+export const OutboxSchema = SchemaFactory.createForClass(Outbox);
