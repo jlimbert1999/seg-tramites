@@ -3,41 +3,47 @@ import mongoose, { Document } from 'mongoose';
 import { Account, Officer } from 'src/administration/schemas';
 import { ExternalProcedure } from './external.schema';
 
+@Schema({ _id: false })
+export class Participant extends Document {
+    @Prop({
+        type: mongoose.Schema.Types.ObjectId,
+        ref: Account.name,
+        required: true
+    })
+    cuenta: Account
+
+    @Prop({
+        type: mongoose.Schema.Types.ObjectId,
+        ref: Officer.name,
+    })
+    funcionario: Officer
+
+    @Prop({
+        type: String,
+        required: true
+    })
+    fullname: string
+
+    @Prop({
+        type: String
+    })
+    jobtitle: string
+}
+export const ParticipantSchema = SchemaFactory.createForClass(Participant);
 
 @Schema({ collection: 'bandeja_entradas' })
 export class Imbox extends Document {
     @Prop({
-        type: {
-            cuenta: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Account.name,
-            },
-            funcionario: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Officer.name,
-            },
-        }
+        type: ParticipantSchema,
+        required: true
     })
-    emisor: {
-        cuenta: Account,
-        funcionario: Officer
-    };
+    emisor: Participant
+
     @Prop({
-        type: {
-            cuenta: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Account.name,
-            },
-            funcionario: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Officer.name,
-            },
-        }
+        type: ParticipantSchema,
+        required: true
     })
-    receptor: {
-        cuenta: Account,
-        funcionario: Officer
-    };
+    receptor: Participant
 
     @Prop({
         type: mongoose.Schema.Types.ObjectId,

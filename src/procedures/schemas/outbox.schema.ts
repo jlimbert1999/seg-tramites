@@ -2,42 +2,22 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Account, Officer } from 'src/administration/schemas';
 import { ExternalProcedure } from 'src/procedures/schemas/external.schema';
+import { Participant, ParticipantSchema } from './imbox.schema';
+
 
 @Schema({ collection: 'bandeja_salidas' })
 export class Outbox extends Document {
     @Prop({
-        type: {
-            cuenta: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Account.name,
-            },
-            funcionario: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Officer.name,
-            },
-        }
+        type: ParticipantSchema,
+        required: true
     })
-    emisor: {
-        cuenta: Account,
-        funcionario: Officer
-    };
+    emisor: Participant
 
     @Prop({
-        type: {
-            cuenta: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Account.name,
-            },
-            funcionario: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: Officer.name,
-            },
-        }
+        type: ParticipantSchema,
+        required: true
     })
-    receptor: {
-        cuenta: Account,
-        funcionario: Officer
-    };
+    receptor: Participant
 
     @Prop({
         type: mongoose.Schema.Types.ObjectId,

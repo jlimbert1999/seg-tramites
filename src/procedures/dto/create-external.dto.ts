@@ -1,6 +1,5 @@
-import { Prop } from "@nestjs/mongoose";
 import { Type } from "class-transformer";
-import { IsArray, IsDefined, IsEnum, IsNotEmpty, IsNotEmptyObject, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator"
+import { IsArray, IsDefined, IsNotEmpty, IsNotEmptyObject, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator"
 
 
 export class ApplicantDto {
@@ -87,7 +86,6 @@ export class CreateExternalProcedureDto {
     @IsString({ each: true })
     requerimientos: string[]
 
-    @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     cite: string
 }

@@ -167,7 +167,7 @@ export class ExternalProcedure extends Document {
     @Prop({ type: Date })
     fecha_finalizacion: Date
 
-    @Prop({ type: String })
+    @Prop({ type: String, default: '' })
     cite: string
 }
 
