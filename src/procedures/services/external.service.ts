@@ -20,6 +20,7 @@ export class ExternalService {
 
     async search(limit: number, offset: number, id_account: string, text: string) {
         const regex = new RegExp(text, 'i')
+        offset = offset * limit
         const data = await this.externalProcedureModel.aggregate([
             {
                 $match: {
@@ -89,6 +90,7 @@ export class ExternalService {
 
     }
     async findAll(limit: number, offset: number, id_account: string) {
+        offset = offset * limit
         const [procedures, total] = await Promise.all([
             await this.externalProcedureModel.find({ cuenta: id_account, estado: { $ne: 'ANULADO' } })
                 .select('-requerimientos')

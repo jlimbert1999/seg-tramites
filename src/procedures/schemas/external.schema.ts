@@ -169,6 +169,9 @@ export class ExternalProcedure extends Document {
 
     @Prop({ type: String, default: '' })
     cite: string
+
+    @Prop({ type: Boolean, default: false })
+    enviado: boolean
 }
 
 export const ExternalProcedureSchema = SchemaFactory.createForClass(ExternalProcedure);

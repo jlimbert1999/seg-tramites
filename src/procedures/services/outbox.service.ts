@@ -55,8 +55,6 @@ export class OutboxService {
             console.log(element);
         });
         const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0
-
-
         // const mails = await this.outboxModel.find({})
         // for (const mail of mails) {
         //     const participant = {}
