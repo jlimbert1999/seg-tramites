@@ -92,6 +92,7 @@ export class OutboxService {
                     "tramite": new mongoose.Types.ObjectId(id_procedure)
                 }
             },
+
             {
                 $group: {
                     _id: {
@@ -102,8 +103,15 @@ export class OutboxService {
                     sendings: { $push: "$$ROOT" }
                 }
             },
+            {
+                $sort: {
+                    '_id.fecha_envio': 1
+                }
+            },
+
         ])
         for (const item of workflow) {
+            console.log(item);
             await this.accountModel.populate(item['sendings'], [
                 {
                     path: 'emisor.cuenta',
