@@ -51,6 +51,7 @@ export class RepresentativeDto {
     @IsNotEmpty()
     documento?: string;
 }
+
 export class CreateExternalProcedureDto {
     @IsString()
     @IsNotEmpty()

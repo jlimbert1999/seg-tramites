@@ -28,6 +28,5 @@ export class UpdateExternalProcedureDto {
     cantidad: string
 
     @IsString()
-    @IsNotEmpty()
     cite: string
 }

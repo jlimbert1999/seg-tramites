@@ -124,6 +124,10 @@ export class ExternalService {
                 populate: {
                     path: 'funcionario',
                     select: 'nombre paterno materno cargo',
+                    populate: {
+                        path: 'cargo',
+                        select: 'nombre'
+                    }
                 }
             })
         if (!procedure) throw new BadRequestException('El tramite no existe')
