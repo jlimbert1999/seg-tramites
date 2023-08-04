@@ -72,5 +72,9 @@ export class TypeProcedureService {
     async getTypeProceduresBySegments(segment: string) {
         return await this.typeProcedureModel.find({ segmento: segment.toUpperCase(), activo: true })
     }
+    
+    async getTypesProceduresByGroup(group: 'INTERNO' | 'EXTERNO') {
+        return await this.typeProcedureModel.find({ activo: true, tipo: group })
+    }
 
 }

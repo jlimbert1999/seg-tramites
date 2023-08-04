@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Account, Officer } from 'src/administration/schemas';
 import { ExternalProcedure } from 'src/procedures/schemas/external.schema';
 import { Participant, ParticipantSchema } from './imbox.schema';
+import { InternalProcedure } from './internal.schema';
 
 
 @Schema({ collection: 'bandeja_salidas' })
@@ -23,8 +23,7 @@ export class Outbox extends Document {
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'group',
     })
-    // todo add the secod reference internal
-    tramite: ExternalProcedure
+    tramite: ExternalProcedure | InternalProcedure
 
     @Prop({
         required: true,

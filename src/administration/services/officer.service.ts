@@ -171,6 +171,54 @@ export class OfficerService {
         return await this.officerModel.populate(officers, { path: 'cargo' })
     }
 
+    async findOfficerForProcess(text: string) {
+        const regex = new RegExp(text, 'i')
+        return await this.officerModel.aggregate([
+            {
+                $match: {
+                    activo: true,
+                }
+            },
+            {
+                $lookup: {
+                    from: 'cargos',
+                    localField: "cargo",
+                    foreignField: "_id",
+                    as: "cargo"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$cargo",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    "fullname": {
+                        $concat: [
+                            "$nombre",
+                            " ",
+                            { $ifNull: ["$paterno", ""] },
+                            " ",
+                            { $ifNull: ["$materno", ""] },
+                        ],
+                    },
+                },
+            },
+            {
+                $match: {
+                    $or: [
+                        { 'fullname': regex },
+                        { 'cargo.nombre': regex }
+                    ]
+                }
+            },
+            { $limit: 5 }
+        ]);
+    }
+
+
     async markOfficerWithAccount(id_officer: string, hasAccount: boolean) {
         return await this.officerModel.findByIdAndUpdate(id_officer, { cuenta: hasAccount })
     }

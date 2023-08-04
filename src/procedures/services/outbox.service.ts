@@ -118,7 +118,7 @@ export class OutboxService {
                         select: 'nombre',
                         populate: {
                             path: 'institucion',
-                            select: 'nombre'
+                            select: 'nombre sigla'
                         }
                     }
                 },
@@ -130,7 +130,7 @@ export class OutboxService {
                         select: 'nombre',
                         populate: {
                             path: 'institucion',
-                            select: 'nombre'
+                            select: 'nombre sigla'
                         }
                     }
                 }

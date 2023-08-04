@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { ExternalProcedure } from './external.schema';
 import { Account, Officer } from 'src/administration/schemas';
+import { InternalProcedure } from './internal.schema';
 export enum groupProcedure {
     tramites_externos = 'tramites_externos',
     tramites_internos = 'tramites_internos'
@@ -13,8 +14,7 @@ export class Observation extends Document {
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'group',
     })
-    // todo add the secod reference internal
-    procedure: ExternalProcedure
+    procedure: ExternalProcedure | InternalProcedure
 
     @Prop({
         required: true,
