@@ -49,6 +49,11 @@ export class Officer extends Document {
     cargo?: Job
 
     @Prop({
+        type: String
+    })
+    oldcargo: string
+
+    @Prop({
         type: Boolean,
         default: true
     })

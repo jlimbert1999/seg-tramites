@@ -47,7 +47,7 @@ export class InternalProcedure extends Document {
         type: PersonSchema,
         required: true
     })
-    remitante: Person
+    remitente: Person
 
     @Prop({
         type: PersonSchema,

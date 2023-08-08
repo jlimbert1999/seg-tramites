@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Imbox } from '../schemas';
+import { Imbox, Outbox } from '../schemas';
 import { Model } from 'mongoose';
 import { Account, Officer } from 'src/administration/schemas';
 
@@ -8,6 +8,7 @@ import { Account, Officer } from 'src/administration/schemas';
 export class ImboxService {
     constructor(
         @InjectModel(Imbox.name) private imboxModel: Model<Imbox>,
+        @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
         @InjectModel(Officer.name) private officer: Model<Officer>,
         @InjectModel(Account.name) private accountModel: Model<Account>
     ) {
@@ -29,16 +30,16 @@ export class ImboxService {
                 }),
             this.imboxModel.count({ 'receptor.cuenta': id_account }),
         ]);
-        // const mails = await this.imboxModel.find({})
+        // const mails = await this.outboxModel.find({})
         // for (const mail of mails) {
         //     const participant = {}
-        //     if (!mail.emisor.funcionario) {
-        //         await this.imboxModel.populate(mail, { path: 'emisor.cuenta' })
-        //         if (!mail.emisor.cuenta.funcionario) {
+        //     if (!mail.receptor.funcionario) {
+        //         await this.outboxModel.populate(mail, { path: 'receptor.cuenta' })
+        //         if (!mail.receptor.cuenta.funcionario) {
         //             participant['fullname'] = 'NO DESIGNADO'
         //         }
         //         else {
-        //             const officer = await this.officer.findById(mail.emisor.cuenta.funcionario._id).populate('cargo', 'nombre')
+        //             const officer = await this.officer.findById(mail.receptor.cuenta.funcionario._id).populate('cargo', 'nombre paterno materno')
         //             participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(" ")
         //             if (officer.cargo) {
         //                 participant['jobtitle'] = officer.cargo.nombre
@@ -46,16 +47,16 @@ export class ImboxService {
         //         }
         //     }
         //     else {
-        //         const officer = await this.officer.findById(mail.emisor.funcionario._id).populate('cargo', 'nombre')
+        //         const officer = await this.officer.findById(mail.receptor.funcionario._id).populate('cargo', 'nombre paterno materno')
         //         participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(" ")
         //         if (officer.cargo) {
         //             participant['jobtitle'] = officer.cargo.nombre
         //         }
         //     }
-        //     await this.imboxModel.findByIdAndUpdate(mail._id, { emisor: { cuenta: mail.emisor.cuenta._id, ...participant } })
+        //     await this.outboxModel.findByIdAndUpdate(mail._id, { receptor: { cuenta: mail.receptor.cuenta._id, ...participant } })
         //     console.log('ok');
         // }
         // console.log('end');
-        return { mails: [], length: 0 }
+        return { mails, length }
     }
 }

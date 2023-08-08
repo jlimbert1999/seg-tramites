@@ -89,6 +89,12 @@ export class OfficerService {
                 this.officerModel.count()
             ]
         )
+        // const officers = await this.officerModel.find({})
+        // for (const officer of officers) {
+        //     const newjob = await this.jobModel.create({ nombre: officer.oldcargo })
+        //     await this.officerModel.findByIdAndUpdate(officer._id, { cargo: newjob._id })
+        // }
+        // console.log('end');
         return { officers, length }
     }
 
