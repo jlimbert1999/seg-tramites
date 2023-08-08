@@ -4,8 +4,9 @@ import { AuthModule } from 'src/auth/auth.module';
 import { AdministrationModule } from 'src/administration/administration.module';
 import { InternalController, ExternalController, ImboxController, OutboxController } from './controllers/index'
 import { ExternalService, InternalService, ImboxService, OutboxService } from './services/index';
-import { ExternalProcedure, ExternalProcedureSchema, Observation, ObservationSchema, Imbox, ImboxSchema, Outbox, OutboxSchema, InternalProcedureSchema, InternalProcedure } from './schemas/index';
-
+import { ExternalProcedure, ExternalProcedureSchema, Observation, ObservationSchema, InternalProcedureSchema, InternalProcedure } from './schemas/index';
+import { Imbox, ImboxSchema } from './schemas/imbox.schema';
+import { Outbox, OutboxSchema } from './schemas/outbox.schema';
 
 @Module({
   imports: [

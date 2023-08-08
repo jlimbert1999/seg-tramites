@@ -11,7 +11,7 @@ export class ImboxController {
 
     }
     @Get()
-    async getSegmentsOfTypesProcedures(
+    async get(
         @GetUser('_id') id_account: string,
         @Query('offset', ParseIntPipe) offset: number,
         @Query('limit', ParseIntPipe) limit: number,

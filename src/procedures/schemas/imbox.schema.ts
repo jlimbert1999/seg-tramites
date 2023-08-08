@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Account, Officer } from 'src/administration/schemas';
 import { ExternalProcedure } from './external.schema';
+import { InternalProcedure } from './internal.schema';
 
 @Schema({ _id: false })
 export class Participant extends Document {
@@ -47,17 +48,17 @@ export class Imbox extends Document {
 
     @Prop({
         type: mongoose.Schema.Types.ObjectId,
-        refPath: 'group',
+        required: true,
+       
     })
-    // todo add the secod reference internal
     tramite: ExternalProcedure
 
     @Prop({
-        required: true,
         type: String,
-        enum: ['tramites_internos', 'tramites_externos'],
+        required: true,
+        enum: [ExternalProcedure.name, InternalProcedure.name],
     })
-    tipo: 'tramites_internos' | 'tramites_externos'
+    tipo: any
 
     @Prop({
         type: String,
