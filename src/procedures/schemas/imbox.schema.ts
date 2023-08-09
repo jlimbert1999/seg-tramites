@@ -47,18 +47,20 @@ export class Imbox extends Document {
     receptor: Participant
 
     @Prop({
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-       
-    })
-    tramite: ExternalProcedure
-
-    @Prop({
         type: String,
         required: true,
         enum: [ExternalProcedure.name, InternalProcedure.name],
     })
-    tipo: any
+    tipo: 'ExternalProcedure' | 'InternalProcedure'
+
+
+    @Prop({
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: "tipo"
+    })
+    tramite: InternalProcedure | ExternalProcedure
+
 
     @Prop({
         type: String,

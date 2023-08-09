@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InternalProcedure, Observation, groupProcedure } from '../schemas';
+import { Observation, groupProcedure } from '../schemas';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateInternalProcedureDto } from '../dto/create-internal.dto';
 import { Account, Dependency } from 'src/administration/schemas';
 import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
 import { UpdateInternalProcedureDto } from '../dto/update-internal.dto';
+import { InternalProcedure } from '../schemas/internal.schema';
 
 @Injectable()
 export class InternalService {

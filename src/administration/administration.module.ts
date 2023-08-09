@@ -63,6 +63,6 @@ import { JobChanges, JobChangesSchema } from './schemas/jobChanges.schema';
     ]),
     AuthModule
   ],
-  exports: [MongooseModule, TypeProcedureService, OfficerService, TypeProcedureService]
+  exports: [MongooseModule, TypeProcedureService, OfficerService, TypeProcedureService, InstitutionService, DependencieService]
 })
 export class AdministrationModule { }
