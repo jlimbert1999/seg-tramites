@@ -67,8 +67,7 @@ export class DependencieService {
         return newDependency.activo
     };
 
-
-    async getActiveDependenciesOfInstitution(id_institution) {
+    async getActiveDependenciesOfInstitution(id_institution: string) {
         return await this.dependencyModel.find({ institucion: id_institution, activo: true })
     }
 }

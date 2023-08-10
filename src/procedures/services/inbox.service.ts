@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Imbox } from '../schemas/index';
 import { Model } from 'mongoose';
-import { Account } from 'src/administration/schemas';
+import { Account, Officer } from 'src/administration/schemas';
 import { InboxDto } from '../dto/create-inbox.dto';
 
 @Injectable()
@@ -38,8 +38,28 @@ export class InboxService {
             })
     }
 
-    async create(inbox: InboxDto, acccount: Account) {
+    async create(inbox: InboxDto, account: Account) {
         const { receivers, ...value } = inbox
-        const vale
+        // const emitter = account.funcionario.cargo ? {
+        //     cuenta: account._id,
+        //     fullname: this.createFullName(account.funcionario),
+        //     jobtitle: account.funcionario.cargo
+        // }
+
+        // const fecha_registro = new Date()
+        // const sends = receivers.map(receiver => {
+        //     return {
+        //         ...value,
+        //         fecha_registro,
+        //         emisor: {
+        //             cuenta: account._id,
+        //             fullname: account.funcionario.nombre,
+        //         }
+        //     }
+        // })
+
+    }
+    createFullName(officer: Officer): string {
+        return [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(" ");
     }
 }

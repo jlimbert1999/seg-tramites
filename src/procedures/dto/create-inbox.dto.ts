@@ -3,7 +3,7 @@ import { ArrayMinSize, IsArray, IsIn, IsMongoId, IsNotEmpty, IsOptional, IsStrin
 import { procedureGroup } from "../interfaces/group.interface";
 
 
-class ReceriverDto {
+class ReceiverDto {
     @IsMongoId()
     cuenta: string;
 
@@ -35,8 +35,8 @@ export class InboxDto {
     @IsArray()
     @ValidateNested({ each: true })
     @ArrayMinSize(1)
-    @Type(() => ReceriverDto)
-    receivers: ReceriverDto[]
+    @Type(() => ReceiverDto)
+    receivers: ReceiverDto[]
 
     @IsString()
     @IsOptional()

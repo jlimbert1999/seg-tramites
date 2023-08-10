@@ -28,7 +28,7 @@ export class Participant extends Document {
     @Prop({
         type: String
     })
-    jobtitle: string
+    jobtitle?: string
 }
 export const ParticipantSchema = SchemaFactory.createForClass(Participant);
 
@@ -52,7 +52,6 @@ export class Imbox extends Document {
         enum: [ExternalProcedure.name, InternalProcedure.name],
     })
     tipo: 'ExternalProcedure' | 'InternalProcedure'
-
 
     @Prop({
         type: mongoose.Schema.Types.ObjectId,
