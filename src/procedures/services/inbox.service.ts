@@ -2,13 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Imbox } from '../schemas/index';
 import { Model } from 'mongoose';
-import { Account, Officer } from 'src/administration/schemas';
-import { InboxDto } from '../dto/create-inbox.dto';
+import { Account } from 'src/administration/schemas';
+import { CreateInboxDto } from '../dto/create-inbox.dto';
+import { createFullName } from 'src/administration/helpers/fullname';
 
 @Injectable()
 export class InboxService {
     constructor(
-        @InjectModel(Imbox.name) private imboxModel: Model<Imbox>,
+        @InjectModel(Imbox.name) private inboxModel: Model<Imbox>,
         @InjectModel(Account.name) private accountModel: Model<Account>
     ) {
 
@@ -16,18 +17,23 @@ export class InboxService {
     async getAll(id_account: string, limit: number, offset: number) {
         offset = offset * limit
         const [mails, length] = await Promise.all([
-            this.imboxModel.find({ 'receptor.cuenta': id_account })
+            this.inboxModel.find({ 'receptor.cuenta': id_account })
                 .sort({ fecha_envio: -1 })
                 .skip(offset)
                 .limit(limit)
                 .populate('tramite', 'alterno detalle estado'),
-            this.imboxModel.count({ 'receptor.cuenta': id_account }),
+            this.inboxModel.count({ 'receptor.cuenta': id_account }),
         ]);
         return { mails, length }
     }
 
-    async getAccountForSend(id_dependencie: string) {
-        return await this.accountModel.find({ dependencia: id_dependencie, activo: true, funcionario: { $ne: null } })
+    async getAccountForSend(id_dependencie: string, id_account: string) {
+        return await this.accountModel.find({
+            dependencia: id_dependencie,
+            activo: true,
+            funcionario: { $ne: null },
+            _id: { $ne: id_account }
+        })
             .select('_id')
             .populate({
                 path: 'funcionario',
@@ -38,28 +44,51 @@ export class InboxService {
             })
     }
 
-    async create(inbox: InboxDto, account: Account) {
-        const { receivers, ...value } = inbox
-        // const emitter = account.funcionario.cargo ? {
-        //     cuenta: account._id,
-        //     fullname: this.createFullName(account.funcionario),
-        //     jobtitle: account.funcionario.cargo
-        // }
-
-        // const fecha_registro = new Date()
-        // const sends = receivers.map(receiver => {
-        //     return {
-        //         ...value,
-        //         fecha_registro,
-        //         emisor: {
-        //             cuenta: account._id,
-        //             fullname: account.funcionario.nombre,
-        //         }
-        //     }
-        // })
-
+    async create(inbox: CreateInboxDto, account: Account) {
+        const { receivers, ...value } = inbox;
+        for (const receiver of receivers) {
+            await this.verifyDuplicateSend(value.tramite, value.tipo, receiver.cuenta)
+        }
+        await this.accountModel.populate(account, {
+            path: 'funcionario',
+            select: 'nombre paterno materno cargo',
+            populate: {
+                path: 'cargo',
+                select: 'nombre'
+            }
+        });
+        const fecha_envio = new Date();
+        const { funcionario } = account;
+        const emiter = {
+            cuenta: account._id,
+            fullname: [funcionario.nombre, funcionario.paterno, funcionario.materno].filter(Boolean).join(" "),
+            ...funcionario.cargo && { jobtitle: funcionario.cargo.nombre }
+        }
+        const mails = receivers.map(receiver => {
+            return {
+                emisor: emiter,
+                receptor: receiver,
+                fecha_envio,
+                ...value
+            }
+        })
+        await this.inboxModel.findById(inbox.tramite)
+        console.log(mails);
     }
-    createFullName(officer: Officer): string {
-        return [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(" ");
+    async verifyDuplicateSend(id_procedure: string, group: string, id_receiver: string) {
+        // ! change query for receive procedures distinc emitter
+        const foundDuplicate = await this.inboxModel.findOne({
+            'receptor.cuenta': id_receiver,
+            tramite: id_procedure,
+            tipo: group
+        }).populate({
+            path: 'receptor.cuenta',
+            select: 'funcionario',
+            populate: {
+                path: 'funcionario',
+                select: 'nombre paterno materno'
+            }
+        })
+        if (foundDuplicate) throw new BadRequestException(`El funcionario ${createFullName(foundDuplicate.receptor.funcionario)} ya tiene el tramite en su bandeja de entrada`)
     }
 }

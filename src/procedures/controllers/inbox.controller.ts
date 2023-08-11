@@ -5,7 +5,7 @@ import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { DependencieService, InstitutionService } from 'src/administration/services';
 import { InboxService } from '../services';
 import { Account } from 'src/administration/schemas';
-import { ImboxDto } from '../dto/create-inbox.dto';
+import { CreateInboxDto } from '../dto/create-inbox.dto';
 
 @Controller('inbox')
 @Auth(ValidResources.ENTRADAS)
@@ -32,9 +32,10 @@ export class InboxController {
     }
     @Get('accounts/:id_dependency')
     async getAcccount(
+        @GetUser('_id') id_account: string,
         @Param('id_dependency') id_dependency: string
     ) {
-        return await this.inboxService.getAccountForSend(id_dependency)
+        return await this.inboxService.getAccountForSend(id_dependency, id_account)
     }
 
     @Get()
@@ -49,8 +50,8 @@ export class InboxController {
     @Post()
     async add(
         @GetUser() account: Account,
-        @Body() inbox: ImboxDto
+        @Body() inbox: CreateInboxDto
     ) {
-        return await this.externalService.create(procedure, account)
+        return await this.inboxService.create(inbox, account)
     }
 }

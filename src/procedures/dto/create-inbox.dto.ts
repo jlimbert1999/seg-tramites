@@ -2,7 +2,6 @@ import { Type } from "class-transformer";
 import { ArrayMinSize, IsArray, IsIn, IsMongoId, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator"
 import { procedureGroup } from "../interfaces/group.interface";
 
-
 class ReceiverDto {
     @IsMongoId()
     cuenta: string;
@@ -17,7 +16,7 @@ class ReceiverDto {
 }
 
 
-export class InboxDto {
+export class CreateInboxDto {
     @IsMongoId()
     tramite: string
 
