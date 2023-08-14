@@ -25,6 +25,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
       const decoded = this.jwtService.verify(token);
       this.groupwareService.addUser(client.id, decoded)
       this.server.emit('listar', this.groupwareService.getAll())
+
     } catch (error) {
       client.disconnect()
       return
@@ -35,6 +36,13 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     this.server.emit('listar', this.groupwareService.getAll())
   }
 
+  test() {
+    const s = this.groupwareService.users.find(user => user.id_account == '63af5e77ac7469b4ea9fedb8')
+    console.log(s);
+    s.socketIds.forEach(id => {
+      this.server.to(id).emit('newmail', 'dsds')
+    })
+  }
   @SubscribeMessage('createGroupware')
   create(@MessageBody() createGroupwareDto: CreateGroupwareDto) {
     // return this.groupwareService.create(createGroupwareDto);

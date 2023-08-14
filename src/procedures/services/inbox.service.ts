@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Imbox } from '../schemas/index';
-import { Model } from 'mongoose';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import mongoose, { Model } from 'mongoose';
+import { Imbox, Outbox } from '../schemas/index';
 import { Account } from 'src/administration/schemas';
 import { CreateInboxDto } from '../dto/create-inbox.dto';
 import { createFullName } from 'src/administration/helpers/fullname';
@@ -10,7 +10,9 @@ import { createFullName } from 'src/administration/helpers/fullname';
 export class InboxService {
     constructor(
         @InjectModel(Imbox.name) private inboxModel: Model<Imbox>,
-        @InjectModel(Account.name) private accountModel: Model<Account>
+        @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
+        @InjectModel(Account.name) private accountModel: Model<Account>,
+        @InjectConnection() private readonly connection: mongoose.Connection
     ) {
 
     }
@@ -45,6 +47,42 @@ export class InboxService {
     }
 
     async create(inbox: CreateInboxDto, account: Account) {
+        const mails = await this.createInboxModel(inbox, account)
+        const session = await this.connection.startSession();
+        try {
+            session.startTransaction();
+            await this.inboxModel.findOneAndDelete({ tramite: inbox.tramite, receptor: account._id, recibido: { $ne: null } }, { session });
+            const [, inMails] = await Promise.all([
+                this.outboxModel.insertMany(mails, { session }),
+                this.inboxModel.insertMany(mails, { session })
+            ])
+            await session.commitTransaction();
+            return await this.inboxModel.populate(inMails, { path: 'tramite', select: 'alterno detalle estado' })
+        } catch (error) {
+            await session.abortTransaction();
+            throw new InternalServerErrorException('No se puedo enviar en el tramite');
+        } finally {
+            session.endSession();
+        }
+    }
+
+    async verifyDuplicateSend(id_procedure: string, group: string, id_receiver: string) {
+        // ! change query for receive procedures distinc emitter
+        const foundDuplicate = await this.inboxModel.findOne({
+            'receptor.cuenta': id_receiver,
+            tramite: id_procedure,
+            tipo: group
+        }).populate({
+            path: 'receptor.cuenta',
+            select: 'funcionario',
+            populate: {
+                path: 'funcionario',
+                select: 'nombre paterno materno'
+            }
+        })
+        if (foundDuplicate) throw new BadRequestException(`El funcionario ${createFullName(foundDuplicate.receptor.funcionario)} ya tiene el tramite en su bandeja de entrada`)
+    }
+    async createInboxModel(inbox: CreateInboxDto, account: Account) {
         const { receivers, ...value } = inbox;
         for (const receiver of receivers) {
             await this.verifyDuplicateSend(value.tramite, value.tipo, receiver.cuenta)
@@ -72,23 +110,6 @@ export class InboxService {
                 ...value
             }
         })
-        await this.inboxModel.findById(inbox.tramite)
-        console.log(mails);
-    }
-    async verifyDuplicateSend(id_procedure: string, group: string, id_receiver: string) {
-        // ! change query for receive procedures distinc emitter
-        const foundDuplicate = await this.inboxModel.findOne({
-            'receptor.cuenta': id_receiver,
-            tramite: id_procedure,
-            tipo: group
-        }).populate({
-            path: 'receptor.cuenta',
-            select: 'funcionario',
-            populate: {
-                path: 'funcionario',
-                select: 'nombre paterno materno'
-            }
-        })
-        if (foundDuplicate) throw new BadRequestException(`El funcionario ${createFullName(foundDuplicate.receptor.funcionario)} ya tiene el tramite en su bandeja de entrada`)
+        return mails
     }
 }

@@ -10,6 +10,8 @@ import { Imbox, ImboxSchema } from './schemas/imbox.schema';
 import { ExternalProcedure, ExternalProcedureSchema } from './schemas/external.schema';
 import { InternalProcedure, InternalProcedureSchema } from './schemas/internal.schema';
 import { Outbox, OutboxSchema } from './schemas/outbox.schema';
+import { GroupwareModule } from 'src/groupware/groupware.module';
+import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { Outbox, OutboxSchema } from './schemas/outbox.schema';
     ]),
     AuthModule,
     AdministrationModule,
+    GroupwareModule
   ],
   controllers: [InternalController, ExternalController, InboxController, OutboxController],
   providers: [ExternalService, InternalService, InboxService, OutboxService]

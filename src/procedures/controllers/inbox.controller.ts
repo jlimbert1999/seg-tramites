@@ -6,6 +6,7 @@ import { DependencieService, InstitutionService } from 'src/administration/servi
 import { InboxService } from '../services';
 import { Account } from 'src/administration/schemas';
 import { CreateInboxDto } from '../dto/create-inbox.dto';
+import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 
 @Controller('inbox')
 @Auth(ValidResources.ENTRADAS)
@@ -14,6 +15,7 @@ export class InboxController {
         private readonly inboxService: InboxService,
         private readonly institutionService: InstitutionService,
         private readonly dependencieService: DependencieService,
+        private gate: GroupwareGateway
     ) {
 
     }
@@ -44,6 +46,7 @@ export class InboxController {
         @Query('offset', ParseIntPipe) offset: number,
         @Query('limit', ParseIntPipe) limit: number,
     ) {
+        this.gate.test()
         return await this.inboxService.getAll(id_account, limit, offset)
     }
 
@@ -52,6 +55,6 @@ export class InboxController {
         @GetUser() account: Account,
         @Body() inbox: CreateInboxDto
     ) {
-        return await this.inboxService.create(inbox, account)
+        return await this.inboxService.create(inbox, account);
     }
 }

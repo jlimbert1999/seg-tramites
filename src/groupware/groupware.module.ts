@@ -5,6 +5,7 @@ import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   providers: [GroupwareGateway, GroupwareService],
-  imports: [AuthModule]
+  imports: [AuthModule],
+  exports: [GroupwareGateway]
 })
 export class GroupwareModule { }

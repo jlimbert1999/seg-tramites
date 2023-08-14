@@ -39,6 +39,7 @@ export class GroupwareService {
       }
     }
   }
+
   getAll() {
     return this.users
   }

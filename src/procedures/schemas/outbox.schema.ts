@@ -28,9 +28,9 @@ export class Outbox extends Document {
     @Prop({
         required: true,
         type: String,
-        enum: ['tramites_internos', 'tramites_externos'],
+        enum: [ExternalProcedure.name, InternalProcedure.name]
     })
-    tipo: 'tramites_internos' | 'tramites_externos'
+    tipo: 'ExternalProcedure' | 'InternalProcedure'
 
     @Prop({
         type: String,

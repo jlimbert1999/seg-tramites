@@ -9,7 +9,7 @@ import { ProceduresModule } from './procedures/procedures.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017/test-seg-tramites'),
+    MongooseModule.forRoot('mongodb://127.0.0.1:27017/new-seg-tramitesDB'),
     AuthModule,
     AdministrationModule,
     GroupwareModule,
