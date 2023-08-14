@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { ExternalService } from '../services/external.service';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ValidResources } from 'src/auth/interfaces/valid-resources.interface';
@@ -39,12 +39,29 @@ export class ExternalController {
     ) {
         return await this.externalService.search(limit, offset, id_account, text)
     }
+
+    @Patch('send/verify/:id_procedure')
+    async verifyIfProcedureisSend(
+        @Param('id_procedure') id_procedure: string,
+        @GetUser() account: Account
+    ) {
+        console.log(account);
+        const isSend = await this.externalService.verifyIfProcedureIsSend(id_procedure)
+    }
+
+    @Patch('send/:id_procedure')
+    async markAsSendProcedure(
+        @Param('id_procedure') id_procedure: string
+    ) {
+        await this.externalService.markProcedureAsSend(id_procedure)
+        return { ok: true }
+    }
+
     @Get()
     async get(
         @GetUser('_id') id_account: string,
         @Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number
     ) {
-
         return await this.externalService.findAll(limit, offset, id_account)
     }
 

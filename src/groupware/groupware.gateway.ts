@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { GroupwareService } from './groupware.service';
 import { CreateGroupwareDto } from './dto/create-groupware.dto';
 import { UpdateGroupwareDto } from './dto/update-groupware.dto';
+import { Imbox } from 'src/procedures/schemas';
 
 
 @WebSocketGateway(
@@ -33,16 +34,20 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
   handleDisconnect(client: Socket) {
     this.groupwareService.removeUser(client.id)
-    this.server.emit('listar', this.groupwareService.getAll())
+    client.broadcast.emit('listar', this.groupwareService.getAll())
   }
 
-  test() {
-    const s = this.groupwareService.users.find(user => user.id_account == '63af5e77ac7469b4ea9fedb8')
-    console.log(s);
-    s.socketIds.forEach(id => {
-      this.server.to(id).emit('newmail', 'dsds')
+  sendMail(data: Imbox[]) {
+    data.forEach(mail => {
+      const user = this.groupwareService.getUser(String(mail.receptor.cuenta._id))
+      if (user) {
+        user.socketIds.forEach(socketId => {
+          this.server.to(socketId).emit('newmail', mail)
+        })
+      }
     })
   }
+
   @SubscribeMessage('createGroupware')
   create(@MessageBody() createGroupwareDto: CreateGroupwareDto) {
     // return this.groupwareService.create(createGroupwareDto);

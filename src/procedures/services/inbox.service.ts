@@ -60,7 +60,7 @@ export class InboxService {
             return await this.inboxModel.populate(inMails, { path: 'tramite', select: 'alterno detalle estado' })
         } catch (error) {
             await session.abortTransaction();
-            throw new InternalServerErrorException('No se puedo enviar en el tramite');
+            throw new InternalServerErrorException('No se pudo enviar el tramite');
         } finally {
             session.endSession();
         }
@@ -80,7 +80,7 @@ export class InboxService {
                 select: 'nombre paterno materno'
             }
         })
-        if (foundDuplicate) throw new BadRequestException(`El funcionario ${createFullName(foundDuplicate.receptor.funcionario)} ya tiene el tramite en su bandeja de entrada`)
+        if (foundDuplicate) throw new BadRequestException(`El funcionario ${createFullName(foundDuplicate.receptor.cuenta.funcionario)} ya tiene el tramite en su bandeja de entrada`)
     }
     async createInboxModel(inbox: CreateInboxDto, account: Account) {
         const { receivers, ...value } = inbox;

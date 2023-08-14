@@ -11,7 +11,6 @@ import { ExternalProcedure, ExternalProcedureSchema } from './schemas/external.s
 import { InternalProcedure, InternalProcedureSchema } from './schemas/internal.schema';
 import { Outbox, OutboxSchema } from './schemas/outbox.schema';
 import { GroupwareModule } from 'src/groupware/groupware.module';
-import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 
 @Module({
   imports: [

@@ -15,7 +15,7 @@ export class InboxController {
         private readonly inboxService: InboxService,
         private readonly institutionService: InstitutionService,
         private readonly dependencieService: DependencieService,
-        private gate: GroupwareGateway
+        private readonly groupwareGateway: GroupwareGateway
     ) {
 
     }
@@ -46,7 +46,6 @@ export class InboxController {
         @Query('offset', ParseIntPipe) offset: number,
         @Query('limit', ParseIntPipe) limit: number,
     ) {
-        this.gate.test()
         return await this.inboxService.getAll(id_account, limit, offset)
     }
 
@@ -55,6 +54,8 @@ export class InboxController {
         @GetUser() account: Account,
         @Body() inbox: CreateInboxDto
     ) {
-        return await this.inboxService.create(inbox, account);
+        const mails = await this.inboxService.create(inbox, account);
+        this.groupwareGateway.sendMail(mails)
+        return { message: 'Tramite enviado' }
     }
 }

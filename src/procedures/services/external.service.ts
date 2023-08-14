@@ -7,6 +7,7 @@ import { Account, Dependency } from 'src/administration/schemas';
 import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
 import { UpdateExternalProcedureDto } from '../dto/update-external.dto';
 import { Observation, groupProcedure } from '../schemas/observations.schema';
+import { Outbox } from '../schemas';
 
 @Injectable()
 export class ExternalService {
@@ -15,7 +16,15 @@ export class ExternalService {
         @InjectModel(TypeProcedure.name) private typeProcedure: Model<TypeProcedure>,
         @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
         @InjectModel(Observation.name) private observationModel: Model<Observation>,
+        @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
     ) {
+    }
+    async markProcedureAsSend(id_procedure: string) {
+        return await this.externalProcedureModel.updateOne({ _id: id_procedure }, { enviado: true })
+    }
+
+    async verifyIfProcedureIsSend(id_procedure: string) {
+        return await this.outboxModel.findOne({ tramite: id_procedure, recibido: { $ne: false } }) ? true : false
     }
 
     async search(limit: number, offset: number, id_account: string, text: string) {
@@ -87,8 +96,8 @@ export class ExternalService {
         const procedures = data[0].paginatedResults
         const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0
         return { procedures, length }
-
     }
+
     async findAll(limit: number, offset: number, id_account: string) {
         offset = offset * limit
         const [procedures, total] = await Promise.all([

@@ -14,8 +14,8 @@ export class AccountRoleGuard implements CanActivate {
   ): boolean {
     const validResource: string = this.reflector.get(META_RESOURCE, context.getClass())
     if (!validResource) return true
-    const req = context.switchToHttp().getRequest()
-    const account = req.user as Account
+    const req = context.switchToHttp().getRequest();
+    const account = req.user as Account;
     if (!account) throw new InternalServerErrorException('Guard Auth problems or not call, no user in requets')
     const privilege = account.rol.privileges.find(element => element.resource === validResource)
     if (!privilege) throw new ForbiddenException(`Esta cuenta no tiene permisos para el recurso ${validResource}`)
@@ -24,6 +24,6 @@ export class AccountRoleGuard implements CanActivate {
     else if (req.method == "GET" && privilege.read) allow = true;
     else if (req.method == "PUT" && privilege.update) allow = true;
     else if (req.method == "DELETE" && privilege.delete) allow = true;
-    return allow
+    return allow;
   }
 }
