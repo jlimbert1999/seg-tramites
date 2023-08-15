@@ -17,6 +17,10 @@ export class InternalService {
         @InjectModel(Observation.name) private observationModel: Model<Observation>,
     ) {
     }
+    async markProcedureAsSend(id_procedure: string) {
+        return await this.internalProcedureModel.updateOne({ _id: id_procedure }, { enviado: true })
+    }
+
     async add(procedure: CreateInternalProcedureDto, account: Account) {
         const newProcedure = {
             alterno: await this.generateAlterno(account.dependencia._id, procedure.tipo_tramite),

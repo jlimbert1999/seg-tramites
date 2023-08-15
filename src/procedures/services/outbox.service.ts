@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Outbox } from '../schemas';
+import { ExternalProcedure, InternalProcedure, Outbox, groupProcedure } from '../schemas';
 import { Account, Officer } from 'src/administration/schemas';
 
 @Injectable()
@@ -10,6 +10,8 @@ export class OutboxService {
         @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
         @InjectModel(Officer.name) private officer: Model<Officer>,
         @InjectModel(Account.name) private accountModel: Model<Account>,
+        @InjectModel(ExternalProcedure.name) private externalProcedure: Model<ExternalProcedure>,
+        @InjectModel(InternalProcedure.name) private internalProcedure: Model<InternalProcedure>,
 
     ) { }
 
@@ -34,7 +36,7 @@ export class OutboxService {
             { $sort: { '_id.fecha_envio': -1 } },
             {
                 $facet: {
-                    paginatedResults: [{ $skip: offset }, { $limit: limit }],
+                    paginatedResults: [{ $skip: (offset * limit) }, { $limit: limit }],
                     totalCount: [
                         {
                             $count: 'count'
@@ -43,46 +45,15 @@ export class OutboxService {
                 }
             },
         ])
-
-        // for (const mail of dataPaginated[0].paginatedResults) {
-        //     await SalidaModel.populate(mail.sendings, [
-        //         { path: 'receptor.funcionario', select: 'nombre paterno materno cargo' },
-        //         { path: 'tramite', select: 'alterno estado cite detalle' }
-        //     ])
-        // }
+       
+        for (const mail of dataPaginated[0].paginatedResults) {
+            await this.outboxModel.populate(mail.sendings, { path: 'tramite', select: 'alterno detalle estado' })
+            console.log(mail.sendings);
+        }
+        console.log(dataPaginated[0].paginatedResults.sendings);
         const mails = dataPaginated[0].paginatedResults
-        mails.forEach(element => {
-            console.log(element);
-        });
         const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0
-        // const mails = await this.outboxModel.find({})
-        // for (const mail of mails) {
-        //     const participant = {}
-        //     if (!mail.receptor.funcionario) {
-        //         await this.outboxModel.populate(mail, { path: 'receptor.cuenta' })
-        //         if (!mail.receptor.cuenta.funcionario) {
-        //             participant['fullname'] = 'NO DESIGNADO'
-        //         }
-        //         else {
-        //             const officer = await this.officer.findById(mail.receptor.cuenta.funcionario._id).populate('cargo', 'nombre')
-        //             participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(" ")
-        //             if (officer.cargo) {
-        //                 participant['jobtitle'] = officer.cargo.nombre
-        //             }
-        //         }
-        //     }
-        //     else {
-        //         const officer = await this.officer.findById(mail.receptor.funcionario._id).populate('cargo', 'nombre')
-        //         participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(" ")
-        //         if (officer.cargo) {
-        //             participant['jobtitle'] = officer.cargo.nombre
-        //         }
-        //     }
-        //     await this.outboxModel.findByIdAndUpdate(mail._id, { receptor: { cuenta: mail.receptor.cuenta._id, ...participant } })
-        //     console.log('ok');
-        // }
-        // console.log('end');
-        return { mails: [], length: 0 }
+        return { mails, length }
     }
 
     async getWorkflow(id_procedure: string) {

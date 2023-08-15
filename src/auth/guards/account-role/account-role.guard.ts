@@ -20,7 +20,10 @@ export class AccountRoleGuard implements CanActivate {
     const privilege = account.rol.privileges.find(element => element.resource === validResource)
     if (!privilege) throw new ForbiddenException(`Esta cuenta no tiene permisos para el recurso ${validResource}`)
     let allow = false;
-    if (req.method == "POST" && privilege.create) allow = true;
+    // ! patch for update procedure after send
+    if (req.method == "PATCH") allow = true;
+    
+    else if (req.method == "POST" && privilege.create) allow = true;
     else if (req.method == "GET" && privilege.read) allow = true;
     else if (req.method == "PUT" && privilege.update) allow = true;
     else if (req.method == "DELETE" && privilege.delete) allow = true;

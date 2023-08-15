@@ -7,24 +7,22 @@ import { Account, Dependency } from 'src/administration/schemas';
 import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
 import { UpdateExternalProcedureDto } from '../dto/update-external.dto';
 import { Observation, groupProcedure } from '../schemas/observations.schema';
-import { Outbox } from '../schemas';
+import { Procedure } from '../schemas/procedure.schema';
+import { ExternalDetail } from '../schemas/external-detail.schema';
+import { InternalDetail } from '../schemas/internal-detail.schema';
 
 @Injectable()
 export class ExternalService {
     constructor(
         @InjectModel(ExternalProcedure.name) private externalProcedureModel: Model<ExternalProcedure>,
         @InjectModel(TypeProcedure.name) private typeProcedure: Model<TypeProcedure>,
-        @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
         @InjectModel(Observation.name) private observationModel: Model<Observation>,
-        @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
+        @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
+        @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     ) {
     }
     async markProcedureAsSend(id_procedure: string) {
         return await this.externalProcedureModel.updateOne({ _id: id_procedure }, { enviado: true })
-    }
-
-    async verifyIfProcedureIsSend(id_procedure: string) {
-        return await this.outboxModel.findOne({ tramite: id_procedure, recibido: { $ne: false } }) ? true : false
     }
 
     async search(limit: number, offset: number, id_account: string, text: string) {
@@ -101,13 +99,13 @@ export class ExternalService {
     async findAll(limit: number, offset: number, id_account: string) {
         offset = offset * limit
         const [procedures, total] = await Promise.all([
-            await this.externalProcedureModel.find({ cuenta: id_account, estado: { $ne: 'ANULADO' } })
+            await this.procedureModel.find({ account: id_account, group: 'ExternalDetail', estado: { $ne: 'ANULADO' } })
                 .select('-requerimientos')
                 .sort({ _id: -1 })
                 .skip(offset)
                 .limit(limit)
-                .populate('tipo_tramite', 'nombre'),
-            await this.externalProcedureModel.count({ cuenta: id_account, estado: { $ne: 'ANULADO' } })
+                .populate('details'),
+            await this.procedureModel.count({ account: id_account, group: 'ExternalDetail', estado: { $ne: 'ANULADO' } })
         ])
         return { procedures, total }
     }

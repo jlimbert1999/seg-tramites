@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { ValidResources } from 'src/auth/interfaces/valid-resources.interface';
@@ -27,6 +27,14 @@ export class InternalController {
         @Param('text') text: string
     ) {
         return await this.officerService.findOfficerForProcess(text)
+    }
+
+    @Patch('send/:id_procedure')
+    async markAsSendProcedure(
+        @Param('id_procedure') id_procedure: string
+    ) {
+        await this.internalService.markProcedureAsSend(id_procedure)
+        return { ok: true }
     }
 
     @Get('search/:text')

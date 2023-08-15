@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { ExternalService } from '../services/external.service';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ValidResources } from 'src/auth/interfaces/valid-resources.interface';
@@ -8,6 +8,7 @@ import { Account } from 'src/administration/schemas';
 import { CreateExternalProcedureDto } from '../dto/create-external.dto';
 import { UpdateExternalProcedureDto } from '../dto/update-external.dto';
 import { OutboxService } from '../services';
+import { ProcedureService } from '../services/procedure.service';
 
 @Controller('external')
 @Auth(ValidResources.EXTERNOS)
@@ -15,7 +16,8 @@ export class ExternalController {
     constructor(
         private readonly externalService: ExternalService,
         private readonly typeProcedure: TypeProcedureService,
-        private readonly outboxService: OutboxService
+        private readonly outboxService: OutboxService,
+        private readonly procedureService: ProcedureService
     ) {
     }
 
@@ -38,15 +40,6 @@ export class ExternalController {
         @Param('text') text: string
     ) {
         return await this.externalService.search(limit, offset, id_account, text)
-    }
-
-    @Patch('send/verify/:id_procedure')
-    async verifyIfProcedureisSend(
-        @Param('id_procedure') id_procedure: string,
-        @GetUser() account: Account
-    ) {
-        console.log(account);
-        const isSend = await this.externalService.verifyIfProcedureIsSend(id_procedure)
     }
 
     @Patch('send/:id_procedure')
