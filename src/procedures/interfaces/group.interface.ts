@@ -1,4 +1,4 @@
-export enum procedureGroup {
-    EXTERNAL = 'ExternalProcedure',
-    INTERNAL = 'InternalProcedure',
+export enum groupProcedure {
+  EXTERNAL = 'ExternalDetail',
+  INTERNAL = 'InternalDetail',
 }

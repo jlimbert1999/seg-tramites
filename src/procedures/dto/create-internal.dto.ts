@@ -1,41 +1,39 @@
-import { Type } from "class-transformer";
-import { IsNotEmpty, IsNotEmptyObject, IsObject, IsOptional, IsString, ValidateNested } from "class-validator"
+import { Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsNotEmptyObject,
+  IsObject,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { ProcedureDto } from './procedure.dto';
+import { IntersectionType } from '@nestjs/mapped-types';
 
 export class Worker {
-    @IsString()
-    @IsNotEmpty()
-    nombre: string;
+  @IsString()
+  @IsNotEmpty()
+  nombre: string;
 
-    @IsString()
-    @IsNotEmpty()
-    cargo: string;
+  @IsString()
+  @IsNotEmpty()
+  cargo: string;
 }
 
-export class CreateInternalProcedureDto {
-    @IsString()
-    @IsNotEmpty()
-    tipo_tramite: string
+export class InternalDetailDto {
+  @IsNotEmptyObject()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Worker)
+  remitente: Worker;
 
-    @IsNotEmptyObject()
-    @IsObject()
-    @ValidateNested()
-    @Type(() => Worker)
-    remitente: Worker
-
-    @IsNotEmptyObject()
-    @IsObject()
-    @ValidateNested()
-    @Type(() => Worker)
-    destinatario: Worker
-
-    @IsString()
-    @IsNotEmpty()
-    detalle: string
-
-    @IsString()
-    @IsNotEmpty()
-    cantidad: string
-
-    @IsOptional()
-    cite: string
+  @IsNotEmptyObject()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Worker)
+  destinatario: Worker;
 }
+
+export class CreateInternalProcedureDto extends IntersectionType(
+  ProcedureDto,
+  InternalDetailDto,
+) {}

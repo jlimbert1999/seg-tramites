@@ -1,43 +1,51 @@
-import { Type } from "class-transformer";
-import { ArrayMinSize, IsArray, IsIn, IsMongoId, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator"
-import { procedureGroup } from "../interfaces/group.interface";
+import { Type } from 'class-transformer';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsIn,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { groupProcedure } from '../interfaces/group.interface';
 
 class ReceiverDto {
-    @IsMongoId()
-    cuenta: string;
+  @IsMongoId()
+  cuenta: string;
 
-    @IsString()
-    @IsNotEmpty()
-    fullname: string;
+  @IsString()
+  @IsNotEmpty()
+  fullname: string;
 
-    @IsString()
-    @IsOptional()
-    jobtitle?: string;
+  @IsString()
+  @IsOptional()
+  jobtitle?: string;
 }
 
-
 export class CreateInboxDto {
-    @IsMongoId()
-    tramite: string
+  @IsMongoId()
+  tramite: string;
 
-    @IsIn(Object.values(procedureGroup))
-    tipo: procedureGroup
+  @IsIn(Object.values(groupProcedure))
+  tipo: groupProcedure;
 
-    @IsString()
-    @IsNotEmpty()
-    cantidad: string
+  @IsString()
+  @IsNotEmpty()
+  cantidad: string;
 
-    @IsString()
-    @IsNotEmpty()
-    motivo: string
+  @IsString()
+  @IsNotEmpty()
+  motivo: string;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @ArrayMinSize(1)
-    @Type(() => ReceiverDto)
-    receivers: ReceiverDto[]
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => ReceiverDto)
+  receivers: ReceiverDto[];
 
-    @IsString()
-    @IsOptional()
-    numero_interno: string
+  @IsString()
+  @IsOptional()
+  numero_interno: string;
 }

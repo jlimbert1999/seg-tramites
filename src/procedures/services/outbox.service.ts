@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { ExternalProcedure, InternalProcedure, Outbox, groupProcedure } from '../schemas';
+import { ExternalProcedure, InternalProcedure, Outbox } from '../schemas';
 import { Account, Officer } from 'src/administration/schemas';
 
 @Injectable()
