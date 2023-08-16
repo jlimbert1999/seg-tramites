@@ -29,21 +29,21 @@ export class InternalService {
   }
 
   async add(procedure: CreateInternalProcedureDto, account: Account) {
-    const newProcedure = {
-      alterno: await this.generateAlterno(
-        account.dependencia._id,
-        procedure.tipo_tramite,
-      ),
-      cuenta: account._id,
-      ...procedure,
-    };
-    const createdProcedure = new this.internalProcedureModel(newProcedure);
-    await createdProcedure.save();
-    await this.internalProcedureModel.populate(createdProcedure, {
-      path: 'tipo_tramite',
-      select: 'nombre',
-    });
-    return createdProcedure;
+    // const newProcedure = {
+    //   alterno: await this.generateAlterno(
+    //     account.dependencia._id,
+    //     procedure.tipo_tramite,
+    //   ),
+    //   cuenta: account._id,
+    //   ...procedure,
+    // };
+    // const createdProcedure = new this.internalProcedureModel(newProcedure);
+    // await createdProcedure.save();
+    // await this.internalProcedureModel.populate(createdProcedure, {
+    //   path: 'tipo_tramite',
+    //   select: 'nombre',
+    // });
+    // return createdProcedure;
   }
 
   async update(id_procedure: string, procedure: UpdateInternalProcedureDto) {

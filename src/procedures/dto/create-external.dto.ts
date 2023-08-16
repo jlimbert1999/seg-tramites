@@ -78,10 +78,10 @@ class ExternalDetailDto {
   @ValidateNested()
   @Type(() => ApplicantDto)
   solicitante: ApplicantDto;
-
+  
   @IsArray()
   @IsString({ each: true })
-  requerimientos: string[];
+  requirements: string[];
 
   @IsNumber()
   pin: number;
@@ -90,4 +90,4 @@ class ExternalDetailDto {
 export class CreateExternalProcedureDto extends IntersectionType(
   ProcedureDto,
   ExternalDetailDto,
-) {}
+) { }

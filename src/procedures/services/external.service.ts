@@ -31,7 +31,7 @@ export class ExternalService {
     private externalDetailModel: Model<ExternalDetail>,
     private readonly procedureService: ProcedureService,
     @InjectConnection() private readonly connection: mongoose.Connection,
-  ) {}
+  ) { }
   async markProcedureAsSend(id_procedure: string) {
     return await this.externalProcedureModel.updateOne(
       { _id: id_procedure },
@@ -153,15 +153,16 @@ export class ExternalService {
   }
 
   async create(procedure: CreateExternalProcedureDto, acccount: Account) {
-    const { solicitante, representante, pin, requerimientos, ...values } =
+    const { solicitante, representante, pin, requirements, ...values } =
       procedure;
     const session = await this.connection.startSession();
     try {
+      session.startTransaction();
       const createdDetail = new this.externalDetailModel({
         solicitante,
         representante,
         pin,
-        requerimientos,
+        requirements,
       });
       await createdDetail.save({ session });
       const newProcedure = await this.procedureService.create(
@@ -175,6 +176,7 @@ export class ExternalService {
       return newProcedure;
     } catch (error) {
       await session.abortTransaction();
+      console.log(error);
       throw new InternalServerErrorException(
         'No se puedo registrar el tramite correctamente',
       );
@@ -182,6 +184,7 @@ export class ExternalService {
       session.endSession();
     }
   }
+
 
   async update(id_procedure: string, procedure: UpdateExternalProcedureDto) {
     return this.externalProcedureModel
@@ -240,8 +243,7 @@ export class ExternalService {
     const correlativo = await this.externalProcedureModel.count({
       alterno: regex,
     });
-    return `${typeProcedure.segmento}-${
-      dependency.institucion.sigla
-    }-2023-${String(correlativo + 1).padStart(6, '0')}`;
+    return `${typeProcedure.segmento}-${dependency.institucion.sigla
+      }-2023-${String(correlativo + 1).padStart(6, '0')}`;
   }
 }
