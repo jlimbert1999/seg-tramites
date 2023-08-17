@@ -77,11 +77,10 @@ export class Procedure extends Document {
     required: true,
     refPath: 'group',
   })
-  details: any;
+  details: ExternalDetail | InternalDetail;
 
   @Prop({
     type: String,
-    required: true,
   })
   tramite: string;
 }

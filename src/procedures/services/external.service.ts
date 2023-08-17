@@ -31,7 +31,7 @@ export class ExternalService {
     private externalDetailModel: Model<ExternalDetail>,
     private readonly procedureService: ProcedureService,
     @InjectConnection() private readonly connection: mongoose.Connection,
-  ) { }
+  ) {}
   async markProcedureAsSend(id_procedure: string) {
     return await this.externalProcedureModel.updateOne(
       { _id: id_procedure },
@@ -136,7 +136,7 @@ export class ExternalService {
       await this.procedureModel
         .find({
           account: id_account,
-          group: 'ExternalDetail',
+          group: groupProcedure.EXTERNAL,
           estado: { $ne: 'ANULADO' },
         })
         .sort({ _id: -1 })
@@ -145,7 +145,7 @@ export class ExternalService {
         .populate('details'),
       await this.procedureModel.count({
         account: id_account,
-        group: 'ExternalDetail',
+        group: groupProcedure.EXTERNAL,
         estado: { $ne: 'ANULADO' },
       }),
     ]);
@@ -185,11 +185,16 @@ export class ExternalService {
     }
   }
 
-
   async update(id_procedure: string, procedure: UpdateExternalProcedureDto) {
-    return this.externalProcedureModel
-      .findByIdAndUpdate(id_procedure, procedure, { new: true })
-      .populate('tipo_tramite');
+    const updateProcedure = await this.procedureModel.findByIdAndUpdate(
+      id_procedure,
+      procedure,
+      { new: true },
+    );
+    await this.externalDetailModel.findByIdAndUpdate(
+      updateProcedure.details._id,
+      procedure,
+    );
   }
 
   async getAllDataProcedure(id_procedure: string) {
@@ -243,7 +248,8 @@ export class ExternalService {
     const correlativo = await this.externalProcedureModel.count({
       alterno: regex,
     });
-    return `${typeProcedure.segmento}-${dependency.institucion.sigla
-      }-2023-${String(correlativo + 1).padStart(6, '0')}`;
+    return `${typeProcedure.segmento}-${
+      dependency.institucion.sigla
+    }-2023-${String(correlativo + 1).padStart(6, '0')}`;
   }
 }
