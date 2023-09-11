@@ -1,0 +1,7 @@
+export enum stateProcedure {
+  INSCRITO = 'INSCRITO',
+  EN_REVISION = 'EN REVISION',
+  OBSERVADO = 'OBSERVADO',
+  CONCLUIDO = 'CONCLUIDO',
+  ANULADO = 'ANULADO',
+}

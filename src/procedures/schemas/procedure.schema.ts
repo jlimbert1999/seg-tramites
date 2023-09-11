@@ -4,13 +4,7 @@ import { Account } from 'src/administration/schemas';
 import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
 import { ExternalDetail } from './external-detail.schema';
 import { InternalDetail } from './internal-detail.schema';
-enum StateProcedure {
-  INSCRITO = 'INSCRITO',
-  EN_REVISION = 'EN REVISION',
-  OBSERVADO = 'OBSERVADO',
-  CONCLUIDO = 'CONCLUIDO',
-  ANULADO = 'ANULADO',
-}
+import { stateProcedure } from '../interfaces/states-procedure.interface';
 
 @Schema()
 export class Procedure extends Document {
@@ -39,10 +33,10 @@ export class Procedure extends Document {
 
   @Prop({
     type: String,
-    enum: Object.values(StateProcedure),
-    default: StateProcedure.INSCRITO,
+    enum: Object.values(stateProcedure),
+    default: stateProcedure.INSCRITO,
   })
-  state: StateProcedure;
+  state: stateProcedure;
 
   @Prop({
     type: String,

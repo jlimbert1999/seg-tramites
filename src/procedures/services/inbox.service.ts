@@ -9,6 +9,7 @@ import { Imbox, Outbox, Procedure } from '../schemas/index';
 import { Account } from 'src/administration/schemas';
 import { CreateInboxDto } from '../dto/create-inbox.dto';
 import { createFullName } from 'src/administration/helpers/fullname';
+import { stateProcedure } from '../interfaces/states-procedure.interface';
 
 @Injectable()
 export class InboxService {
@@ -37,7 +38,57 @@ export class InboxService {
         },
       });
   }
-  async getAll(id_account: string, limit: number, offset: number) {
+
+  async search(
+    id_account: string,
+    text: string,
+    limit: number,
+    offset: number,
+  ) {
+    const regex = new RegExp(text, 'i');
+    const data = await this.inboxModel.aggregate([
+      {
+        $match: {
+          'receptor.cuenta': new mongoose.Types.ObjectId(id_account),
+        },
+      },
+      {
+        $lookup: {
+          from: 'procedures',
+          localField: 'tramite',
+          foreignField: '_id',
+          as: 'tramite',
+        },
+      },
+      {
+        $unwind: '$tramite',
+      },
+      {
+        $match: {
+          $or: [
+            { 'tramite.code': regex },
+            { 'tramite.reference': regex },
+            { 'emisor.fullname': regex },
+          ],
+        },
+      },
+      {
+        $facet: {
+          paginatedResults: [{ $skip: offset }, { $limit: limit }],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        },
+      },
+    ]);
+    const mails = data[0].paginatedResults;
+    const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
+    return { mails, length };
+  }
+
+  async findAll(id_account: string, limit: number, offset: number) {
     offset = offset * limit;
     const [mails, length] = await Promise.all([
       this.inboxModel
@@ -94,12 +145,13 @@ export class InboxService {
     // console.log('end');
     return { mails, length };
   }
+
   async create(inbox: CreateInboxDto, account: Account) {
     const mails = await this.createInboxModel(inbox, account);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.inboxModel.findOneAndDelete(
+      await this.inboxModel.deleteOne(
         {
           tramite: inbox.tramite,
           receptor: account._id,
@@ -107,29 +159,32 @@ export class InboxService {
         },
         { session },
       );
-      const [, inMails] = await Promise.all([
-        this.outboxModel.insertMany(mails, { session }),
+      const [createdInbox] = await Promise.all([
         this.inboxModel.insertMany(mails, { session }),
+        this.outboxModel.insertMany(mails, { session }),
       ]);
-      await this.procedureModel.updateOne(
-        { _id: inbox.tramite },
-        { send: true },
-        { session },
-      );
-      await session.commitTransaction();
-      return await this.inboxModel.populate(inMails, {
+      await this.inboxModel.populate(createdInbox, {
         path: 'tramite',
-        select: 'alterno detalle estado',
+        select: 'code reference state send',
       });
+      if (!createdInbox[0].tramite.send) {
+        await this.procedureModel.updateOne(
+          { _id: inbox.tramite },
+          { send: true },
+          { session },
+        );
+      }
+      await session.commitTransaction();
+      return createdInbox;
     } catch (error) {
       await session.abortTransaction();
-      throw new InternalServerErrorException('No se pudo enviar el tramite');
+      throw new InternalServerErrorException('Error al enviar el tramite');
     } finally {
       session.endSession();
     }
   }
 
-  async aceptMail(id_mail: string) {
+  async acceptMail(id_mail: string) {
     const mailDB = await this.inboxModel
       .findById(id_mail)
       .populate('tramite', 'state');
@@ -137,13 +192,14 @@ export class InboxService {
       throw new BadRequestException('El envio del tramite ha sido cancelado');
     const session = await this.connection.startSession();
     try {
+      const { tramite, emisor, receptor } = mailDB;
       session.startTransaction();
       await Promise.all([
         this.outboxModel.updateOne(
           {
-            tramite: mailDB.tramite._id,
-            'emisor.cuenta': mailDB.emisor.cuenta._id,
-            'receptor.cuenta': mailDB.receptor.cuenta._id,
+            tramite: tramite._id,
+            'emisor.cuenta': emisor.cuenta._id,
+            'receptor.cuenta': receptor.cuenta._id,
             recibido: null,
           },
           { recibido: true, fecha_recibido: new Date() },
@@ -151,25 +207,22 @@ export class InboxService {
         ),
         this.inboxModel.updateOne(
           {
-            tramite: mailDB.tramite._id,
-            'emisor.cuenta': mailDB.emisor.cuenta._id,
-            'receptor.cuenta': mailDB.receptor.cuenta._id,
-            recibido: null,
+            _id: id_mail,
           },
           { recibido: true },
           { session },
         ),
       ]);
-      if (mailDB.tramite.state !== 'OBSERVADO')
-        await this.procedureModel.findByIdAndUpdate(
-          mailDB.tramite._id,
+      if (tramite.state !== stateProcedure.OBSERVADO)
+        await this.procedureModel.updateOne(
+          { _id: tramite._id },
           {
-            state: 'EN REVISION',
+            state: stateProcedure.EN_REVISION,
           },
           { session },
         );
       await session.commitTransaction();
-      return true;
+      return tramite.state;
     } catch (error) {
       await session.abortTransaction();
       throw new InternalServerErrorException(
@@ -179,6 +232,7 @@ export class InboxService {
       session.endSession();
     }
   }
+
   async rejectMail(id_mail: string, rejectionReason: string) {
     const mailDB = await this.inboxModel
       .findById(id_mail)
@@ -187,14 +241,14 @@ export class InboxService {
       throw new BadRequestException('El envio del tramite ha sido cancelado');
     const session = await this.connection.startSession();
     try {
+      const { tramite, emisor, receptor } = mailDB;
       session.startTransaction();
       await Promise.all([
-        this.inboxModel.deleteOne({ _id: id_mail }, { session }),
         this.outboxModel.updateOne(
           {
-            tramite: mailDB.tramite._id,
-            'emisor.cuenta': mailDB.emisor.cuenta._id,
-            'receptor.cuenta': mailDB.receptor.cuenta._id,
+            tramite: tramite._id,
+            'emisor.cuenta': emisor.cuenta._id,
+            'receptor.cuenta': receptor.cuenta._id,
             recibido: null,
           },
           {
@@ -204,24 +258,33 @@ export class InboxService {
           },
           { session },
         ),
+        this.inboxModel.deleteOne({ _id: id_mail }, { session }),
       ]);
       const lastMailSend = await this.outboxModel
         .findOne({
-          tramite: mailDB.tramite._id,
-          'receptor.cuenta': mailDB.emisor.cuenta._id,
+          tramite: tramite._id,
+          'receptor.cuenta': emisor.cuenta._id,
           recibido: true,
         })
         .sort({ _id: -1 });
       if (lastMailSend) {
         lastMailSend.recibido = false;
-        const newMailOld = new this.inboxModel(lastMailSend);
+        const recoverMail = new this.inboxModel(lastMailSend);
         await this.inboxModel.updateOne(
-          // newMailOld,
-          { $setOnInsert: newMailOld },
-          { upsert: true },
+          {
+            tramite: tramite._id,
+            'emisor.cuenta': lastMailSend.emisor.cuenta._id,
+            'receptor.cuenta': lastMailSend.receptor.cuenta._id,
+          },
+          { $setOnInsert: recoverMail },
+          { upsert: true, session: session },
         );
       } else {
-        this.procedureModel.updateMany({});
+        await this.procedureModel.updateOne(
+          { _id: tramite._id },
+          { send: false },
+          { session },
+        );
       }
       await session.commitTransaction();
       return true;
@@ -231,6 +294,37 @@ export class InboxService {
     } finally {
       session.endSession();
     }
+  }
+
+  async createInboxModel(inbox: CreateInboxDto, account: Account) {
+    const { receivers, ...values } = inbox;
+    for (const receiver of receivers) {
+      await this.verifyDuplicateSend(values.tramite, receiver.cuenta);
+    }
+    await this.accountModel.populate(account, {
+      path: 'funcionario',
+      select: 'nombre paterno materno cargo',
+      populate: {
+        path: 'cargo',
+        select: 'nombre',
+      },
+    });
+    const fecha_envio = new Date();
+    const { funcionario } = account;
+    const emiter = {
+      cuenta: account._id,
+      fullname: createFullName(funcionario),
+      ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
+    };
+    const mails = receivers.map((receiver) => {
+      return {
+        emisor: emiter,
+        receptor: receiver,
+        fecha_envio,
+        ...values,
+      };
+    });
+    return mails;
   }
 
   async verifyDuplicateSend(id_procedure: string, id_receiver: string) {
@@ -255,38 +349,6 @@ export class InboxService {
         )} ya tiene el tramite en su bandeja de entrada`,
       );
   }
-  async createInboxModel(inbox: CreateInboxDto, account: Account) {
-    const { receivers, ...value } = inbox;
-    for (const receiver of receivers) {
-      await this.verifyDuplicateSend(value.tramite, receiver.cuenta);
-    }
-    await this.accountModel.populate(account, {
-      path: 'funcionario',
-      select: 'nombre paterno materno cargo',
-      populate: {
-        path: 'cargo',
-        select: 'nombre',
-      },
-    });
-    const fecha_envio = new Date();
-    const { funcionario } = account;
-    const emiter = {
-      cuenta: account._id,
-      fullname: [funcionario.nombre, funcionario.paterno, funcionario.materno]
-        .filter(Boolean)
-        .join(' '),
-      ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
-    };
-    const mails = receivers.map((receiver) => {
-      return {
-        emisor: emiter,
-        receptor: receiver,
-        fecha_envio,
-        ...value,
-      };
-    });
-    return mails;
-  }
   async getMail(id_inbox: string) {
     const mail = await this.inboxModel
       .findById(id_inbox)
@@ -309,6 +371,7 @@ export class InboxService {
       );
     return mail;
   }
+
   async getLocationProcedure(id_procedure: string) {
     return await this.inboxModel
       .find({ tramite: id_procedure })

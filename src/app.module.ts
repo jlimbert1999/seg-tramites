@@ -9,7 +9,16 @@ import { ProceduresModule } from './procedures/procedures.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017/new-seg-tramitesDB'),
+    // local mongodb://127.0.0.1:27017/new-seg-tramitesDB
+    // atlas mongodb+srv://root:<password>@cluster0.jmkbaqz.mongodb.net/?retryWrites=true&w=majority
+    // MongooseModule.forRoot(
+    //   'mongodb+srv://root:8835024limbert@cluster0.jmkbaqz.mongodb.net/?retryWrites=true&w=majority',
+    // ),
+    MongooseModule.forRootAsync({
+      useFactory: () => ({
+        uri: 'mongodb+srv://root:8835024limbert@cluster0.jmkbaqz.mongodb.net/seg-tramites?retryWrites=true&w=majority',
+      }),
+    }),
     AuthModule,
     AdministrationModule,
     GroupwareModule,
@@ -18,4 +27,4 @@ import { ProceduresModule } from './procedures/procedures.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

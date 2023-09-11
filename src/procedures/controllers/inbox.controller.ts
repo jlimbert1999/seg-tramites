@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
@@ -55,7 +56,17 @@ export class InboxController {
     @Query('offset', ParseIntPipe) offset: number,
     @Query('limit', ParseIntPipe) limit: number,
   ) {
-    return await this.inboxService.getAll(id_account, limit, offset);
+    return await this.inboxService.findAll(id_account, limit, offset);
+  }
+  @Get('search/:text')
+  async search(
+    @GetUser('_id')
+    id_account: string,
+    @Param('text') text: string,
+    @Query('offset', ParseIntPipe) offset: number,
+    @Query('limit', ParseIntPipe) limit: number,
+  ) {
+    return await this.inboxService.search(id_account, text, limit, offset);
   }
 
   @Post()
@@ -68,5 +79,14 @@ export class InboxController {
   @Get('/:id')
   async getMail(@Param('id') id_mail: string) {
     return await this.inboxService.getMail(id_mail);
+  }
+
+  @Put('/:id')
+  async aceptMail(@Param('id') id_mail: string) {
+    return await this.inboxService.acceptMail(id_mail);
+  }
+  @Put('/:id')
+  async rejectMail(@Param('id') id_mail: string) {
+    // return await this.inboxService.rejectMail(id_mail);
   }
 }
