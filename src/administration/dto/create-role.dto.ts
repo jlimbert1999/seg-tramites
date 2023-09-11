@@ -1,34 +1,31 @@
-import { Type } from "class-transformer";
-import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsString, ValidateNested } from "class-validator"
+import { Type } from 'class-transformer';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsNotEmpty,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
-export class CreateRoleDto {
-    @IsNotEmpty()
-    @IsString()
-    role: string
+class Permissions {
+  @IsString()
+  @IsNotEmpty()
+  resource: string;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @ArrayMinSize(1)
-    @Type(() => Privileges)
-    privileges: Privileges[]
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMinSize(1)
+  actions: string[];
 }
 
+export class CreateRoleDto {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
 
-class Privileges {
-    @IsString()
-    @IsNotEmpty()
-    resource: string;
-
-    @IsBoolean()
-    create: boolean
-
-    @IsBoolean()
-    update: boolean
-
-    @IsBoolean()
-    read: boolean
-
-    @IsBoolean()
-    delete: boolean
-
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => Permissions)
+  permissions: Permissions[];
 }

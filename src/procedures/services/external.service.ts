@@ -1,43 +1,29 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { ExternalProcedure } from '../schemas/external.schema';
-import { CreateExternalProcedureDto } from '../dto/create-external.dto';
-import { Account, Dependency } from 'src/administration/schemas';
-import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
-import { UpdateExternalProcedureDto } from '../dto/update-external.dto';
+import { Account } from 'src/administration/schemas';
 import { Observation } from '../schemas/observations.schema';
 import { Procedure } from '../schemas/procedure.schema';
 import { ExternalDetail } from '../schemas/external-detail.schema';
-import { InternalDetail } from '../schemas/internal-detail.schema';
 import { groupProcedure } from '../interfaces/group.interface';
 import { ProcedureService } from './procedure.service';
+import {
+  CreateExternalDetailDto,
+  CreateProcedureDto,
+  UpdateExternalDto,
+  UpdateProcedureDto,
+} from '../dto';
 
 @Injectable()
 export class ExternalService {
   constructor(
-    @InjectModel(ExternalProcedure.name)
-    private externalProcedureModel: Model<ExternalProcedure>,
-    @InjectModel(TypeProcedure.name)
-    private typeProcedure: Model<TypeProcedure>,
     @InjectModel(Observation.name) private observationModel: Model<Observation>,
-    @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name)
     private externalDetailModel: Model<ExternalDetail>,
     private readonly procedureService: ProcedureService,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
-  async markProcedureAsSend(id_procedure: string) {
-    return await this.externalProcedureModel.updateOne(
-      { _id: id_procedure },
-      { enviado: true },
-    );
-  }
 
   async search(
     limit: number,
@@ -91,26 +77,9 @@ export class ExternalService {
         },
       },
       {
-        $lookup: {
-          from: 'tipos_tramites',
-          localField: 'type',
-          foreignField: '_id',
-          as: 'type',
-        },
-      },
-      {
-        $unwind: {
-          path: '$type',
-        },
-      },
-      {
         $project: {
           'details.solicitante.fullname': 0,
           'details.requerimientos': 0,
-          'type.requerimientos': 0,
-          'type.segmento': 0,
-          'type.tipo': 0,
-          'type.activo': 0,
         },
       },
 
@@ -132,7 +101,7 @@ export class ExternalService {
 
   async findAll(limit: number, offset: number, id_account: string) {
     offset = offset * limit;
-    const [procedures, total] = await Promise.all([
+    const [procedures, length] = await Promise.all([
       await this.procedureModel
         .find({
           account: id_account,
@@ -149,24 +118,21 @@ export class ExternalService {
         estado: { $ne: 'ANULADO' },
       }),
     ]);
-    return { procedures, total };
+    return { procedures, length };
   }
 
-  async create(procedure: CreateExternalProcedureDto, acccount: Account) {
-    const { solicitante, representante, pin, requirements, ...values } =
-      procedure;
+  async create(
+    procedure: CreateProcedureDto,
+    details: CreateExternalDetailDto,
+    acccount: Account,
+  ) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      const createdDetail = new this.externalDetailModel({
-        solicitante,
-        representante,
-        pin,
-        requirements,
-      });
+      const createdDetail = new this.externalDetailModel(details);
       await createdDetail.save({ session });
       const newProcedure = await this.procedureService.create(
-        values,
+        procedure,
         acccount,
         createdDetail._id,
         groupProcedure.EXTERNAL,
@@ -176,7 +142,6 @@ export class ExternalService {
       return newProcedure;
     } catch (error) {
       await session.abortTransaction();
-      console.log(error);
       throw new InternalServerErrorException(
         'No se puedo registrar el tramite correctamente',
       );
@@ -185,71 +150,38 @@ export class ExternalService {
     }
   }
 
-  async update(id_procedure: string, procedure: UpdateExternalProcedureDto) {
-    const updateProcedure = await this.procedureModel.findByIdAndUpdate(
+  async update(
+    id_procedure: string,
+    id_account: string,
+    procedure: UpdateProcedureDto,
+    details: UpdateExternalDto,
+  ) {
+    const procedureDB = await this.procedureService.checkIfEditable(
       id_procedure,
-      procedure,
-      { new: true },
+      id_account,
     );
-    await this.externalDetailModel.findByIdAndUpdate(
-      updateProcedure.details._id,
-      procedure,
-    );
-  }
-
-  async getAllDataProcedure(id_procedure: string) {
-    const procedure = await this.externalProcedureModel
-      .findById(id_procedure)
-      .populate('tipo_tramite', 'nombre')
-      .populate({
-        path: 'cuenta',
-        select: '_id',
-        populate: {
-          path: 'funcionario',
-          select: 'nombre paterno materno cargo',
-          populate: {
-            path: 'cargo',
-            select: 'nombre',
-          },
+    const session = await this.connection.startSession();
+    try {
+      session.startTransaction();
+      await this.externalDetailModel.updateOne(
+        {
+          _id: procedureDB.details._id,
         },
-      });
-    if (!procedure) throw new BadRequestException('El tramite no existe');
-    const observations = await this.observationModel.find({
-      group: groupProcedure.EXTERNAL,
-      procedure: id_procedure,
-    });
-    return { procedure, observations };
-  }
-
-  async generateAlterno(account: Account, id_typeProcedure: string) {
-    const dependency = await this.dependencyModel
-      .findById(account.dependencia._id)
-      .populate('institucion', 'sigla');
-    if (!dependency)
-      throw new BadRequestException(
-        'No se ha podido generar un alterno correctamente',
+        details,
+        { session },
       );
-    if (!dependency.institucion)
-      throw new BadRequestException(
-        'No se ha podido generar un alterno correctamente',
+      const updatedProcedure = await this.procedureService.update(
+        id_procedure,
+        procedure,
+        session,
       );
-    const typeProcedure = await this.typeProcedure
-      .findById(id_typeProcedure)
-      .select('segmento');
-    if (!typeProcedure)
-      throw new BadRequestException(
-        'No se ha podido generar un alterno correctamente',
-      );
-    // TODO CONFIG YEAR IN ENV
-    const regex = new RegExp(
-      `${typeProcedure.segmento}-${dependency.institucion.sigla}-2023`.toUpperCase(),
-      'i',
-    );
-    const correlativo = await this.externalProcedureModel.count({
-      alterno: regex,
-    });
-    return `${typeProcedure.segmento}-${
-      dependency.institucion.sigla
-    }-2023-${String(correlativo + 1).padStart(6, '0')}`;
+      await session.commitTransaction();
+      return updatedProcedure;
+    } catch (error) {
+      await session.abortTransaction();
+      throw new InternalServerErrorException();
+    } finally {
+      session.endSession();
+    }
   }
 }

@@ -2,14 +2,12 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
-  IsIn,
   IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { groupProcedure } from '../interfaces/group.interface';
 
 class ReceiverDto {
   @IsMongoId()
@@ -27,9 +25,6 @@ class ReceiverDto {
 export class CreateInboxDto {
   @IsMongoId()
   tramite: string;
-
-  @IsIn(Object.values(groupProcedure))
-  tipo: groupProcedure;
 
   @IsString()
   @IsNotEmpty()

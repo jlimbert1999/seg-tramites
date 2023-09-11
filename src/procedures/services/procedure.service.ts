@@ -12,7 +12,7 @@ import { ExternalDetail } from '../schemas/external-detail.schema';
 import { InternalDetail } from '../schemas/internal-detail.schema';
 import { Account, Dependency, TypeProcedure } from 'src/administration/schemas';
 import { groupProcedure } from '../interfaces/group.interface';
-import { ProcedureDto } from '../dto/procedure.dto';
+import { CreateProcedureDto, UpdateProcedureDto } from '../dto';
 
 @Injectable()
 export class ProcedureService {
@@ -20,7 +20,7 @@ export class ProcedureService {
     @InjectModel(ExternalProcedure.name)
     private externalProcedureModel: Model<ExternalProcedure>,
     @InjectModel(InternalProcedure.name)
-    private InternalProcedureModel: Model<InternalProcedure>,
+    private internalProcedureModel: Model<InternalProcedure>,
     @InjectModel(ExternalDetail.name)
     private externalDetailModel: Model<ExternalDetail>,
     @InjectModel(InternalDetail.name)
@@ -66,14 +66,15 @@ export class ProcedureService {
     //   await createProcedure.save();
     //   await this.imboxModel.updateMany(
     //     { tramite: procedure._id },
-    //     { tramite: createProcedure._id },
+    //     { $set: { tramite: createProcedure._id } },
     //   );
     //   await this.outboxModel.updateMany(
     //     { tramite: procedure._id },
-    //     { tramite: createProcedure._id },
+    //     { $set: { tramite: createProcedure._id } },
     //   );
     // }
-    // const procedures = await this.InternalProcedureModel.find({});
+
+    // const procedures = await this.internalProcedureModel.find({});
     // for (const procedure of procedures) {
     //   const newProcedure: any = {
     //     code: procedure.alterno,
@@ -101,17 +102,17 @@ export class ProcedureService {
     //   await createProcedure.save();
     //   await this.imboxModel.updateMany(
     //     { tramite: procedure._id },
-    //     { tramite: createProcedure._id },
+    //     { $set: { tramite: createProcedure._id } },
     //   );
     //   await this.outboxModel.updateMany(
     //     { tramite: procedure._id },
-    //     { tramite: createProcedure._id },
+    //     { $set: { tramite: createProcedure._id } },
     //   );
     // }
-    // return { ok: true };
+    return { ok: true };
   }
   async create(
-    procedure: ProcedureDto,
+    procedure: CreateProcedureDto,
     account: Account,
     id_detail: string,
     group: groupProcedure,
@@ -132,6 +133,49 @@ export class ProcedureService {
     await createdProcedure.save({ session });
     await createdProcedure.populate('details');
     return createdProcedure;
+  }
+
+  async update(
+    id_procedure: string,
+    procedure: UpdateProcedureDto,
+    session: mongoose.mongo.ClientSession,
+  ) {
+    return await this.procedureModel
+      .findByIdAndUpdate(id_procedure, procedure, {
+        session,
+        new: true,
+      })
+      .populate('details');
+  }
+
+  async getProcedure(id_procedure: string) {
+    const procedureDB = await this.procedureModel
+      .findById(id_procedure)
+      .populate('details')
+      .populate('type', 'nombre')
+      .populate({
+        path: 'account',
+        select: '_id',
+        populate: {
+          path: 'funcionario',
+          select: 'nombre paterno materno cargo',
+          populate: {
+            path: 'cargo',
+            select: 'nombre',
+          },
+        },
+      });
+    if (!procedureDB) throw new BadRequestException('El tramite no existe');
+    return procedureDB;
+  }
+
+  async checkIfEditable(id_procedure: string, id_account: string) {
+    const procedureDB = await this.procedureModel.findById(id_procedure);
+    if (!procedureDB)
+      throw new BadRequestException('El tramite solicitado no existe');
+    if (procedureDB.account._id.toString() !== id_account.toString())
+      throw new BadRequestException('Usted no puede editar este tramite');
+    return procedureDB;
   }
 
   async generateCode(

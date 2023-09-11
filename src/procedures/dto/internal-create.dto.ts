@@ -6,8 +6,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ProcedureDto } from './procedure.dto';
-import { IntersectionType } from '@nestjs/mapped-types';
 
 export class Worker {
   @IsString()
@@ -19,7 +17,7 @@ export class Worker {
   cargo: string;
 }
 
-export class InternalDetailDto {
+export class CreateInternalDetailDto {
   @IsNotEmptyObject()
   @IsObject()
   @ValidateNested()
@@ -32,8 +30,3 @@ export class InternalDetailDto {
   @Type(() => Worker)
   destinatario: Worker;
 }
-
-export class CreateInternalProcedureDto extends IntersectionType(
-  ProcedureDto,
-  InternalDetailDto,
-) {}

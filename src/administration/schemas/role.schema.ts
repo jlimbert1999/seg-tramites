@@ -1,64 +1,29 @@
-
-
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
+import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 
-class Privileges {
-    @Prop({
-        type: String,
-        enum: [
-            'externos',
-            'internos',
-            'entradas',
-            'salidas',
-            'tipos',
-            'usuarios',
-            'cuentas',
-            'roles',
-            'cargos',
-            'instituciones',
-            'dependencias',
-            'reportes',
-            'reporte-solicitante',
-            'reporte-tipo',
-            'reporte-unidad',
-            'reporte-usuario',
-            'archivos',
-            'busquedas',
-        ]
-    })
-    resource: string;
+class Permissions {
+  @Prop({
+    type: String,
+    enum: Object.values(validResources),
+  })
+  resource: string;
 
-    @Prop({ type: [String] })
-    actions: string[]
-
-    @Prop({ type: Boolean, default: false })
-    create: boolean
-
-    @Prop({ type: Boolean, default: false })
-    update: boolean
-
-    @Prop({ type: Boolean, default: false })
-    read: boolean
-
-    @Prop({ type: Boolean, default: false })
-    delete: boolean
-
+  @Prop({ type: [String] })
+  actions: string[];
 }
 
 @Schema({ collection: 'roles' })
 export class Role extends Document {
-    @Prop({
-        type: String,
-        required: true,
-        uppercase: true
-    })
-    role: string;
+  @Prop({
+    type: String,
+    required: true,
+    uppercase: true,
+  })
+  name: string;
 
-    @Prop({ _id: false, type: mongoose.Types.Array })
-    privileges: Privileges[]
+  @Prop({ _id: false, type: mongoose.Types.Array })
+  permissions: Permissions[];
 }
 
 export const RoleSchema = SchemaFactory.createForClass(Role);
-
-

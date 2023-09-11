@@ -1,6 +1,6 @@
 import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
 
-export class ProcedureDto {
+export class CreateProcedureDto {
   @IsString()
   cite: string;
 

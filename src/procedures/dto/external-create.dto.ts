@@ -10,8 +10,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ProcedureDto } from './procedure.dto';
-import { IntersectionType } from '@nestjs/mapped-types';
 
 class ApplicantDto {
   @IsString()
@@ -40,6 +38,7 @@ class ApplicantDto {
   @IsOptional()
   documento?: string;
 }
+
 class RepresentativeDto {
   @IsString()
   @IsNotEmpty()
@@ -63,7 +62,7 @@ class RepresentativeDto {
   documento?: string;
 }
 
-class ExternalDetailDto {
+export class CreateExternalDetailDto {
   @IsOptional()
   @IsDefined()
   @IsNotEmptyObject()
@@ -81,13 +80,8 @@ class ExternalDetailDto {
 
   @IsArray()
   @IsString({ each: true })
-  requirements: string[];
+  requerimientos: string[];
 
   @IsNumber()
   pin: number;
 }
-
-export class CreateExternalProcedureDto extends IntersectionType(
-  ProcedureDto,
-  ExternalDetailDto,
-) {}
