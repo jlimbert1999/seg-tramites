@@ -234,9 +234,7 @@ export class InboxService {
   }
 
   async rejectMail(id_mail: string, rejectionReason: string) {
-    const mailDB = await this.inboxModel
-      .findById(id_mail)
-      .populate('tramite', 'state');
+    const mailDB = await this.inboxModel.findById(id_mail);
     if (!mailDB)
       throw new BadRequestException('El envio del tramite ha sido cancelado');
     const session = await this.connection.startSession();
@@ -244,6 +242,7 @@ export class InboxService {
       const { tramite, emisor, receptor } = mailDB;
       session.startTransaction();
       await Promise.all([
+        this.inboxModel.deleteOne({ _id: id_mail }, { session }),
         this.outboxModel.updateOne(
           {
             tramite: tramite._id,
@@ -258,7 +257,6 @@ export class InboxService {
           },
           { session },
         ),
-        this.inboxModel.deleteOne({ _id: id_mail }, { session }),
       ]);
       const lastMailSend = await this.outboxModel
         .findOne({
@@ -270,6 +268,7 @@ export class InboxService {
       if (lastMailSend) {
         lastMailSend.recibido = false;
         const recoverMail = new this.inboxModel(lastMailSend);
+        console.log(recoverMail);
         await this.inboxModel.updateOne(
           {
             tramite: tramite._id,
@@ -280,19 +279,21 @@ export class InboxService {
           { upsert: true, session: session },
         );
       } else {
-        await this.procedureModel.updateOne(
-          { _id: tramite._id },
-          { send: false },
-          { session },
-        );
+        // await this.procedureModel.updateOne(
+        //   { _id: tramite._id },
+        //   { send: false },
+        //   { session },
+        // );
       }
+      throw new BadRequestException('error conotrolado');
       await session.commitTransaction();
       return true;
     } catch (error) {
       await session.abortTransaction();
+      console.log(error);
       throw new InternalServerErrorException('No se pudo aceptar el tramite');
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 

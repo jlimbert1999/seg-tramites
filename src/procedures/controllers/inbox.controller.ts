@@ -81,12 +81,12 @@ export class InboxController {
     return await this.inboxService.getMail(id_mail);
   }
 
-  @Put('/:id')
+  @Put('accept/:id')
   async aceptMail(@Param('id') id_mail: string) {
     return await this.inboxService.acceptMail(id_mail);
   }
-  @Put('/:id')
+  @Put('reject/:id')
   async rejectMail(@Param('id') id_mail: string) {
-    // return await this.inboxService.rejectMail(id_mail);
+    return await this.inboxService.rejectMail(id_mail, 'esta mal');
   }
 }
