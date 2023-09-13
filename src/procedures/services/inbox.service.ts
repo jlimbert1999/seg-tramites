@@ -7,17 +7,18 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Imbox, Outbox, Procedure } from '../schemas/index';
 import { Account } from 'src/administration/schemas';
-import { CreateInboxDto } from '../dto/create-inbox.dto';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { stateProcedure } from '../interfaces/states-procedure.interface';
+import { CreateInboxDto } from '../dto';
 
 @Injectable()
 export class InboxService {
   constructor(
-    @InjectModel(Imbox.name) private inboxModel: Model<Imbox>,
-    @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
-    @InjectModel(Account.name) private accountModel: Model<Account>,
-    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
+    @InjectModel(Imbox.name) private readonly inboxModel: Model<Imbox>,
+    @InjectModel(Outbox.name) private readonly outboxModel: Model<Outbox>,
+    @InjectModel(Account.name) private readonly accountModel: Model<Account>,
+    @InjectModel(Procedure.name)
+    private readonly procedureModel: Model<Procedure>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -154,7 +155,7 @@ export class InboxService {
       await this.inboxModel.deleteOne(
         {
           tramite: inbox.tramite,
-          receptor: account._id,
+          'receptor.cuenta': account._id,
           recibido: { $ne: null },
         },
         { session },
@@ -194,25 +195,23 @@ export class InboxService {
     try {
       const { tramite, emisor, receptor } = mailDB;
       session.startTransaction();
-      await Promise.all([
-        this.outboxModel.updateOne(
-          {
-            tramite: tramite._id,
-            'emisor.cuenta': emisor.cuenta._id,
-            'receptor.cuenta': receptor.cuenta._id,
-            recibido: null,
-          },
-          { recibido: true, fecha_recibido: new Date() },
-          { session },
-        ),
-        this.inboxModel.updateOne(
-          {
-            _id: id_mail,
-          },
-          { recibido: true },
-          { session },
-        ),
-      ]);
+      await this.inboxModel.updateOne(
+        {
+          _id: id_mail,
+        },
+        { recibido: true },
+        { session },
+      );
+      await this.outboxModel.updateOne(
+        {
+          tramite: tramite._id,
+          'emisor.cuenta': emisor.cuenta._id,
+          'receptor.cuenta': receptor.cuenta._id,
+          recibido: null,
+        },
+        { recibido: true, fecha_recibido: new Date() },
+        { session },
+      );
       if (tramite.state !== stateProcedure.OBSERVADO)
         await this.procedureModel.updateOne(
           { _id: tramite._id },
@@ -224,16 +223,17 @@ export class InboxService {
       await session.commitTransaction();
       return tramite.state;
     } catch (error) {
+      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException(
         'Ha ocurrido un error al aceptar el tramite',
       );
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 
-  async rejectMail(id_mail: string, rejectionReason: string) {
+  async rejectMail(id_mail: string, reason: string) {
     const mailDB = await this.inboxModel.findById(id_mail);
     if (!mailDB)
       throw new BadRequestException('El envio del tramite ha sido cancelado');
@@ -241,60 +241,69 @@ export class InboxService {
     try {
       const { tramite, emisor, receptor } = mailDB;
       session.startTransaction();
-      await Promise.all([
-        this.inboxModel.deleteOne({ _id: id_mail }, { session }),
-        this.outboxModel.updateOne(
-          {
-            tramite: tramite._id,
-            'emisor.cuenta': emisor.cuenta._id,
-            'receptor.cuenta': receptor.cuenta._id,
-            recibido: null,
-          },
-          {
-            fecha_recibido: new Date(),
-            motivo_rechazo: rejectionReason,
-            recibido: false,
-          },
-          { session },
-        ),
-      ]);
-      const lastMailSend = await this.outboxModel
-        .findOne({
+      await this.inboxModel.deleteOne({ _id: id_mail }, { session });
+      await this.outboxModel.updateOne(
+        {
           tramite: tramite._id,
-          'receptor.cuenta': emisor.cuenta._id,
-          recibido: true,
-        })
-        .sort({ _id: -1 });
-      if (lastMailSend) {
-        lastMailSend.recibido = false;
-        const recoverMail = new this.inboxModel(lastMailSend);
-        console.log(recoverMail);
-        await this.inboxModel.updateOne(
-          {
-            tramite: tramite._id,
-            'emisor.cuenta': lastMailSend.emisor.cuenta._id,
-            'receptor.cuenta': lastMailSend.receptor.cuenta._id,
-          },
-          { $setOnInsert: recoverMail },
-          { upsert: true, session: session },
-        );
-      } else {
-        // await this.procedureModel.updateOne(
-        //   { _id: tramite._id },
-        //   { send: false },
-        //   { session },
-        // );
-      }
-      throw new BadRequestException('error conotrolado');
+          'emisor.cuenta': emisor.cuenta._id,
+          'receptor.cuenta': receptor.cuenta._id,
+          recibido: null,
+        },
+        {
+          fecha_recibido: new Date(),
+          motivo_rechazo: reason,
+          recibido: false,
+        },
+        { session },
+      );
+      const recoveredMail = await this.recoverLastMail(
+        tramite._id,
+        emisor.cuenta._id,
+        session,
+      );
       await session.commitTransaction();
-      return true;
+      return recoveredMail;
     } catch (error) {
-      await session.abortTransaction();
       console.log(error);
+      await session.abortTransaction();
       throw new InternalServerErrorException('No se pudo aceptar el tramite');
     } finally {
       await session.endSession();
     }
+  }
+
+  async recoverLastMail(
+    id_procedure: string,
+    id_receiver: string,
+    session: mongoose.mongo.ClientSession,
+  ) {
+    const lastMail = await this.outboxModel
+      .findOne({
+        tramite: id_procedure,
+        'receptor.cuenta': id_receiver,
+        recibido: true,
+      })
+      .sort({ _id: -1 });
+    if (!lastMail) {
+      await this.procedureModel.updateOne(
+        { _id: id_procedure },
+        { send: false },
+        { session },
+      );
+      return undefined;
+    }
+    lastMail.recibido = false;
+    const recoverMail = new this.inboxModel(lastMail);
+    return await this.inboxModel.findOneAndUpdate(
+      {
+        tramite: id_procedure,
+        'emisor.cuenta': lastMail.emisor.cuenta._id,
+        'receptor.cuenta': lastMail.receptor.cuenta._id,
+        recibido: false,
+      },
+      { $setOnInsert: recoverMail },
+      { upsert: true, session: session },
+    );
   }
 
   async createInboxModel(inbox: CreateInboxDto, account: Account) {
@@ -350,6 +359,7 @@ export class InboxService {
         )} ya tiene el tramite en su bandeja de entrada`,
       );
   }
+
   async getMail(id_inbox: string) {
     const mail = await this.inboxModel
       .findById(id_inbox)

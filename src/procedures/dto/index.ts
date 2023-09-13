@@ -4,4 +4,4 @@ export * from './external-create.dto';
 export * from './external-update.dto';
 export * from './internal-create.dto';
 export * from './internal-update.dto';
-export * from './create-inbox.dto';
+export * from './inbox-create.dto';

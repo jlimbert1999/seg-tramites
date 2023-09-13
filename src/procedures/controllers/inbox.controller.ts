@@ -17,8 +17,9 @@ import {
 } from 'src/administration/services';
 import { InboxService, OutboxService } from '../services';
 import { Account } from 'src/administration/schemas';
-import { CreateInboxDto } from '../dto/create-inbox.dto';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
+import { CreateInboxDto } from '../dto';
+import { RejectionDetail } from '../dto/inbox-update.dto';
 
 @Controller('inbox')
 @Auth(validResources.inbox)
@@ -85,8 +86,13 @@ export class InboxController {
   async aceptMail(@Param('id') id_mail: string) {
     return await this.inboxService.acceptMail(id_mail);
   }
+
   @Put('reject/:id')
-  async rejectMail(@Param('id') id_mail: string) {
-    return await this.inboxService.rejectMail(id_mail, 'esta mal');
+  async rejectMail(
+    @Param('id') id_mail: string,
+    @Body() body: RejectionDetail,
+  ) {
+    await this.inboxService.rejectMail(id_mail, body.rejection_reason);
+    return { message: 'Tramite rechazado' };
   }
 }
