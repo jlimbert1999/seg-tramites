@@ -3,16 +3,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import {
   ExternalProcedure,
-  Imbox,
   InternalProcedure,
   Outbox,
+  Procedure,
 } from '../schemas';
-import { Procedure } from '../schemas/procedure.schema';
 import { ExternalDetail } from '../schemas/external-detail.schema';
 import { InternalDetail } from '../schemas/internal-detail.schema';
 import { Account, Dependency, TypeProcedure } from 'src/administration/schemas';
 import { groupProcedure } from '../interfaces/group.interface';
 import { CreateProcedureDto, UpdateProcedureDto } from '../dto';
+import { Inbox } from '../schemas/inbox.schema';
 
 @Injectable()
 export class ProcedureService {
@@ -25,7 +25,7 @@ export class ProcedureService {
     private externalDetailModel: Model<ExternalDetail>,
     @InjectModel(InternalDetail.name)
     private internalDetailModel: Model<InternalDetail>,
-    @InjectModel(Imbox.name) private imboxModel: Model<Imbox>,
+    @InjectModel(Inbox.name) private imboxModel: Model<Inbox>,
     @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
     @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
     @InjectModel(TypeProcedure.name)

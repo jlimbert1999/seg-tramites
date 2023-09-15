@@ -1,8 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Account, Officer } from 'src/administration/schemas';
-import { ExternalProcedure } from './external.schema';
-import { InternalProcedure } from './internal.schema';
 import { Procedure } from './procedure.schema';
 
 @Schema({ _id: false })
@@ -34,7 +32,7 @@ export class Participant extends Document {
 export const ParticipantSchema = SchemaFactory.createForClass(Participant);
 
 @Schema({ collection: 'bandeja_entradas' })
-export class Imbox extends Document {
+export class Inbox extends Document {
   @Prop({
     type: ParticipantSchema,
     required: true,
@@ -92,4 +90,4 @@ export class Imbox extends Document {
   recibido?: boolean;
 }
 
-export const ImboxSchema = SchemaFactory.createForClass(Imbox);
+export const InboxSchema = SchemaFactory.createForClass(Inbox);

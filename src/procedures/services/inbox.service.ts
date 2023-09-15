@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Imbox, Outbox, Procedure } from '../schemas/index';
+import { Inbox, Outbox, Procedure } from '../schemas/index';
 import { Account } from 'src/administration/schemas';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { stateProcedure } from '../interfaces/states-procedure.interface';
@@ -14,7 +14,7 @@ import { CreateInboxDto } from '../dto';
 @Injectable()
 export class InboxService {
   constructor(
-    @InjectModel(Imbox.name) private readonly inboxModel: Model<Imbox>,
+    @InjectModel(Inbox.name) private readonly inboxModel: Model<Inbox>,
     @InjectModel(Outbox.name) private readonly outboxModel: Model<Outbox>,
     @InjectModel(Account.name) private readonly accountModel: Model<Account>,
     @InjectModel(Procedure.name)
@@ -259,6 +259,7 @@ export class InboxService {
       const recoveredMail = await this.recoverLastMail(
         tramite._id,
         emisor.cuenta._id,
+        false,
         session,
       );
       await session.commitTransaction();
@@ -275,6 +276,7 @@ export class InboxService {
   async recoverLastMail(
     id_procedure: string,
     id_receiver: string,
+    isReceived: boolean,
     session: mongoose.mongo.ClientSession,
   ) {
     const lastMail = await this.outboxModel
@@ -292,7 +294,7 @@ export class InboxService {
       );
       return undefined;
     }
-    lastMail.recibido = false;
+    lastMail.recibido = isReceived;
     const recoverMail = new this.inboxModel(lastMail);
     return await this.inboxModel.findOneAndUpdate(
       {

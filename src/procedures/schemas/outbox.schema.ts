@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { ExternalProcedure } from 'src/procedures/schemas/external.schema';
-import { Participant, ParticipantSchema } from './imbox.schema';
 import { InternalProcedure } from './internal.schema';
 import { Procedure } from './procedure.schema';
+import { Participant, ParticipantSchema } from './inbox.schema';
 
 @Schema({ collection: 'bandeja_salidas' })
 export class Outbox extends Document {
