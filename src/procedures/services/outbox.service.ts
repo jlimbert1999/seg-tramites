@@ -5,35 +5,31 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { ExternalProcedure, InternalProcedure, Outbox } from '../schemas';
-import { InboxService } from './inbox.service';
+import { Communication } from '../schemas';
+import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { statusMail } from '../interfaces';
 
 @Injectable()
 export class OutboxService {
   constructor(
-    @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
-    // @InjectModel(Imbox.name) private imboxModel: Model<Imbox>,
-    private readonly inboxService: InboxService,
-    @InjectModel(ExternalProcedure.name)
-    private externalProcedure: Model<ExternalProcedure>,
-    @InjectModel(InternalProcedure.name)
-    private internalProcedure: Model<InternalProcedure>,
+    @InjectModel(Communication.name)
+    private communicationModel: Model<Communication>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async getAll(id_account: string, limit: number, offset: number) {
-    const dataPaginated = await this.outboxModel.aggregate([
+  async findAll(id_account: string, { limit, offset }: PaginationParamsDto) {
+    const dataPaginated = await this.communicationModel.aggregate([
       {
         $match: {
-          'emisor.cuenta': id_account,
+          'emitter.cuenta': id_account,
         },
       },
       {
         $group: {
           _id: {
-            cuenta: '$emisor.cuenta',
-            tramite: '$tramite',
-            fecha_envio: '$fecha_envio',
+            account: '$emitter.cuenta',
+            procedure: '$procedure',
+            outboundDate: '$outboundDate',
           },
           sendings: { $push: '$$ROOT' },
         },
@@ -41,20 +37,20 @@ export class OutboxService {
       {
         $lookup: {
           from: 'procedures',
-          localField: '_id.tramite',
+          localField: '_id.procedure',
           foreignField: '_id',
-          as: '_id.tramite',
+          as: '_id.procedure',
         },
       },
       {
         $unwind: {
-          path: '$_id.tramite',
+          path: '$_id.procedure',
         },
       },
-      { $sort: { '_id.fecha_envio': -1 } },
+      { $sort: { '_id.outboundDate': -1 } },
       {
         $facet: {
-          paginatedResults: [{ $skip: offset * limit }, { $limit: limit }],
+          paginatedResults: [{ $skip: offset }, { $limit: limit }],
           totalCount: [
             {
               $count: 'count',
@@ -70,32 +66,32 @@ export class OutboxService {
     return { mails, length };
   }
 
-  async getWorkflow(id_procedure: string) {
-    const workflow = await this.outboxModel.aggregate([
+  async getWorkflowProcedure(id_procedure: string) {
+    const workflow = await this.communicationModel.aggregate([
       {
         $match: {
-          tramite: new mongoose.Types.ObjectId(id_procedure),
+          procedure: new mongoose.Types.ObjectId(id_procedure),
         },
       },
       {
         $group: {
           _id: {
-            cuenta: '$emisor.cuenta',
-            fecha_envio: '$fecha_envio',
+            cuenta: '$emitter.cuenta',
+            outboundDate: '$outboundDate',
           },
           sendings: { $push: '$$ROOT' },
         },
       },
       {
         $sort: {
-          '_id.fecha_envio': 1,
+          '_id.outboundDate': 1,
         },
       },
     ]);
     for (const item of workflow) {
-      await this.outboxModel.populate(item['sendings'], [
+      await this.communicationModel.populate(item['sendings'], [
         {
-          path: 'emisor.cuenta',
+          path: 'emitter.cuenta',
           select: '_id',
           populate: {
             path: 'dependencia',
@@ -107,7 +103,7 @@ export class OutboxService {
           },
         },
         {
-          path: 'receptor.cuenta',
+          path: 'receiver.cuenta',
           select: '_id',
           populate: {
             path: 'dependencia',
@@ -123,39 +119,46 @@ export class OutboxService {
     return workflow;
   }
 
-  async cancelOneSend(id_outbox: string) {
-    const mailDB = await this.outboxModel.findById(id_outbox);
-    if (!mailDB)
-      throw new BadRequestException('No se encontro el envio realizado');
-    if (mailDB.recibido !== undefined)
-      throw new BadRequestException('El tramite ya ha sido evaluado');
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      await this.outboxModel.deleteOne({ _id: id_outbox }, { session });
-      // await this.imboxModel.deleteOne(
-      //   {
-      //     tramite: mailDB.tramite._id,
-      //     'emisor.cuenta': mailDB.emisor.cuenta._id,
-      //     'receptor.cuenta': mailDB.receptor.cuenta._id,
-      //   },
-      //   { session },
-      // ),
-      //   this.inboxService.recoverLastMail(
-      //     mailDB.tramite._id,
-      //     mailDB.receptor.cuenta._id,
-      //     session,
-      //   );
-      // await session.commitTransaction();
-      // return tramite.state;
-    } catch (error) {
-      console.log(error);
-      await session.abortTransaction();
-      throw new InternalServerErrorException(
-        'Ha ocurrido un error al aceptar el tramite',
-      );
-    } finally {
-      await session.endSession();
-    }
+  async cancelSend(outboxIds: string[]) {
+    const mails = await this.communicationModel.find({
+      _id: {
+        $in: outboxIds,
+      },
+    });
+    // console.log(object);
+    // if (!mailDB)
+    //   throw new BadRequestException('No se encontro el envio realizado');
+    // if (mailDB.status === statusMail.Received)
+    //   throw new BadRequestException('El tramite ya ha sido evaluado');
+    // const session = await this.connection.startSession();
+    // try {
+    //   session.startTransaction();
+    //   await this.communicationModel.deleteOne({ _id: id_outbox }, { session });
+
+    //   await this.outboxModel.deleteOne({ _id: id_outbox }, { session });
+    //   await this.imboxModel.deleteOne(
+    //     {
+    //       tramite: mailDB.tramite._id,
+    //       'emisor.cuenta': mailDB.emisor.cuenta._id,
+    //       'receptor.cuenta': mailDB.receptor.cuenta._id,
+    //     },
+    //     { session },
+    //   ),
+    //     this.inboxService.recoverLastMail(
+    //       mailDB.tramite._id,
+    //       mailDB.receptor.cuenta._id,
+    //       session,
+    //     );
+    //   await session.commitTransaction();
+    //   return tramite.state;
+    // } catch (error) {
+    //   console.log(error);
+    //   await session.abortTransaction();
+    //   throw new InternalServerErrorException(
+    //     'Ha ocurrido un error al aceptar el tramite',
+    //   );
+    // } finally {
+    //   await session.endSession();
+    // }
   }
 }

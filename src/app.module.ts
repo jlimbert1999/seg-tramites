@@ -16,7 +16,7 @@ import { ProceduresModule } from './procedures/procedures.module';
     // ),
     MongooseModule.forRootAsync({
       useFactory: () => ({
-        uri: 'mongodb+srv://root:8835024limbert@cluster0.jmkbaqz.mongodb.net/seg-tramites?retryWrites=true&w=majority',
+        uri: 'mongodb://127.0.0.1:27017/new-seg-tramitesDB',
       }),
     }),
     AuthModule,

@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { GroupwareService } from './groupware.service';
 import { CreateGroupwareDto } from './dto/create-groupware.dto';
 import { UpdateGroupwareDto } from './dto/update-groupware.dto';
-import { Inbox } from 'src/procedures/schemas';
+import { Communication } from 'src/procedures/schemas';
 
 @WebSocketGateway({ cors: true })
 export class GroupwareGateway
@@ -41,14 +41,14 @@ export class GroupwareGateway
     client.broadcast.emit('listar', this.groupwareService.getAll());
   }
 
-  sendMail(data: Inbox[]) {
+  sendMail(data: Communication[]) {
     data.forEach((mail) => {
       const user = this.groupwareService.getUser(
-        String(mail.receptor.cuenta._id),
+        String(mail.receiver.cuenta._id),
       );
       if (user) {
         user.socketIds.forEach((socketId) => {
-          this.server.to(socketId).emit('newmail', mail);
+          this.server.to(socketId).emit('new-mail', mail);
         });
       }
     });

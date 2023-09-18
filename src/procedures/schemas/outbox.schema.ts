@@ -32,6 +32,7 @@ export class Outbox extends Document {
   //   tipo: 'ExternalProcedure' | 'InternalProcedure';
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
+    ref: Procedure.name,
     required: true,
   })
   tramite: Procedure;

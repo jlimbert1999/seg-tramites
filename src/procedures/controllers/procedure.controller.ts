@@ -22,7 +22,7 @@ export class ProcedureController {
     const [procedure, location, workflow] = await Promise.all([
       this.procedureService.getProcedure(id_procedure),
       this.inboxService.getLocationProcedure(id_procedure),
-      this.outboxService.getWorkflow(id_procedure),
+      this.outboxService.getWorkflowProcedure(id_procedure),
     ]);
     return { procedure, location, workflow };
   }

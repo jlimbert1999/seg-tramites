@@ -57,7 +57,7 @@ export class InboxController {
     @Query('offset', ParseIntPipe) offset: number,
     @Query('limit', ParseIntPipe) limit: number,
   ) {
-    return await this.inboxService.findAll(id_account, limit, offset);
+    // return await this.inboxService.findAll(id_account, limit, offset);
   }
   @Get('search/:text')
   async search(
@@ -72,14 +72,14 @@ export class InboxController {
 
   @Post()
   async add(@GetUser() account: Account, @Body() inbox: CreateInboxDto) {
-    const mails = await this.inboxService.create(inbox, account);
-    this.groupwareGateway.sendMail(mails);
+    // const mails = await this.inboxService.create(inbox, account);
+    // this.groupwareGateway.sendMail(mails);
     return { message: 'Tramite enviado' };
   }
 
   @Get('/:id')
   async getMail(@Param('id') id_mail: string) {
-    return await this.inboxService.getMail(id_mail);
+    // return await this.inboxService.getMail(id_mail);
   }
 
   @Put('accept/:id')

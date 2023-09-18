@@ -8,12 +8,4 @@ import { OutboxService } from '../services';
 @Auth(validResources.outbox)
 export class OutboxController {
   constructor(private readonly outboxService: OutboxService) {}
-  @Get()
-  async getSegmentsOfTypesProcedures(
-    @GetUser('_id') id_account: string,
-    @Query('offset', ParseIntPipe) offset: number,
-    @Query('limit', ParseIntPipe) limit: number,
-  ) {
-    return await this.outboxService.getAll(id_account, limit, offset);
-  }
 }

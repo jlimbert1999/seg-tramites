@@ -92,7 +92,7 @@ export class ExternalController {
   async getOne(@Param('id_procedure') id_procedure: string) {
     const [procedure, workflow] = await Promise.all([
       this.procedureService.getProcedure(id_procedure),
-      this.outboxService.getWorkflow(id_procedure),
+      this.outboxService.getWorkflowProcedure(id_procedure),
     ]);
     return {
       procedure,

@@ -5,3 +5,5 @@ export * from './external-update.dto';
 export * from './internal-create.dto';
 export * from './internal-update.dto';
 export * from './inbox-create.dto';
+export * from './communication-create.dto';
+export * from './communication-update.dto';

@@ -16,7 +16,12 @@ import {
   OutboxService,
   CommunicationService,
 } from './services/index';
-import { Observation, ObservationSchema } from './schemas/index';
+import {
+  Communication,
+  CommunicationSchema,
+  Observation,
+  ObservationSchema,
+} from './schemas/index';
 import { Inbox, InboxSchema } from './schemas/inbox.schema';
 import {
   ExternalProcedure,
@@ -52,6 +57,7 @@ import { CommunicationController } from './controllers/communication.controller'
       { name: Procedure.name, schema: ProcedureSchema },
       { name: ExternalDetail.name, schema: ExternalDetailSchema },
       { name: InternalDetail.name, schema: InternalDetailSchema },
+      { name: Communication.name, schema: CommunicationSchema },
     ]),
     AuthModule,
     AdministrationModule,
