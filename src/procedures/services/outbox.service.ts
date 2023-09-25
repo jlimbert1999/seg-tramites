@@ -8,6 +8,7 @@ import mongoose, { Model } from 'mongoose';
 import { Communication } from '../schemas';
 import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
 import { statusMail } from '../interfaces';
+import { createFullName } from 'src/administration/helpers/fullname';
 
 @Injectable()
 export class OutboxService {
@@ -119,46 +120,5 @@ export class OutboxService {
     return workflow;
   }
 
-  async cancelSend(outboxIds: string[]) {
-    const mails = await this.communicationModel.find({
-      _id: {
-        $in: outboxIds,
-      },
-    });
-    // console.log(object);
-    // if (!mailDB)
-    //   throw new BadRequestException('No se encontro el envio realizado');
-    // if (mailDB.status === statusMail.Received)
-    //   throw new BadRequestException('El tramite ya ha sido evaluado');
-    // const session = await this.connection.startSession();
-    // try {
-    //   session.startTransaction();
-    //   await this.communicationModel.deleteOne({ _id: id_outbox }, { session });
-
-    //   await this.outboxModel.deleteOne({ _id: id_outbox }, { session });
-    //   await this.imboxModel.deleteOne(
-    //     {
-    //       tramite: mailDB.tramite._id,
-    //       'emisor.cuenta': mailDB.emisor.cuenta._id,
-    //       'receptor.cuenta': mailDB.receptor.cuenta._id,
-    //     },
-    //     { session },
-    //   ),
-    //     this.inboxService.recoverLastMail(
-    //       mailDB.tramite._id,
-    //       mailDB.receptor.cuenta._id,
-    //       session,
-    //     );
-    //   await session.commitTransaction();
-    //   return tramite.state;
-    // } catch (error) {
-    //   console.log(error);
-    //   await session.abortTransaction();
-    //   throw new InternalServerErrorException(
-    //     'Ha ocurrido un error al aceptar el tramite',
-    //   );
-    // } finally {
-    //   await session.endSession();
-    // }
-  }
+  
 }

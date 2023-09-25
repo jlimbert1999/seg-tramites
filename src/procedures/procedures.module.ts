@@ -6,8 +6,6 @@ import { AdministrationModule } from 'src/administration/administration.module';
 import {
   InternalController,
   ExternalController,
-  InboxController,
-  OutboxController,
 } from './controllers/index';
 import {
   ExternalService,
@@ -66,8 +64,6 @@ import { CommunicationController } from './controllers/communication.controller'
   controllers: [
     InternalController,
     ExternalController,
-    InboxController,
-    OutboxController,
     ProcedureController,
     CommunicationController,
   ],

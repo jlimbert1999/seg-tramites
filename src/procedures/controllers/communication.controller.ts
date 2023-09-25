@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -13,23 +14,26 @@ import {
   DependencieService,
 } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { CommunicationService, InboxService, OutboxService } from '../services';
+import { CommunicationService } from '../services';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
-import { CreateCommunicationDto, RejectionDetail } from '../dto';
+import {
+  CancelMailsDto,
+  CreateCommunicationDto,
+  RejectionDetail,
+} from '../dto';
 import { Account } from 'src/administration/schemas';
 
 @Controller('communication')
-@Auth(validResources.inbox)
+@Auth(validResources.communication)
 export class CommunicationController {
   constructor(
-    private readonly inboxService: InboxService,
-    private readonly outboxService: OutboxService,
     private readonly institutionService: InstitutionService,
     private readonly dependencieService: DependencieService,
     private readonly groupwareGateway: GroupwareGateway,
+    private readonly communicationService: CommunicationService,
   ) {}
 
   @Get('generate')
@@ -54,7 +58,10 @@ export class CommunicationController {
     @GetUser('_id') id_account: string,
     @Param('id_dependency') id_dependency: string,
   ) {
-    return await this.inboxService.getAccountForSend(id_dependency, id_account);
+    return await this.communicationService.getAccountsForSend(
+      id_dependency,
+      id_account,
+    );
   }
 
   @Post()
@@ -62,8 +69,11 @@ export class CommunicationController {
     @GetUser() account: Account,
     @Body() communication: CreateCommunicationDto,
   ) {
-    const mails = await this.inboxService.create(communication, account);
-    this.groupwareGateway.sendMail(mails);
+    const mails = await this.communicationService.create(
+      communication,
+      account,
+    );
+    this.groupwareGateway.sendMails(mails);
     return { message: 'Tramite enviado' };
   }
 
@@ -72,12 +82,25 @@ export class CommunicationController {
     @GetUser('_id') id_account: string,
     @Query() paginationParams: PaginationParamsDto,
   ) {
-    return await this.inboxService.findAll(id_account, paginationParams);
+    return await this.communicationService.getInboxOfAccount(
+      id_account,
+      paginationParams,
+    );
+  }
+  @Get('outbox')
+  async getOutbox(
+    @GetUser('_id') id_account: string,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return await this.communicationService.getOutboxOfAccount(
+      id_account,
+      paginationParams,
+    );
   }
 
   @Put('inbox/accept/:id_mail')
   async acceptMail(@Param('id_mail') id_mail: string) {
-    const state = await this.inboxService.acceptMail(id_mail);
+    const state = await this.communicationService.acceptMail(id_mail);
     return { state };
   }
   @Put('inbox/reject/:id_mail')
@@ -85,20 +108,34 @@ export class CommunicationController {
     @Param('id_mail') id_mail: string,
     @Body() body: RejectionDetail,
   ) {
-    await this.inboxService.rejectMail(id_mail, body.rejectionReason);
+    await this.communicationService.rejectMail(id_mail, body.rejectionReason);
     return { message: 'Se ha rechazado el tramite correctamente' };
   }
 
-  @Get('outbox')
-  async getOutbox(
+  @Delete('outbox/:id_procedure')
+  async cancelMails(
     @GetUser('_id') id_account: string,
-    @Query() paginationParams: PaginationParamsDto,
+    @Body() body: CancelMailsDto,
+    @Param('id_procedure') id_procedure: string,
   ) {
-    return await this.outboxService.findAll(id_account, paginationParams);
+    const { message, canceledMails } =
+      await this.communicationService.cancelMails(
+        body.ids_mails,
+        id_procedure,
+        id_account,
+      );
+    this.groupwareGateway.cancelMails(canceledMails);
+    return { message };
   }
+
+  @Get('/:id_mail')
+  async getMailDetails(@Param('id_mail') id_mail: string) {
+    return await this.communicationService.getMailDetails(id_mail);
+  }
+
   @Get('outbox/workflow/:id_procedure')
   async getWorkflow(@GetUser('id_procedure') id_procedure: string) {
-    return await this.outboxService.getWorkflowProcedure(id_procedure);
+    // return await this.outboxService.getWorkflowProcedure(id_procedure);
   }
 
   @Get('search/:text')
@@ -109,6 +146,6 @@ export class CommunicationController {
     @Query('offset', ParseIntPipe) offset: number,
     @Query('limit', ParseIntPipe) limit: number,
   ) {
-    return await this.inboxService.search(id_account, text, limit, offset);
+    // return await this.inboxService.search(id_account, text, limit, offset);
   }
 }

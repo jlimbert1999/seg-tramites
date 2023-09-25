@@ -13,6 +13,7 @@ import { AuthDto } from './dto/auth.dto';
 import { UpdateMyAccountDto } from './dto/my-account.dto';
 import { validResources } from './interfaces/valid-resources.interface';
 import { systemModules } from 'src/administration/helpers/system-modules';
+import { systemMenu } from 'src/administration/helpers/system-menu';
 
 @Injectable()
 export class AuthService {
@@ -163,7 +164,7 @@ export class AuthService {
   }
 
   getMenu(myResources: string[]) {
-    const menu = systemModules.reduce((accumulator, currentValue) => {
+    const menu = systemMenu.reduce((accumulator, currentValue) => {
       const filteredResources = currentValue.resources
         .filter((resource) => myResources.includes(resource.value))
         .map((element) => {

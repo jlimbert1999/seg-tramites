@@ -39,7 +39,7 @@ export class GroupwareService {
       }
     }
   }
-
+  
   getUser(id_account: string) {
     return this.users.find(user => user.id_account === id_account)
   }

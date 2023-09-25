@@ -29,14 +29,7 @@ export class RoleController {
 
   @Get('resources')
   getResources() {
-    const modules = systemModules.map((el) => {
-      const resources = el.resources.map((item) => {
-        const { value, text, actions } = item;
-        return { value, text, actions, disabled: false };
-      });
-      return { group: el.group, resources: resources };
-    });
-    return modules;
+    return systemModules;
   }
 
   @Post()
