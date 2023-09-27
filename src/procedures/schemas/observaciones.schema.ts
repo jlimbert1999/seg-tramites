@@ -7,7 +7,7 @@ import { groupProcedure } from '../interfaces/group.interface';
 
 
 @Schema({ collection: 'observaciones' })
-export class Observation extends Document {
+export class Observaciones extends Document {
     @Prop({
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'group',
@@ -51,4 +51,4 @@ export class Observation extends Document {
     date: Date
 }
 
-export const ObservationSchema = SchemaFactory.createForClass(Observation);
+export const ObservacionSchema = SchemaFactory.createForClass(Observaciones);

@@ -3,10 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from 'src/auth/auth.module';
 import { AdministrationModule } from 'src/administration/administration.module';
 
-import {
-  InternalController,
-  ExternalController,
-} from './controllers/index';
+import { InternalController, ExternalController } from './controllers/index';
 import {
   ExternalService,
   InternalService,
@@ -17,8 +14,8 @@ import {
 import {
   Communication,
   CommunicationSchema,
-  Observation,
-  ObservationSchema,
+  Observaciones,
+  ObservacionSchema,
 } from './schemas/index';
 import { Inbox, InboxSchema } from './schemas/inbox.schema';
 import {
@@ -49,7 +46,7 @@ import { CommunicationController } from './controllers/communication.controller'
     MongooseModule.forFeature([
       { name: ExternalProcedure.name, schema: ExternalProcedureSchema },
       { name: InternalProcedure.name, schema: InternalProcedureSchema },
-      { name: Observation.name, schema: ObservationSchema },
+      { name: Observaciones.name, schema: ObservacionSchema },
       { name: Inbox.name, schema: InboxSchema },
       { name: Outbox.name, schema: OutboxSchema },
       { name: Procedure.name, schema: ProcedureSchema },

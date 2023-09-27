@@ -1,5 +1,5 @@
 export * from './external.schema';
-export * from './observations.schema';
+export * from './observaciones.schema';
 export * from './inbox.schema';
 export * from './outbox.schema';
 export * from './internal.schema';

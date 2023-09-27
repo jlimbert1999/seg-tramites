@@ -2,7 +2,6 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Account } from 'src/administration/schemas';
-import { Observation } from '../schemas/observations.schema';
 import { Procedure } from '../schemas/procedure.schema';
 import { ExternalDetail } from '../schemas/external-detail.schema';
 import { groupProcedure } from '../interfaces/group.interface';
@@ -13,11 +12,12 @@ import {
   UpdateExternalDto,
   UpdateProcedureDto,
 } from '../dto';
+import { Observaciones } from '../schemas/observaciones.schema';
 
 @Injectable()
 export class ExternalService {
   constructor(
-    @InjectModel(Observation.name) private observationModel: Model<Observation>,
+    @InjectModel(Observaciones.name) private observationModel: Model<Observaciones>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name)
     private externalDetailModel: Model<ExternalDetail>,
