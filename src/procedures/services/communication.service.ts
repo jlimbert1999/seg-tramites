@@ -487,7 +487,7 @@ export class CommunicationService {
   }
 
   async getWorkflowOfProcedure(id_procedure: string) {
-    const workflow = await this.outboxModel.aggregate([
+    const workflow = await this.communicationModel.aggregate([
       {
         $match: {
           procedure: new mongoose.Types.ObjectId(id_procedure),

@@ -40,6 +40,8 @@ import {
   InternalDetailSchema,
 } from './schemas/internal-detail.schema';
 import { CommunicationController } from './controllers/communication.controller';
+import { Observation, ObservationSchema } from './schemas/observation.schema';
+import { ObservationService } from './services/observation.service';
 
 @Module({
   imports: [
@@ -53,6 +55,7 @@ import { CommunicationController } from './controllers/communication.controller'
       { name: ExternalDetail.name, schema: ExternalDetailSchema },
       { name: InternalDetail.name, schema: InternalDetailSchema },
       { name: Communication.name, schema: CommunicationSchema },
+      { name: Observation.name, schema: ObservationSchema },
     ]),
     AuthModule,
     AdministrationModule,
@@ -71,6 +74,7 @@ import { CommunicationController } from './controllers/communication.controller'
     OutboxService,
     ProcedureService,
     CommunicationService,
+    ObservationService,
   ],
 })
 export class ProceduresModule {}

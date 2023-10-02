@@ -22,9 +22,11 @@ import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
 import {
   CancelMailsDto,
   CreateCommunicationDto,
+  CreateObservationDto,
   RejectionDetail,
 } from '../dto';
 import { Account } from 'src/administration/schemas';
+import { ObservationService } from '../services/observation.service';
 
 @Controller('communication')
 @Auth(validResources.communication)
@@ -34,6 +36,7 @@ export class CommunicationController {
     private readonly dependencieService: DependencieService,
     private readonly groupwareGateway: GroupwareGateway,
     private readonly communicationService: CommunicationService,
+    private readonly observationService: ObservationService,
   ) {}
 
   @Get('generate')
@@ -147,5 +150,23 @@ export class CommunicationController {
     @Query('limit', ParseIntPipe) limit: number,
   ) {
     // return await this.inboxService.search(id_account, text, limit, offset);
+  }
+
+  @Post('inbox/observation/:id_procedure')
+  async addObservation(
+    @Param('id_procedure') id_procedure: string,
+    @GetUser()
+    account: Account,
+    @Body() observationDto: CreateObservationDto,
+  ) {
+    return this.observationService.addObservation(
+      id_procedure,
+      account,
+      observationDto,
+    );
+  }
+  @Get('inbox/observations/:id_procedure')
+  async getObservations(@Param('id_procedure') id_procedure: string) {
+    return this.observationService.getObservationsOfProcedure(id_procedure);
   }
 }

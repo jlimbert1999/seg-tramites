@@ -7,3 +7,4 @@ export * from './internal-update.dto';
 export * from './inbox-create.dto';
 export * from './communication-create.dto';
 export * from './communication-update.dto';
+export * from './observation-create.dto';
