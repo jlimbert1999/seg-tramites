@@ -4,8 +4,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Observation, Procedure } from '../schemas';
 import mongoose, { Model } from 'mongoose';
+import { Observation, Procedure } from '../schemas';
 import { Account } from 'src/administration/schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
@@ -67,4 +67,15 @@ export class ObservationService {
       session.endSession();
     }
   }
+
+  // async solveObservation(id_observation: string) {
+  //   const observationDB = await this.observationModel.findByIdAndUpdate(
+  //     id_observation,
+  //     {
+  //       isSolved: true,
+  //     },
+  //   );
+
+  //   await this.observationModel.fin;
+  // }
 }
