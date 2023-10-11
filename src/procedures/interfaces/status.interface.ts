@@ -3,4 +3,5 @@ export enum statusMail {
   Completed = 'completed',
   Rejected = 'rejected',
   Pending = 'pending',
+  Archived = 'archived',
 }

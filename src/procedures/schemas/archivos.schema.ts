@@ -1,107 +1,62 @@
-import { Prop } from '@nestjs/mongoose';
-
-const { Schema, model } = require('mongoose');
-
-const ArchivoScheme = Schema({
-  location: {
-    type: String,
-  },
-  procedure: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    refPath: 'group',
-  },
-  group: {
-    type: String,
-    required: true,
-    enum: ['tramites_externos', 'tramites_internos'],
-  },
-  dependencie: {
-    type: Schema.Types.ObjectId,
-    ref: 'dependencias',
-  },
-  account: {
-    type: Schema.Types.ObjectId,
-    ref: 'cuentas',
-  },
-  officer: {
-    type: Schema.Types.ObjectId,
-    ref: 'funcionarios',
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  date: {
-    type: Date,
-    default: Date.now(),
-  },
-});
-ArchivoScheme.method('toJSON', function () {
-  const { __v, ...object } = this.toObject();
-  return object;
-});
-
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
+import { Account, Dependency, Officer } from 'src/administration/schemas';
+import { ExternalProcedure } from './external.schema';
+import { InternalProcedure } from './internal.schema';
 
 @Schema({ collection: 'archivos' })
-export class Communication extends Document {
+export class Archivos {
   @Prop({
-    type: ParticipantSchema,
-    required: true,
+    type: String,
   })
-  emitter: Participant;
-
-  @Prop({
-    type: ParticipantSchema,
-    required: true,
-  })
-  receiver: Participant;
+  location?: string;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: Procedure.name,
+    required: true,
+    refPath: 'group',
+  })
+  procedure: ExternalProcedure | InternalProcedure;
+
+  @Prop({
+    type: String,
+    enum: ['tramites_externos', 'tramites_internos'],
+  })
+  group: 'tramites_externos' | 'tramites_internos';
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Dependency.name,
     required: true,
   })
-  procedure: Procedure;
+  dependencie: Dependency;
 
   @Prop({
-    type: String,
-    required: true,uj
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Account.name,
+    required: true,
   })
-  reference: string;
+  account: Account;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Officer.name,
+    required: true,
+  })
+  officer: Officer;
 
   @Prop({
     type: String,
     required: true,
   })
-  attachmentQuantity: string;
-
-  @Prop({
-    type: String,
-  })
-  internalNumber: string;
+  description: string;
 
   @Prop({
     type: Date,
+    default: Date.now,
     required: true,
   })
-  outboundDate: Date;
-
-  @Prop({
-    type: Date,
-  })
-  inboundDate?: Date;
-
-  @Prop({
-    type: String,
-  })
-  rejectionReason?: string;
-
-  @Prop({
-    type: String,
-    required: true,
-    enum: Object.values(statusMail),
-    default: statusMail.Pending,
-  })
-  status: statusMail;
+  date: Date;
 }
+
+export const ArchivoSchema = SchemaFactory.createForClass(Archivos);

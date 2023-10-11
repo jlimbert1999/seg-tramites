@@ -3,7 +3,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from 'src/auth/auth.module';
 import { AdministrationModule } from 'src/administration/administration.module';
 
-import { InternalController, ExternalController } from './controllers/index';
+import {
+  InternalController,
+  ExternalController,
+  ArchiveController,
+} from './controllers/index';
 import {
   ExternalService,
   InternalService,
@@ -12,6 +16,8 @@ import {
   CommunicationService,
 } from './services/index';
 import {
+  Archive,
+  ArchiveSchema,
   Communication,
   CommunicationSchema,
   Observaciones,
@@ -42,6 +48,8 @@ import {
 import { CommunicationController } from './controllers/communication.controller';
 import { Observation, ObservationSchema } from './schemas/observation.schema';
 import { ObservationService } from './services/observation.service';
+import { ArchivoSchema, Archivos } from './schemas/archivos.schema';
+import { ArchiveService } from './services/archive.service';
 
 @Module({
   imports: [
@@ -56,6 +64,8 @@ import { ObservationService } from './services/observation.service';
       { name: InternalDetail.name, schema: InternalDetailSchema },
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
+      { name: Archivos.name, schema: ArchivoSchema },
+      { name: Archive.name, schema: ArchiveSchema },
     ]),
     AuthModule,
     AdministrationModule,
@@ -66,6 +76,7 @@ import { ObservationService } from './services/observation.service';
     ExternalController,
     ProcedureController,
     CommunicationController,
+    ArchiveController,
   ],
   providers: [
     ExternalService,
@@ -75,6 +86,7 @@ import { ObservationService } from './services/observation.service';
     ProcedureService,
     CommunicationService,
     ObservationService,
+    ArchiveService,
   ],
 })
 export class ProceduresModule {}
