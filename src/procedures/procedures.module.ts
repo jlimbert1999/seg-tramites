@@ -16,10 +16,10 @@ import {
   CommunicationService,
 } from './services/index';
 import {
-  Archive,
-  ArchiveSchema,
   Communication,
   CommunicationSchema,
+  EventProcedure,
+  EventSchema,
   Observaciones,
   ObservacionSchema,
 } from './schemas/index';
@@ -65,7 +65,7 @@ import { ArchiveService } from './services/archive.service';
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
       { name: Archivos.name, schema: ArchivoSchema },
-      { name: Archive.name, schema: ArchiveSchema },
+      { name: EventProcedure.name, schema: EventSchema },
     ]),
     AuthModule,
     AdministrationModule,

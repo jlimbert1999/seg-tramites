@@ -30,7 +30,7 @@ export const systemMenu = [
         ],
       },
       {
-        value: validResources.archived,
+        value: validResources.communication,
         text: 'Archivos',
         icon: 'folder_copy',
         routerLink: 'archivos',

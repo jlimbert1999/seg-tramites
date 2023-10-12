@@ -76,6 +76,11 @@ export class Procedure extends Document {
   @Prop({
     type: String,
   })
+  completionReason?: string;
+
+  @Prop({
+    type: String,
+  })
   tramite: string;
 }
 
