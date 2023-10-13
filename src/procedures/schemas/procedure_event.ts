@@ -1,12 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Account } from 'src/administration/schemas';
 import { Procedure } from './procedure.schema';
-import { Participant, ParticipantSchema } from './inbox.schema';
-import { groupArchive } from '../interfaces';
 
 @Schema()
-export class Archive extends Document {
+export class ProcedureEvents extends Document {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: Procedure.name,
@@ -15,10 +12,10 @@ export class Archive extends Document {
   procedure: Procedure;
 
   @Prop({
-    type: ParticipantSchema,
+    type: String,
     required: true,
   })
-  manager: Participant;
+  fullNameOfficer: string;
 
   @Prop({
     type: String,
@@ -27,16 +24,10 @@ export class Archive extends Document {
   description: string;
 
   @Prop({
-    type: String,
-    enum: Object.values(groupArchive),
-    required: true,
-  })
-  group: groupArchive;
-
-  @Prop({
     type: Date,
     default: Date.now,
   })
   date: Date;
 }
-export const ArchiveSchema = SchemaFactory.createForClass(Archive);
+export const ProcedureEventSchema =
+  SchemaFactory.createForClass(ProcedureEvents);

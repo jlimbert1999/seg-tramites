@@ -9,5 +9,4 @@ export * from './internal-detail.schema';
 export * from './communication.schema';
 export * from './observation.schema';
 export * from './archivos.schema';
-export * from './archive.schema';
-export * from './events.schema';
+export * from './procedure_event';

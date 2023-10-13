@@ -18,8 +18,8 @@ import {
 import {
   Communication,
   CommunicationSchema,
-  EventProcedure,
-  EventSchema,
+  ProcedureEvents,
+  ProcedureEventSchema,
   Observaciones,
   ObservacionSchema,
 } from './schemas/index';
@@ -65,7 +65,7 @@ import { ArchiveService } from './services/archive.service';
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
       { name: Archivos.name, schema: ArchivoSchema },
-      { name: EventProcedure.name, schema: EventSchema },
+      { name: ProcedureEvents.name, schema: ProcedureEventSchema },
     ]),
     AuthModule,
     AdministrationModule,
