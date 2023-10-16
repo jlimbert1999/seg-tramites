@@ -1,7 +1,7 @@
 import { IsEnum, IsMongoId, IsNotEmpty, IsString } from 'class-validator';
 import { stateProcedure } from '../interfaces';
 
-export class ArchiveDto {
+export class CreateArchiveDto {
   @IsMongoId()
   procedure: string;
 
@@ -9,6 +9,8 @@ export class ArchiveDto {
   @IsNotEmpty()
   description: string;
 
-  @IsEnum(stateProcedure)
+  @IsEnum([stateProcedure.CONCLUIDO, stateProcedure.SUSPENDIDO], {
+    message: 'El campo state solo puede ser CONCLUIDO o SUSPENDIDO',
+  })
   state: stateProcedure;
 }
