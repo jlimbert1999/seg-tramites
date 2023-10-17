@@ -1,29 +1,29 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ArchiveService } from '../services/archive.service';
-import { CreateArchiveDto, UpdateArchiveDto } from '../dto';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { Account } from 'src/administration/schemas';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { EventProcedureDto } from '../dto';
 
 @Controller('archive')
 @Auth()
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService) {}
 
-  @Post('procedure/:id_procedure')
+  @Post('procedure/')
   archiveProcedure(
-    @Param('id_procedure') id_procedure: string,
-    @Body() archive: CreateArchiveDto,
+    @Body() eventProcedureDto: EventProcedureDto,
     @GetUser() account: Account,
   ) {
-    return this.archiveService.archiveProcedure(id_procedure, archive, account);
+    return this.archiveService.archiveProcedure(eventProcedureDto, account);
   }
+  
 
   @Post('mail/:id_mail')
   archiveMail(
     @Param('id_mail') id_mail: string,
-    @Body() archive: CreateArchiveDto,
+    @Body() archive: EventProcedureDto,
     @GetUser() account: Account,
   ) {
     return this.archiveService.archiveMail(id_mail, archive, account);
@@ -32,7 +32,7 @@ export class ArchiveController {
   @Post('mail/restart/:id_mail')
   unarchiveMail(
     @Param('id_mail') id_mail: string,
-    @Body() archiveDto: UpdateArchiveDto,
+    @Body() archiveDto: EventProcedureDto,
     @GetUser() account: Account,
   ) {
     return this.archiveService.unarchiveMail(id_mail, archiveDto, account);

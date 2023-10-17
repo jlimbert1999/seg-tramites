@@ -8,7 +8,7 @@ import mongoose, { Model } from 'mongoose';
 import { Archivos } from '../schemas/archivos.schema';
 import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
 import { Communication, ProcedureEvents, Procedure } from '../schemas';
-import { CreateArchiveDto, UpdateArchiveDto } from '../dto';
+import { EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { Account } from 'src/administration/schemas';
 import { createFullName } from 'src/administration/helpers/fullname';
@@ -31,23 +31,23 @@ export class ArchiveService {
   }
 
   async archiveProcedure(
-    id_procedure: string,
-    archiveDto: CreateArchiveDto,
+    eventProcedureDto: EventProcedureDto,
     account: Account,
   ) {
-    await this.checkIfProcedureCanBeCompleted(id_procedure);
+    const { procedure } = eventProcedureDto;
+    await this.checkIfProcedureCanBeCompleted(procedure);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       await this.procedureModel.updateOne(
-        { _id: id_procedure },
+        { _id: procedure },
         {
-          state: archiveDto.state,
+          state: stateProcedure.CONCLUIDO,
           endDate: new Date(),
         },
         { session },
       );
-      await this.createProcedureEvent(archiveDto, account, session);
+      await this.createProcedureEvent(eventProcedureDto, account, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado' };
     } catch (error) {
@@ -62,7 +62,7 @@ export class ArchiveService {
 
   async archiveMail(
     id_mail: string,
-    archiveDto: CreateArchiveDto,
+    archiveDto: EventProcedureDto,
     account: Account,
   ) {
     const { status, procedure } = await this.communicationModel.findById(
@@ -96,7 +96,7 @@ export class ArchiveService {
 
   async unarchiveMail(
     id_mail: string,
-    eventDto: UpdateArchiveDto,
+    eventDto: EventProcedureDto,
     account: Account,
   ) {
     const { status, receiver } = await this.communicationModel.findById(
@@ -113,37 +113,6 @@ export class ArchiveService {
           { status: statusMail.Received },
         );
       } else {
-        const {
-          receiver,
-          emitter,
-          inboundDate,
-          outboundDate,
-          reference,
-          status,
-          ...values
-        } = mailDB;
-        const { funcionario } = await account.populate({
-          path: 'funcionario',
-          select: 'nombre paterno materno',
-          populate: {
-            path: 'cargo',
-            select: 'nombre',
-          },
-        });
-        const unarchiveDate = new Date();
-        const newMail: Communication = {
-          emitter: receiver,
-          receiver: {
-            cuenta: account._id,
-            fullname: createFullName(funcionario),
-            ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
-          },
-          reference: 'Para su continuacion',
-          status: statusMail.Received,
-          outboundDate: unarchiveDate,
-          inboundDate: new Date(),
-          ...values,
-        };
       }
       // await this.createProcedureEvent({procedure:, ...description}, account, session);
       // await session.commitTransaction();
@@ -184,15 +153,15 @@ export class ArchiveService {
   }
 
   async createProcedureEvent(
-    { description, procedure }: CreateArchiveDto,
+    eventProcedureDto: EventProcedureDto,
     account: Account,
     session: mongoose.mongo.ClientSession,
   ) {
     const { funcionario } = await account.populate('funcionario');
     const createdEvent = new this.procedureEventModel({
-      procedure,
+      procedure: eventProcedureDto.procedure,
+      description: eventProcedureDto.description,
       fullNameOfficer: createFullName(funcionario),
-      description,
     });
     await createdEvent.save({ session });
   }
