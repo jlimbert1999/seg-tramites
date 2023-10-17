@@ -12,7 +12,7 @@ import {
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
-import { InternalService, OutboxService } from '../services';
+import { InternalService } from '../services';
 import {
   OfficerService,
   TypeProcedureService,
@@ -33,7 +33,6 @@ export class InternalController {
     private readonly internalService: InternalService,
     private readonly officerService: OfficerService,
     private readonly typeProcedureService: TypeProcedureService,
-    private readonly outboxService: OutboxService,
     private readonly procedureService: ProcedureService,
   ) {}
   @Get('/types-procedures')
@@ -87,17 +86,5 @@ export class InternalController {
       procedure,
       details,
     );
-  }
-
-  @Get('/:id_procedure')
-  async getOne(@Param('id_procedure') id_procedure: string) {
-    const [procedure, workflow] = await Promise.all([
-      this.procedureService.getProcedure(id_procedure),
-      this.outboxService.getWorkflowProcedure(id_procedure),
-    ]);
-    return {
-      procedure,
-      workflow,
-    };
   }
 }

@@ -104,26 +104,29 @@ export class ArchiveService {
     );
     if (status !== statusMail.Archived)
       throw new BadRequestException('El tramite ya fue desarchivado');
-    // const session = await this.connection.startSession();
+    const session = await this.connection.startSession();
     try {
-      // session.startTransaction();
+      session.startTransaction();
       if (String(receiver.cuenta._id) === String(account._id)) {
         await this.communicationModel.updateOne(
           { _id: id_mail },
           { status: statusMail.Received },
         );
       } else {
+        const fecha = new Date()
+        fecha.setSeconds(2)
+        
       }
-      // await this.createProcedureEvent({procedure:, ...description}, account, session);
-      // await session.commitTransaction();
-      return { message: 'tramite desarchivado' };
+      await this.createProcedureEvent(eventDto, account, session);
+      await session.commitTransaction();
+      return { message: 'Tramite desarchivado.' };
     } catch (error) {
-      // await session.abortTransaction();
+      await session.abortTransaction();
       throw new InternalServerErrorException('Error al archivar tramite', {
         cause: error,
       });
     } finally {
-      // session.endSession();
+      session.endSession();
     }
   }
 

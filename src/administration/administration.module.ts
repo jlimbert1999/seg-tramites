@@ -21,7 +21,7 @@ import {
   Officer,
   OfficerSchema,
   Role,
-  RoleSchema
+  RoleSchema,
 } from './schemas/index';
 
 import {
@@ -29,15 +29,17 @@ import {
   OfficerService,
   RoleService,
   DependencieService,
-  InstitutionService
+  InstitutionService,
 } from './services/index';
 import { Job, JobSchema } from './schemas/job.schema';
 import { JobService } from './services/job.service';
 import { JobController } from './controllers/job.controller';
 import { TypeProcedureService } from './services/type-procedure.service';
-import { TypeProcedure, TypeProcedureSchema } from './schemas/type-procedure.schema';
+import {
+  TypeProcedure,
+  TypeProcedureSchema,
+} from './schemas/type-procedure.schema';
 import { JobChanges, JobChangesSchema } from './schemas/jobChanges.schema';
-
 
 @Module({
   controllers: [
@@ -47,9 +49,17 @@ import { JobChanges, JobChangesSchema } from './schemas/jobChanges.schema';
     OfficerController,
     TypeProcedureController,
     RoleController,
-    JobController
+    JobController,
   ],
-  providers: [AccountService, OfficerService, RoleService, DependencieService, InstitutionService, JobService, TypeProcedureService],
+  providers: [
+    AccountService,
+    OfficerService,
+    RoleService,
+    DependencieService,
+    InstitutionService,
+    JobService,
+    TypeProcedureService,
+  ],
   imports: [
     MongooseModule.forFeature([
       { name: Job.name, schema: JobSchema },
@@ -59,10 +69,18 @@ import { JobChanges, JobChangesSchema } from './schemas/jobChanges.schema';
       { name: Dependency.name, schema: DependencySchema },
       { name: Institution.name, schema: InstitutionSchema },
       { name: TypeProcedure.name, schema: TypeProcedureSchema },
-      { name: JobChanges.name, schema: JobChangesSchema }
+      { name: JobChanges.name, schema: JobChangesSchema },
     ]),
-    AuthModule
+    AuthModule,
   ],
-  exports: [MongooseModule, TypeProcedureService, OfficerService, TypeProcedureService, InstitutionService, DependencieService]
+  exports: [
+    MongooseModule,
+    TypeProcedureService,
+    OfficerService,
+    TypeProcedureService,
+    InstitutionService,
+    DependencieService,
+    AccountService,
+  ],
 })
-export class AdministrationModule { }
+export class AdministrationModule {}

@@ -53,11 +53,10 @@ export class GroupwareGateway
       }
     });
   }
-  cancelMails(data: { id_receiver: string, id_mail: string }[]) {
+  cancelMails(data: { id_receiver: string; id_mail: string }[]) {
     data.forEach(({ id_mail, id_receiver }) => {
       const user = this.groupwareService.getUser(id_receiver);
       if (user) {
-       
         user.socketIds.forEach((socketId) => {
           this.server.to(socketId).emit('cancel-mail', id_mail);
         });

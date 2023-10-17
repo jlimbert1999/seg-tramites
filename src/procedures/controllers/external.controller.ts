@@ -16,7 +16,6 @@ import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { TypeProcedureService } from 'src/administration/services/type-procedure.service';
 import { Account } from 'src/administration/schemas';
-import { OutboxService } from '../services';
 import { ProcedureService } from '../services/procedure.service';
 import {
   CreateExternalDetailDto,
@@ -31,7 +30,6 @@ export class ExternalController {
   constructor(
     private readonly externalService: ExternalService,
     private readonly typeProcedure: TypeProcedureService,
-    private readonly outboxService: OutboxService,
     private readonly procedureService: ProcedureService,
   ) {}
 
@@ -88,15 +86,4 @@ export class ExternalController {
     );
   }
 
-  @Get('/:id_procedure')
-  async getOne(@Param('id_procedure') id_procedure: string) {
-    const [procedure, workflow] = await Promise.all([
-      this.procedureService.getProcedure(id_procedure),
-      this.outboxService.getWorkflowProcedure(id_procedure),
-    ]);
-    return {
-      procedure,
-      workflow,
-    };
-  }
 }

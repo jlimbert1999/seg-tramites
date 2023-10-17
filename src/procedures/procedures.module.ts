@@ -11,8 +11,6 @@ import {
 import {
   ExternalService,
   InternalService,
-  InboxService,
-  OutboxService,
   CommunicationService,
 } from './services/index';
 import {
@@ -81,8 +79,6 @@ import { ArchiveService } from './services/archive.service';
   providers: [
     ExternalService,
     InternalService,
-    InboxService,
-    OutboxService,
     ProcedureService,
     CommunicationService,
     ObservationService,
