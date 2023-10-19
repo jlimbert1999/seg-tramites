@@ -9,10 +9,11 @@ import {
 } from '../schemas';
 import { ExternalDetail } from '../schemas/external-detail.schema';
 import { InternalDetail } from '../schemas/internal-detail.schema';
-import { Account, Dependency, TypeProcedure } from 'src/administration/schemas';
+import { Dependency, TypeProcedure } from 'src/administration/schemas';
 import { groupProcedure } from '../interfaces/group.interface';
 import { CreateProcedureDto, UpdateProcedureDto } from '../dto';
 import { Inbox } from '../schemas/inbox.schema';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Injectable()
 export class ProcedureService {

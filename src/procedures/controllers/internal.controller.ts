@@ -4,7 +4,6 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
   Put,
   Query,
@@ -17,7 +16,6 @@ import {
   OfficerService,
   TypeProcedureService,
 } from 'src/administration/services';
-import { Account } from 'src/administration/schemas';
 import {
   CreateInternalDetailDto,
   CreateProcedureDto,
@@ -25,6 +23,7 @@ import {
   UpdateProcedureDto,
 } from '../dto';
 import { ProcedureService } from '../services/procedure.service';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Controller('internal')
 @Auth(validResources.internal)

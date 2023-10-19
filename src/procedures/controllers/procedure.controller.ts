@@ -1,7 +1,11 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ProcedureService } from '../services/procedure.service';
-import { CommunicationService, ObservationService } from '../services';
+import {
+  CommunicationService,
+  ObservationService,
+  ArchiveService,
+  ProcedureService,
+} from '../services';
 
 @Controller('procedure')
 @Auth()
@@ -10,6 +14,7 @@ export class ProcedureController {
     private readonly procedureService: ProcedureService,
     private readonly communicationService: CommunicationService,
     private readonly observationService: ObservationService,
+    private readonly archiveService: ArchiveService,
   ) {}
 
   @Get()
@@ -19,11 +24,12 @@ export class ProcedureController {
 
   @Get('/:id')
   async getFullProcedure(@Param('id') id_procedure: string) {
-    const [procedure, workflow, observations] = await Promise.all([
+    const [procedure, workflow, observations, events] = await Promise.all([
       this.procedureService.getProcedure(id_procedure),
       this.communicationService.getWorkflowOfProcedure(id_procedure),
       this.observationService.getObservationsOfProcedure(id_procedure),
+      this.archiveService.getEventsOfProcedure(id_procedure),
     ]);
-    return { procedure, workflow, observations, location: [] };
+    return { procedure, workflow, observations, events };
   }
 }

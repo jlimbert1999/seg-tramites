@@ -6,10 +6,10 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Observation, Procedure } from '../schemas';
-import { Account } from 'src/administration/schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Injectable()
 export class ObservationService {

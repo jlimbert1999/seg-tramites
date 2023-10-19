@@ -25,8 +25,8 @@ import {
   CreateObservationDto,
   RejectionDetail,
 } from '../dto';
-import { Account } from 'src/administration/schemas';
 import { ObservationService } from '../services/observation.service';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Controller('communication')
 @Auth(validResources.communication)

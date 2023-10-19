@@ -1,4 +1,5 @@
-import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsMongoId, IsNotEmpty, IsString } from 'class-validator';
+import { stateProcedure } from '../interfaces';
 
 export class EventProcedureDto {
   @IsMongoId()
@@ -7,4 +8,7 @@ export class EventProcedureDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @IsEnum([stateProcedure.SUSPENDIDO, stateProcedure.CONCLUIDO])
+  stateProcedure: stateProcedure;
 }

@@ -2,11 +2,11 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { Account } from '../schemas/account.schema';
 import { CreateAccountDto } from '../dto/create-account.dto';
 import { OfficerService } from './officer.service';
 import { CreateOfficerDto } from '../dto/create-officer.dto';
 import { UpdateAccountDto } from '../dto/update-account.dto';
+import { Account } from 'src/auth/schemas/account.schema';
 @Injectable()
 export class AccountService {
   constructor(

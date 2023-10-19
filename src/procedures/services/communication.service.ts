@@ -6,11 +6,11 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Outbox, Inbox, Procedure, Communication } from '../schemas';
-import { Account } from 'src/administration/schemas';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
 import { CreateCommunicationDto, ReceiverDto } from '../dto';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Injectable()
 export class CommunicationService {

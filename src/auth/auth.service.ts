@@ -8,12 +8,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 import { JwtPayload } from './interfaces/jwt.interface';
-import { Account } from 'src/administration/schemas/account.schema';
 import { AuthDto } from './dto/auth.dto';
 import { UpdateMyAccountDto } from './dto/my-account.dto';
-import { validResources } from './interfaces/valid-resources.interface';
-import { systemModules } from 'src/administration/helpers/system-modules';
-import { systemMenu } from 'src/administration/helpers/system-menu';
+import { SystemMenu } from './constants/system-menu';
+import { Account } from './schemas/account.schema';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +37,7 @@ export class AuthService {
       return {
         token: this.getToken({
           id_account: account._id,
-          id_dependencie: '',
+          id_dependency: '',
           officer: {
             fullname: 'ADMINISTRADOR',
             jobtitle: 'Configuraciones',
@@ -54,7 +52,7 @@ export class AuthService {
     return {
       token: this.getToken({
         id_account: account._id,
-        id_dependencie: account.dependencia._id,
+        id_dependency: account.dependencia._id,
         officer: {
           fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
           jobtitle: account.funcionario.cargo
@@ -86,13 +84,13 @@ export class AuthService {
       return {
         token: this.getToken({
           id_account: account._id,
-          id_dependencie: '',
+          id_dependency: '',
           officer: {
             fullname: 'ADMINISTRADOR',
             jobtitle: 'Configuraciones',
           },
         }),
-        menu: this.getMenu(resources),
+        menu: this.getSystemMenu(resources),
         resources,
       };
     if (!account.activo || !account.funcionario)
@@ -100,7 +98,7 @@ export class AuthService {
     return {
       token: this.getToken({
         id_account: account._id,
-        id_dependencie: account.dependencia._id,
+        id_dependency: account.dependencia._id,
         officer: {
           fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
           jobtitle: account.funcionario.cargo
@@ -108,11 +106,12 @@ export class AuthService {
             : '',
         },
       }),
-      menu: this.getMenu(resources),
+      menu: this.getSystemMenu(resources),
       code: account.dependencia.codigo,
       resources,
     };
   }
+
   async getMyAuthDetails(id_account: string) {
     return await this.accountModel
       .findById(id_account)
@@ -132,6 +131,7 @@ export class AuthService {
       })
       .select('-password -rol');
   }
+
   async updateMyAccount(id_account: string, data: UpdateMyAccountDto) {
     const { password } = data;
     const salt = bcrypt.genSaltSync();
@@ -163,24 +163,31 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  getMenu(myResources: string[]) {
-    const menu = systemMenu.reduce((accumulator, currentValue) => {
-      const filteredResources = currentValue.resources
-        .filter((resource) => myResources.includes(resource.value))
-        .map((element) => {
-          const { icon, routerLink, text } = element;
-          return { icon, routerLink, text };
-        });
-
-      if (filteredResources.length > 0) {
-        accumulator.push({
-          group: currentValue.group,
-          icon: currentValue.icon,
-          resources: filteredResources,
+  getSystemMenu(myResources: string[]) {
+    const allowedResources = SystemMenu.filter((menuItem) =>
+      myResources.includes(menuItem.resource),
+    );
+    const groupedMenu = allowedResources.reduce((result, menuItem) => {
+      if (!menuItem.group) {
+        const category = menuItem.routerLink;
+        result[category] = menuItem;
+      } else {
+        const { text, icon } = menuItem.group;
+        if (!result[text]) {
+          result[text] = {
+            text: text,
+            icon,
+            children: [],
+          };
+        }
+        result[text].children.push({
+          text: menuItem.text,
+          icon: menuItem.icon,
+          routerLink: menuItem.routerLink,
         });
       }
-      return accumulator;
-    }, []);
-    return menu;
+      return result;
+    }, {});
+    return Object.values(groupedMenu);
   }
 }

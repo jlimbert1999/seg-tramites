@@ -1,11 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
   Put,
   Query,
@@ -15,7 +13,6 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { TypeProcedureService } from 'src/administration/services/type-procedure.service';
-import { Account } from 'src/administration/schemas';
 import { ProcedureService } from '../services/procedure.service';
 import {
   CreateExternalDetailDto,
@@ -23,6 +20,7 @@ import {
   UpdateExternalDto,
   UpdateProcedureDto,
 } from '../dto';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Controller('external')
 @Auth(validResources.external)
@@ -85,5 +83,4 @@ export class ExternalController {
       details,
     );
   }
-
 }

@@ -1,7 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Account } from 'src/administration/schemas';
 import { Procedure } from '../schemas/procedure.schema';
 import { ExternalDetail } from '../schemas/external-detail.schema';
 import { groupProcedure } from '../interfaces/group.interface';
@@ -13,6 +12,7 @@ import {
   UpdateProcedureDto,
 } from '../dto';
 import { Observaciones } from '../schemas/observaciones.schema';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Injectable()
 export class ExternalService {

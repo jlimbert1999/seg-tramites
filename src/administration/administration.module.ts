@@ -12,8 +12,6 @@ import {
 } from './controllers/index';
 
 import {
-  Account,
-  AccountSchema,
   Dependency,
   DependencySchema,
   Institution,
@@ -65,7 +63,6 @@ import { JobChanges, JobChangesSchema } from './schemas/jobChanges.schema';
       { name: Job.name, schema: JobSchema },
       { name: Role.name, schema: RoleSchema },
       { name: Officer.name, schema: OfficerSchema },
-      { name: Account.name, schema: AccountSchema },
       { name: Dependency.name, schema: DependencySchema },
       { name: Institution.name, schema: InstitutionSchema },
       { name: TypeProcedure.name, schema: TypeProcedureSchema },

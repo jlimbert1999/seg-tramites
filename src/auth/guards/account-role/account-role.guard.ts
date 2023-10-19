@@ -6,8 +6,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Account } from 'src/administration/schemas/account.schema';
 import { META_RESOURCE } from 'src/auth/decorators/rol-protected.decorator';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Injectable()
 export class AccountRoleGuard implements CanActivate {
@@ -23,14 +23,14 @@ export class AccountRoleGuard implements CanActivate {
     const account = req.user as Account;
     if (!account)
       throw new InternalServerErrorException(
-        'Guard Auth problems or not call, no user in requets',
+        'Guard auth problems or not call, no user in requets',
       );
     const permissions = account.rol.permissions.find(
       (element) => element.resource === validResource,
     );
     if (!permissions)
       throw new ForbiddenException(
-        `Esta cuenta no tiene permisos para el recurso ${validResource}`,
+        `Esta cuenta no tiene permisos para el recurso solicitado`,
       );
     let allow = false;
     if (req.method == 'POST' && permissions.actions.includes('create'))

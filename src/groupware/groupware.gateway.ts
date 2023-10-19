@@ -6,12 +6,13 @@ import {
   WebSocketServer,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+import { Server, Socket } from 'socket.io';
 import { GroupwareService } from './groupware.service';
 import { CreateGroupwareDto } from './dto/create-groupware.dto';
 import { UpdateGroupwareDto } from './dto/update-groupware.dto';
 import { Communication } from 'src/procedures/schemas';
+import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 
 @WebSocketGateway({ cors: true })
 export class GroupwareGateway
@@ -28,7 +29,9 @@ export class GroupwareGateway
   handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth.token;
-      const decoded = this.jwtService.verify(token);
+      const decoded: JwtPayload = this.jwtService.verify(token);
+      if (decoded.id_dependency !== '')
+        client.join(decoded.id_dependency.toString());
       this.groupwareService.addUser(client.id, decoded);
       this.server.emit('listar', this.groupwareService.getAll());
     } catch (error) {
@@ -62,6 +65,10 @@ export class GroupwareGateway
         });
       }
     });
+  }
+
+  notify(id_dependency: string, id_mail: string) {
+    this.server.to(id_dependency).emit('unarchive-mail', id_mail);
   }
 
   @SubscribeMessage('createGroupware')

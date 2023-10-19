@@ -3,7 +3,7 @@ import {
   InternalServerErrorException,
   createParamDecorator,
 } from '@nestjs/common';
-import { Account } from 'src/administration/schemas';
+import { Account } from '../schemas/account.schema';
 
 // extract user nested by strategy method in request
 export const GetUser = createParamDecorator(

@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document, HydratedDocument } from 'mongoose';
-import { Account } from 'src/administration/schemas';
+import mongoose, { Document } from 'mongoose';
 import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
+import { Account } from 'src/auth/schemas/account.schema';
+
 enum StateProcedure {
     INSCRITO = 'INSCRITO',
     EN_REVISION = 'EN REVISION',
