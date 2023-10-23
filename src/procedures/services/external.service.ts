@@ -17,7 +17,8 @@ import { Account } from 'src/auth/schemas/account.schema';
 @Injectable()
 export class ExternalService {
   constructor(
-    @InjectModel(Observaciones.name) private observationModel: Model<Observaciones>,
+    @InjectModel(Observaciones.name)
+    private observationModel: Model<Observaciones>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name)
     private externalDetailModel: Model<ExternalDetail>,
@@ -82,7 +83,6 @@ export class ExternalService {
           'details.requerimientos': 0,
         },
       },
-
       {
         $facet: {
           paginatedResults: [{ $skip: offset }, { $limit: limit }],
