@@ -192,24 +192,21 @@ export class ProcedureService {
     ]);
     if (!dependency || !typeProcedure)
       throw new BadRequestException(
-        'No se ha podido generar un alterno correctamente',
+        'Ha ocurrido un error al generar un alterno',
       );
     if (!dependency.institucion)
       throw new BadRequestException(
-        'No se ha podido generar un alterno correctamente',
+        'Ha ocurrido un error al generar un alterno',
       );
     // TODO CONFIG YEAR IN ENV
-    const regex = new RegExp(
-      `${typeProcedure.segmento}-${dependency.institucion.sigla}-2023`.toUpperCase(),
-      'i',
-    );
-    const correlativo = await this.procedureModel.count({
+    const code: string =
+      `${typeProcedure.segmento}-${dependency.institucion.sigla}-2023`.toUpperCase();
+    const regex = new RegExp(code, 'i');
+    const correlative = await this.procedureModel.count({
       group: group,
       code: regex,
     });
     const zeros = group === groupProcedure.EXTERNAL ? 6 : 5;
-    return `${typeProcedure.segmento}-${
-      dependency.institucion.sigla
-    }-2023-${String(correlativo + 1).padStart(zeros, '0')}`;
+    return `${code}-${String(correlative + 1).padStart(zeros, '0')}`;
   }
 }

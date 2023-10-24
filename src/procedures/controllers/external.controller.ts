@@ -1,26 +1,17 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
-import { ExternalService } from '../services/external.service';
-import { Auth } from 'src/auth/decorators/auth.decorator';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
-import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { GetUser, Auth } from 'src/auth/decorators';
+import { Account } from 'src/auth/schemas/account.schema';
 import { TypeProcedureService } from 'src/administration/services/type-procedure.service';
-import { ProcedureService } from '../services/procedure.service';
 import {
   CreateExternalDetailDto,
   CreateProcedureDto,
   UpdateExternalDto,
   UpdateProcedureDto,
 } from '../dto';
-import { Account } from 'src/auth/schemas/account.schema';
+
+import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { ExternalService } from '../services';
 
 @Controller('external')
 @Auth(validResources.external)
@@ -28,7 +19,6 @@ export class ExternalController {
   constructor(
     private readonly externalService: ExternalService,
     private readonly typeProcedure: TypeProcedureService,
-    private readonly procedureService: ProcedureService,
   ) {}
 
   @Get('segments')
@@ -43,20 +33,22 @@ export class ExternalController {
   @Get('search/:text')
   async search(
     @GetUser('_id') id_account: string,
-    @Query('limit', ParseIntPipe) limit: number,
-    @Query('offset', ParseIntPipe) offset: number,
+    @Query() paginationParamsDto: PaginationParamsDto,
     @Param('text') text: string,
   ) {
-    return await this.externalService.search(limit, offset, id_account, text);
+    return await this.externalService.search(
+      paginationParamsDto,
+      id_account,
+      text,
+    );
   }
 
   @Get()
   async get(
     @GetUser('_id') id_account: string,
-    @Query('limit', ParseIntPipe) limit: number,
-    @Query('offset', ParseIntPipe) offset: number,
+    @Query() paginationParamsDto: PaginationParamsDto,
   ) {
-    return await this.externalService.findAll(limit, offset, id_account);
+    return await this.externalService.findAll(paginationParamsDto, id_account);
   }
 
   @Post()

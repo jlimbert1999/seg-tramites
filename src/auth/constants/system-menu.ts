@@ -12,7 +12,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.dependences,
+    resource: validResources.dependencies,
     text: 'Dependencias',
     icon: 'folder_shared',
     routerLink: 'configuraciones/dependencias',

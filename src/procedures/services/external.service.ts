@@ -1,24 +1,21 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Procedure } from '../schemas/procedure.schema';
-import { ExternalDetail } from '../schemas/external-detail.schema';
-import { groupProcedure } from '../interfaces/group.interface';
-import { ProcedureService } from './procedure.service';
 import {
   CreateExternalDetailDto,
   CreateProcedureDto,
   UpdateExternalDto,
   UpdateProcedureDto,
 } from '../dto';
-import { Observaciones } from '../schemas/observaciones.schema';
 import { Account } from 'src/auth/schemas/account.schema';
+import { ExternalDetail, Procedure } from '../schemas';
+import { groupProcedure, stateProcedure } from '../interfaces';
+import { ProcedureService } from './procedure.service';
+import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
 
 @Injectable()
 export class ExternalService {
   constructor(
-    @InjectModel(Observaciones.name)
-    private observationModel: Model<Observaciones>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name)
     private externalDetailModel: Model<ExternalDetail>,
@@ -27,8 +24,7 @@ export class ExternalService {
   ) {}
 
   async search(
-    limit: number,
-    offset: number,
+    { limit, offset }: PaginationParamsDto,
     id_account: string,
     text: string,
   ) {
@@ -39,7 +35,7 @@ export class ExternalService {
         $match: {
           group: groupProcedure.EXTERNAL,
           account: new mongoose.Types.ObjectId(id_account),
-          estado: { $ne: 'ANULADO' },
+          state: { $ne: stateProcedure.ANULADO },
         },
       },
       {
@@ -99,14 +95,14 @@ export class ExternalService {
     return { procedures, length };
   }
 
-  async findAll(limit: number, offset: number, id_account: string) {
+  async findAll({ limit, offset }: PaginationParamsDto, id_account: string) {
     offset = offset * limit;
     const [procedures, length] = await Promise.all([
       await this.procedureModel
         .find({
           account: id_account,
           group: groupProcedure.EXTERNAL,
-          estado: { $ne: 'ANULADO' },
+          state: { $ne: stateProcedure.ANULADO },
         })
         .sort({ _id: -1 })
         .skip(offset)
@@ -115,7 +111,7 @@ export class ExternalService {
       await this.procedureModel.count({
         account: id_account,
         group: groupProcedure.EXTERNAL,
-        estado: { $ne: 'ANULADO' },
+        state: { $ne: stateProcedure.ANULADO },
       }),
     ]);
     return { procedures, length };
@@ -124,7 +120,7 @@ export class ExternalService {
   async create(
     procedure: CreateProcedureDto,
     details: CreateExternalDetailDto,
-    acccount: Account,
+    account: Account,
   ) {
     const session = await this.connection.startSession();
     try {
@@ -133,7 +129,7 @@ export class ExternalService {
       await createdDetail.save({ session });
       const newProcedure = await this.procedureService.create(
         procedure,
-        acccount,
+        account,
         createdDetail._id,
         groupProcedure.EXTERNAL,
         session,

@@ -85,7 +85,7 @@ export const systemModules = [
         ],
       },
       {
-        value: validResources.dependences,
+        value: validResources.dependencies,
         text: 'Dependencias',
         actions: [
           { value: 'create', viewValue: 'Crear' },

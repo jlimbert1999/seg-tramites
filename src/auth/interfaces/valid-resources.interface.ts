@@ -6,7 +6,7 @@ export enum validResources {
   typeProcedures = 'types-procedures',
   officers = 'officers',
   accounts = 'accounts',
-  dependences = 'dependences',
+  dependencies = 'dependencies',
   institutions = 'institutions',
   jobs = 'jobs',
   roles = 'roles',
