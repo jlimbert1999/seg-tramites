@@ -1,32 +1,23 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { InternalDetail, Procedure } from '../schemas';
+import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
 import { groupProcedure } from '../interfaces/group.interface';
-import {
-  CreateInternalDetailDto,
-  CreateProcedureDto,
-  UpdateInternalDetailDto,
-  UpdateProcedureDto,
-} from '../dto';
 import { ProcedureService } from './procedure.service';
 import { Account } from 'src/auth/schemas/account.schema';
+import { InternalDetail, Procedure } from '../schemas';
+import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
 
 @Injectable()
 export class InternalService {
   constructor(
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
-    @InjectModel(InternalDetail.name)
-    private internalDetailModel: Model<InternalDetail>,
+    @InjectModel(InternalDetail.name) private internalDetailModel: Model<InternalDetail>,
     @InjectConnection() private readonly connection: mongoose.Connection,
     private readonly procedureService: ProcedureService,
   ) {}
 
-  async add(
-    procedure: CreateProcedureDto,
-    details: CreateInternalDetailDto,
-    account: Account,
-  ) {
+  async add(procedure: CreateProcedureDto, details: CreateInternalDetailDto, account: Account) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -43,9 +34,7 @@ export class InternalService {
       return newProcedure;
     } catch (error) {
       await session.abortTransaction();
-      throw new InternalServerErrorException(
-        'No se puedo registrar el tramite correctamente',
-      );
+      throw new InternalServerErrorException('No se puedo registrar el tramite correctamente');
     } finally {
       session.endSession();
     }
@@ -57,10 +46,7 @@ export class InternalService {
     procedure: UpdateProcedureDto,
     details: UpdateInternalDetailDto,
   ) {
-    const procedureDB = await this.procedureService.checkIfEditable(
-      id_procedure,
-      id_account,
-    );
+    const procedureDB = await this.procedureService.checkIfEditable(id_procedure, id_account);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -71,11 +57,7 @@ export class InternalService {
         details,
         { session },
       );
-      const updatedProcedure = await this.procedureService.update(
-        id_procedure,
-        procedure,
-        session,
-      );
+      const updatedProcedure = await this.procedureService.update(id_procedure, procedure, session);
       await session.commitTransaction();
       return updatedProcedure;
     } catch (error) {
@@ -86,7 +68,7 @@ export class InternalService {
     }
   }
 
-  async findAll(limit: number, offset: number, id_account: string) {
+  async findAll({ limit, offset }: PaginationParamsDto, id_account: string) {
     offset = offset * limit;
     const [procedures, length] = await Promise.all([
       await this.procedureModel
@@ -108,12 +90,7 @@ export class InternalService {
     return { procedures, length };
   }
 
-  async search(
-    limit: number,
-    offset: number,
-    id_account: string,
-    text: string,
-  ) {
+  async search({ limit, offset }: PaginationParamsDto, id_account: string, text: string) {
     const regex = new RegExp(text, 'i');
     offset = offset * limit;
     const data = await this.procedureModel.aggregate([
@@ -139,12 +116,7 @@ export class InternalService {
       },
       {
         $match: {
-          $or: [
-            { code: regex },
-            { reference: regex },
-            { cite: regex },
-            { 'details.destinatario.nombre': regex },
-          ],
+          $or: [{ code: regex }, { reference: regex }, { cite: regex }, { 'details.destinatario.nombre': regex }],
         },
       },
       {

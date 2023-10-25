@@ -1,12 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import {
-  ExternalProcedure,
-  InternalProcedure,
-  Outbox,
-  Procedure,
-} from '../schemas';
+import { ExternalProcedure, InternalProcedure, Outbox, Procedure } from '../schemas';
 import { ExternalDetail } from '../schemas/external-detail.schema';
 import { InternalDetail } from '../schemas/internal-detail.schema';
 import { Dependency, TypeProcedure } from 'src/administration/schemas';
@@ -14,6 +9,7 @@ import { groupProcedure } from '../interfaces/group.interface';
 import { CreateProcedureDto, UpdateProcedureDto } from '../dto';
 import { Inbox } from '../schemas/inbox.schema';
 import { Account } from 'src/auth/schemas/account.schema';
+import { stateProcedure } from '../interfaces';
 
 @Injectable()
 export class ProcedureService {
@@ -119,11 +115,7 @@ export class ProcedureService {
     group: groupProcedure,
     session: mongoose.mongo.ClientSession,
   ) {
-    const code = await this.generateCode(
-      account.dependencia._id,
-      procedure.type,
-      group,
-    );
+    const code = await this.generateCode(account.dependencia._id, procedure.type, group);
     const createdProcedure = new this.procedureModel({
       code,
       group,
@@ -136,11 +128,7 @@ export class ProcedureService {
     return createdProcedure;
   }
 
-  async update(
-    id_procedure: string,
-    procedure: UpdateProcedureDto,
-    session: mongoose.mongo.ClientSession,
-  ) {
+  async update(id_procedure: string, procedure: UpdateProcedureDto, session: mongoose.mongo.ClientSession) {
     return await this.procedureModel
       .findByIdAndUpdate(id_procedure, procedure, {
         session,
@@ -172,35 +160,23 @@ export class ProcedureService {
 
   async checkIfEditable(id_procedure: string, id_account: string) {
     const procedureDB = await this.procedureModel.findById(id_procedure);
-    if (!procedureDB)
-      throw new BadRequestException('El tramite solicitado no existe');
+    if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
     if (procedureDB.account._id.toString() !== id_account.toString())
       throw new BadRequestException('Usted no puede editar este tramite');
+    if (procedureDB.state !== stateProcedure.INSCRITO)
+      throw new BadRequestException('El tramite ya esta en proceso de evaluacion');
     return procedureDB;
   }
 
-  async generateCode(
-    id_dependency: string,
-    id_typeProcedure: string,
-    group: groupProcedure,
-  ) {
+  async generateCode(id_dependency: string, id_typeProcedure: string, group: groupProcedure) {
     const [dependency, typeProcedure] = await Promise.all([
-      this.dependencyModel
-        .findById(id_dependency)
-        .populate('institucion', 'sigla'),
+      this.dependencyModel.findById(id_dependency).populate('institucion', 'sigla'),
       this.typeProcedure.findById(id_typeProcedure).select('segmento'),
     ]);
-    if (!dependency || !typeProcedure)
-      throw new BadRequestException(
-        'Ha ocurrido un error al generar un alterno',
-      );
-    if (!dependency.institucion)
-      throw new BadRequestException(
-        'Ha ocurrido un error al generar un alterno',
-      );
+    if (!dependency || !typeProcedure) throw new BadRequestException('Ha ocurrido un error al generar un alterno');
+    if (!dependency.institucion) throw new BadRequestException('Ha ocurrido un error al generar un alterno');
     // TODO CONFIG YEAR IN ENV
-    const code: string =
-      `${typeProcedure.segmento}-${dependency.institucion.sigla}-2023`.toUpperCase();
+    const code: string = `${typeProcedure.segmento}-${dependency.institucion.sigla}-2023`.toUpperCase();
     const regex = new RegExp(code, 'i');
     const correlative = await this.procedureModel.count({
       group: group,

@@ -18,5 +18,6 @@
         "titleBar.inactiveBackground": "#7209b799",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "#7209B7"
+    "peacock.color": "#7209B7",
+    "prettier.printWidth": 120
 }

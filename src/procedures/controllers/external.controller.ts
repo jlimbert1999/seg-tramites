@@ -64,8 +64,7 @@ export class ExternalController {
   async edit(
     @Param('id_procedure') id_procedure: string,
     @GetUser('_id') id_account: string,
-    @Body('procedure')
-    procedure: UpdateProcedureDto,
+    @Body('procedure') procedure: UpdateProcedureDto,
     @Body('details') details: UpdateExternalDto,
   ) {
     return await this.externalService.update(

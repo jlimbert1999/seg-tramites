@@ -1,29 +1,11 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
-import { Auth } from 'src/auth/decorators/auth.decorator';
-import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Auth, GetUser } from 'src/auth/decorators';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { InternalService } from '../services';
-import {
-  OfficerService,
-  TypeProcedureService,
-} from 'src/administration/services';
-import {
-  CreateInternalDetailDto,
-  CreateProcedureDto,
-  UpdateInternalDetailDto,
-  UpdateProcedureDto,
-} from '../dto';
-import { ProcedureService } from '../services/procedure.service';
+import { OfficerService, TypeProcedureService } from 'src/administration/services';
+import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
 import { Account } from 'src/auth/schemas/account.schema';
+import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
 
 @Controller('internal')
 @Auth(validResources.internal)
@@ -32,13 +14,12 @@ export class InternalController {
     private readonly internalService: InternalService,
     private readonly officerService: OfficerService,
     private readonly typeProcedureService: TypeProcedureService,
-    private readonly procedureService: ProcedureService,
   ) {}
-  @Get('/types-procedures')
+  @Get('types-procedures')
   async getTypesProcedures() {
     return await this.typeProcedureService.getTypesProceduresByGroup('INTERNO');
   }
-  @Get('/participant/:text')
+  @Get('participant/:text')
   async findParticipantForProcess(@Param('text') text: string) {
     return await this.officerService.findOfficerForProcess(text);
   }
@@ -47,19 +28,14 @@ export class InternalController {
   async search(
     @GetUser('_id') id_account: string,
     @Param('text') text: string,
-    @Query('limit', ParseIntPipe) limit: number,
-    @Query('offset', ParseIntPipe) offset: number,
+    @Query() paginationParamsDto: PaginationParamsDto,
   ) {
-    return await this.internalService.search(limit, offset, id_account, text);
+    return await this.internalService.search(paginationParamsDto, id_account, text);
   }
 
   @Get()
-  async get(
-    @GetUser('_id') id_account: string,
-    @Query('limit', ParseIntPipe) limit: number,
-    @Query('offset', ParseIntPipe) offset: number,
-  ) {
-    return await this.internalService.findAll(limit, offset, id_account);
+  async get(@GetUser('_id') id_account: string, @Query() paginationParamsDto: PaginationParamsDto) {
+    return await this.internalService.findAll(paginationParamsDto, id_account);
   }
 
   @Post()
@@ -79,11 +55,6 @@ export class InternalController {
     procedure: UpdateProcedureDto,
     @Body('details') details: UpdateInternalDetailDto,
   ) {
-    return await this.internalService.update(
-      id_procedure,
-      id_account,
-      procedure,
-      details,
-    );
+    return await this.internalService.update(id_procedure, id_account, procedure, details);
   }
 }

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Archivos } from '../schemas/archivos.schema';
@@ -30,10 +26,7 @@ export class ArchiveService {
     return await this.oldArchiveModel.find({}).limit(limit).skip(offset);
   }
 
-  async archiveProcedure(
-    eventProcedureDto: EventProcedureDto,
-    account: Account,
-  ) {
+  async archiveProcedure(eventProcedureDto: EventProcedureDto, account: Account) {
     const { procedure } = eventProcedureDto;
     await this.checkIfProcedureCanBeCompleted(procedure);
     const session = await this.connection.startSession();
@@ -60,16 +53,9 @@ export class ArchiveService {
     }
   }
 
-  async archiveMail(
-    id_mail: string,
-    eventDto: EventProcedureDto,
-    account: Account,
-  ) {
-    const { status, procedure } = await this.communicationModel.findById(
-      id_mail,
-    );
-    if (status !== statusMail.Received)
-      throw new BadRequestException('El envio no puede archivarse.');
+  async archiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
+    const { status, procedure } = await this.communicationModel.findById(id_mail);
+    if (status !== statusMail.Received) throw new BadRequestException('El envio no puede archivarse.');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -81,11 +67,7 @@ export class ArchiveService {
         { session },
       );
       await this.createProcedureEvent(eventDto, account, session);
-      await this.checkIfProcedureIsCompleted(
-        procedure._id,
-        eventDto.stateProcedure,
-        session,
-      );
+      await this.checkIfProcedureIsCompleted(procedure._id, eventDto.stateProcedure, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado.' };
     } catch (error) {
@@ -98,22 +80,14 @@ export class ArchiveService {
     }
   }
 
-  async unarchiveMail(
-    id_mail: string,
-    eventDto: EventProcedureDto,
-    account: Account,
-  ) {
+  async unarchiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
     const mailDB = await this.communicationModel.findById(id_mail);
-    if (mailDB.status !== statusMail.Archived)
-      throw new BadRequestException('El tramite ya fue desarchivado');
+    if (mailDB.status !== statusMail.Archived) throw new BadRequestException('El tramite ya fue desarchivado');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       if (String(mailDB.receiver.cuenta._id) === String(account._id)) {
-        await this.communicationModel.updateOne(
-          { _id: id_mail },
-          { status: statusMail.Received },
-        );
+        await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Received });
       } else {
         await this.insertPartipantInToWokflow(mailDB, account, session);
       }
@@ -174,21 +148,16 @@ export class ArchiveService {
   async checkIfProcedureCanBeCompleted(id_procedure: string) {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (procedureDB.state === stateProcedure.CONCLUIDO)
-      throw new BadRequestException(
-        `El tramite ${procedureDB.code} ya fue concluido.`,
-      );
+      throw new BadRequestException(`El tramite ${procedureDB.code} ya fue concluido.`);
     const isProcessStarted = await this.communicationModel.findOne({
       procedure: id_procedure,
     });
-    if (isProcessStarted)
-      throw new BadRequestException(
-        'Solo puede concluir tramites que no hayan sido remitidos',
-      );
+    if (isProcessStarted) throw new BadRequestException('Solo puede concluir tramites que no hayan sido remitidos');
   }
 
   async checkIfProcedureIsCompleted(
     id_procedure: string,
-    stateCompleted: stateProcedure,
+    stateCompleted: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
     session: mongoose.mongo.ClientSession,
   ) {
     const isProcessActive = await this.communicationModel.findOne({
@@ -239,8 +208,6 @@ export class ArchiveService {
   }
 
   async getEventsOfProcedure(id_procedure: string) {
-    return this.procedureEventModel
-      .find({ procedure: id_procedure })
-      .sort({ date: -1 });
+    return this.procedureEventModel.find({ procedure: id_procedure }).sort({ date: -1 });
   }
 }

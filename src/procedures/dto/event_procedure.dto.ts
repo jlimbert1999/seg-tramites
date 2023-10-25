@@ -10,5 +10,5 @@ export class EventProcedureDto {
   description: string;
 
   @IsEnum([stateProcedure.SUSPENDIDO, stateProcedure.CONCLUIDO])
-  stateProcedure: stateProcedure;
+  stateProcedure: stateProcedure.CONCLUIDO | stateProcedure.SUSPENDIDO;
 }

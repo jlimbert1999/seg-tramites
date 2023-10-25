@@ -15,23 +15,17 @@ import { Communication } from 'src/procedures/schemas';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 
 @WebSocketGateway({ cors: true })
-export class GroupwareGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(
-    private readonly groupwareService: GroupwareService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly groupwareService: GroupwareService, private readonly jwtService: JwtService) {}
 
   handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth.token;
       const decoded: JwtPayload = this.jwtService.verify(token);
-      if (decoded.id_dependency !== '')
-        client.join(decoded.id_dependency.toString());
+      if (decoded.id_dependency !== '') client.join(decoded.id_dependency.toString());
       this.groupwareService.addUser(client.id, decoded);
       this.server.emit('listar', this.groupwareService.getAll());
     } catch (error) {
@@ -46,9 +40,7 @@ export class GroupwareGateway
 
   sendMails(data: Communication[]) {
     data.forEach((mail) => {
-      const user = this.groupwareService.getUser(
-        String(mail.receiver.cuenta._id),
-      );
+      const user = this.groupwareService.getUser(String(mail.receiver.cuenta._id));
       if (user) {
         user.socketIds.forEach((socketId) => {
           this.server.to(socketId).emit('new-mail', mail);
@@ -56,12 +48,12 @@ export class GroupwareGateway
       }
     });
   }
-  cancelMails(data: { id_receiver: string; id_mail: string }[]) {
-    data.forEach(({ id_mail, id_receiver }) => {
-      const user = this.groupwareService.getUser(id_receiver);
+  cancelMails(data: Communication[]) {
+    data.forEach(({ _id, receiver }) => {
+      const user = this.groupwareService.getUser(String(receiver.cuenta._id));
       if (user) {
         user.socketIds.forEach((socketId) => {
-          this.server.to(socketId).emit('cancel-mail', id_mail);
+          this.server.to(socketId).emit('cancel-mail', _id);
         });
       }
     });
@@ -83,10 +75,7 @@ export class GroupwareGateway
 
   @SubscribeMessage('updateGroupware')
   update(@MessageBody() updateGroupwareDto: UpdateGroupwareDto) {
-    return this.groupwareService.update(
-      updateGroupwareDto.id,
-      updateGroupwareDto,
-    );
+    return this.groupwareService.update(updateGroupwareDto.id, updateGroupwareDto);
   }
 
   @SubscribeMessage('removeGroupware')

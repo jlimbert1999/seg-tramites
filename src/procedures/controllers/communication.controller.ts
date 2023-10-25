@@ -1,30 +1,12 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
-import {
-  InstitutionService,
-  DependencieService,
-} from 'src/administration/services';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { InstitutionService, DependencieService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService } from '../services';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
-import {
-  CancelMailsDto,
-  CreateCommunicationDto,
-  CreateObservationDto,
-  RejectionDetail,
-} from '../dto';
+import { CancelMailsDto, CreateCommunicationDto, CreateObservationDto, RejectionDetail } from '../dto';
 import { ObservationService } from '../services/observation.service';
 import { Account } from 'src/auth/schemas/account.schema';
 
@@ -52,53 +34,27 @@ export class CommunicationController {
 
   @Get('dependencies/:id_institution')
   async getDependencies(@Param('id_institution') id_institution: string) {
-    return await this.dependencieService.getActiveDependenciesOfInstitution(
-      id_institution,
-    );
+    return await this.dependencieService.getActiveDependenciesOfInstitution(id_institution);
   }
   @Get('accounts/:id_dependency')
-  async getAcccount(
-    @GetUser('_id') id_account: string,
-    @Param('id_dependency') id_dependency: string,
-  ) {
-    return await this.communicationService.getAccountsForSend(
-      id_dependency,
-      id_account,
-    );
+  async getAcccount(@GetUser('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
+    return await this.communicationService.getAccountsForSend(id_dependency, id_account);
   }
 
   @Post()
-  async create(
-    @GetUser() account: Account,
-    @Body() communication: CreateCommunicationDto,
-  ) {
-    const mails = await this.communicationService.create(
-      communication,
-      account,
-    );
+  async create(@GetUser() account: Account, @Body() communication: CreateCommunicationDto) {
+    const mails = await this.communicationService.create(communication, account);
     this.groupwareGateway.sendMails(mails);
     return { message: 'Tramite enviado' };
   }
 
   @Get('inbox')
-  async getInbox(
-    @GetUser('_id') id_account: string,
-    @Query() paginationParams: PaginationParamsDto,
-  ) {
-    return await this.communicationService.getInboxOfAccount(
-      id_account,
-      paginationParams,
-    );
+  async getInbox(@GetUser('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
+    return await this.communicationService.getInboxOfAccount(id_account, paginationParams);
   }
   @Get('outbox')
-  async getOutbox(
-    @GetUser('_id') id_account: string,
-    @Query() paginationParams: PaginationParamsDto,
-  ) {
-    return await this.communicationService.getOutboxOfAccount(
-      id_account,
-      paginationParams,
-    );
+  async getOutbox(@GetUser('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
+    return await this.communicationService.getOutboxOfAccount(id_account, paginationParams);
   }
 
   @Put('inbox/accept/:id_mail')
@@ -107,10 +63,7 @@ export class CommunicationController {
     return { state };
   }
   @Put('inbox/reject/:id_mail')
-  async rejectMail(
-    @Param('id_mail') id_mail: string,
-    @Body() body: RejectionDetail,
-  ) {
+  async rejectMail(@Param('id_mail') id_mail: string, @Body() body: RejectionDetail) {
     await this.communicationService.rejectMail(id_mail, body.rejectionReason);
     return { message: 'Se ha rechazado el tramite correctamente' };
   }
@@ -121,12 +74,11 @@ export class CommunicationController {
     @Body() body: CancelMailsDto,
     @Param('id_procedure') id_procedure: string,
   ) {
-    const { message, canceledMails } =
-      await this.communicationService.cancelMails(
-        body.ids_mails,
-        id_procedure,
-        id_account,
-      );
+    const { message, canceledMails } = await this.communicationService.cancelMails(
+      body.ids_mails,
+      id_procedure,
+      id_account,
+    );
     this.groupwareGateway.cancelMails(canceledMails);
     return { message };
   }
@@ -135,12 +87,6 @@ export class CommunicationController {
   async getMailDetails(@Param('id_mail') id_mail: string) {
     return await this.communicationService.getMailDetails(id_mail);
   }
-
-  @Get('outbox/workflow/:id_procedure')
-  async getWorkflow(@GetUser('id_procedure') id_procedure: string) {
-    // return await this.outboxService.getWorkflowProcedure(id_procedure);
-  }
-
   @Get('search/:text')
   async search(
     @GetUser('_id')
@@ -159,11 +105,7 @@ export class CommunicationController {
     account: Account,
     @Body() observationDto: CreateObservationDto,
   ) {
-    return this.observationService.addObservation(
-      id_procedure,
-      account,
-      observationDto,
-    );
+    return this.observationService.addObservation(id_procedure, account, observationDto);
   }
   @Get('inbox/observations/:id_procedure')
   async getObservations(@Param('id_procedure') id_procedure: string) {

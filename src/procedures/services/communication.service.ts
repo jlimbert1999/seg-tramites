@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Outbox, Inbox, Procedure, Communication } from '../schemas';
@@ -129,29 +125,18 @@ export class CommunicationService {
         },
       });
   }
-  async getInboxOfAccount(
-    id_account: string,
-    { limit, offset }: PaginationParamsDto,
-  ) {
+  async getInboxOfAccount(id_account: string, { limit, offset }: PaginationParamsDto) {
     const query: mongoose.FilterQuery<Communication> = {
       'receiver.cuenta': id_account,
       $or: [{ status: 'received' }, { status: 'pending' }],
     };
     const [mails, length] = await Promise.all([
-      this.communicationModel
-        .find(query)
-        .skip(offset)
-        .limit(limit)
-        .sort({ outboundDate: -1 })
-        .populate('procedure'),
+      this.communicationModel.find(query).skip(offset).limit(limit).sort({ outboundDate: -1 }).populate('procedure'),
       this.communicationModel.count(query),
     ]);
     return { mails, length };
   }
-  async getOutboxOfAccount(
-    id_account: string,
-    { limit, offset }: PaginationParamsDto,
-  ) {
+  async getOutboxOfAccount(id_account: string, { limit, offset }: PaginationParamsDto) {
     const dataPaginated = await this.communicationModel.aggregate([
       {
         $match: {
@@ -194,17 +179,10 @@ export class CommunicationService {
       },
     ]);
     const mails = dataPaginated[0].paginatedResults;
-    const length = dataPaginated[0].totalCount[0]
-      ? dataPaginated[0].totalCount[0].count
-      : 0;
+    const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
     return { mails, length };
   }
-  async searchInbox(
-    id_account: string,
-    text: string,
-    limit: number,
-    offset: number,
-  ) {
+  async searchInbox(id_account: string, text: string, limit: number, offset: number) {
     // const regex = new RegExp(text, 'i');
     // const data = await this.inboxModel.aggregate([
     //   {
@@ -254,23 +232,17 @@ export class CommunicationService {
     try {
       session.startTransaction();
       if (id_mail) {
-        await this.communicationModel.updateOne(
-          { _id: id_mail },
-          { status: statusMail.Completed },
-          { session },
-        );
+        await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Completed }, { session });
+      } else {
+        await this.procedureModel.updateOne({ _id: id_procedure }, { send: true }, { session });
       }
       const mails = await this.createMailData(account, communication);
       const createdMails = await this.communicationModel.insertMany(mails, {
         session,
       });
-      await this.communicationModel.populate(createdMails, {
-        path: 'procedure',
-        select: 'code reference state send',
-      });
-      await this.markProcedureAsSend(createdMails[0].procedure, session);
+      await this.communicationModel.populate(createdMails, 'procedure');
       await session.commitTransaction();
-      return createdMails;
+      return mails;
     } catch (error) {
       await session.abortTransaction();
       throw new InternalServerErrorException('Error al enviar el tramite');
@@ -279,11 +251,8 @@ export class CommunicationService {
     }
   }
   async acceptMail(id_mail: string) {
-    const mailDB = await this.communicationModel
-      .findById(id_mail)
-      .populate('procedure', 'state');
-    if (!mailDB)
-      throw new BadRequestException('El envio del tramite ha sido cancelado');
+    const mailDB = await this.communicationModel.findById(id_mail).populate('procedure', 'state');
+    if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -307,21 +276,18 @@ export class CommunicationService {
     } catch (error) {
       console.log(error);
       await session.abortTransaction();
-      throw new InternalServerErrorException(
-        'Ha ocurrido un error al aceptar el tramite',
-      );
+      throw new InternalServerErrorException('Ha ocurrido un error al aceptar el tramite');
     } finally {
       await session.endSession();
     }
   }
   async rejectMail(id_mail: string, rejectionReason: string) {
     const mailDB = await this.communicationModel.findById(id_mail);
-    if (!mailDB)
-      throw new BadRequestException('El envio del tramite ha sido cancelado');
+    if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
     const session = await this.connection.startSession();
     try {
-      const { procedure, emitter } = mailDB;
       session.startTransaction();
+      const { procedure, emitter } = mailDB;
       await this.communicationModel.updateOne(
         { _id: id_mail },
         {
@@ -331,11 +297,7 @@ export class CommunicationService {
         },
         { session },
       );
-      const recoveredMail = await this.recoverLastMailSend(
-        procedure._id,
-        emitter.cuenta._id,
-        session,
-      );
+      const recoveredMail = await this.recoverLastMailSend(procedure._id, emitter.cuenta._id, session);
       await session.commitTransaction();
       return recoveredMail;
     } catch (error) {
@@ -346,22 +308,16 @@ export class CommunicationService {
       await session.endSession();
     }
   }
-  async createMailData(
-    emitterAccount: Account,
-    communication: CreateCommunicationDto,
-  ): Promise<Communication[]> {
+  async createMailData(emitterAccount: Account, communication: CreateCommunicationDto): Promise<Communication[]> {
     const { receivers, id_procedure, ...values } = communication;
-    const { _id, funcionario } = await this.accountModel.populate(
-      emitterAccount,
-      {
-        path: 'funcionario',
-        select: 'nombre paterno materno cargo',
-        populate: {
-          path: 'cargo',
-          select: 'nombre',
-        },
+    const { _id, funcionario } = await emitterAccount.populate({
+      path: 'funcionario',
+      select: 'nombre paterno materno cargo',
+      populate: {
+        path: 'cargo',
+        select: 'nombre',
       },
-    );
+    });
     const emitter = {
       cuenta: _id,
       fullname: createFullName(funcionario),
@@ -394,35 +350,13 @@ export class CommunicationService {
       }
     }
   }
-  async markProcedureAsSend(
-    procedure: Procedure,
-    session: mongoose.mongo.ClientSession,
-  ) {
-    if (procedure.send) return;
-    await this.procedureModel.updateOne(
-      { _id: procedure._id },
-      { send: true },
-      { session },
-    );
-  }
-  async cancelMails(
-    ids_mails: string[],
-    id_procedure: string,
-    id_currentEmitter: string,
-  ) {
+  async cancelMails(ids_mails: string[], id_procedure: string, id_currentEmitter: string) {
     const canceledMails = await this.checkIfMailsHaveBeenReceived(ids_mails);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.communicationModel.deleteMany(
-        { _id: { $in: ids_mails } },
-        { session },
-      );
-      const recoveredMail = await this.recoverLastMailSend(
-        id_procedure,
-        id_currentEmitter,
-        session,
-      );
+      await this.communicationModel.deleteMany({ _id: { $in: ids_mails } }, { session });
+      const recoveredMail = await this.recoverLastMailSend(id_procedure, id_currentEmitter, session);
       await session.commitTransaction();
       return {
         message: `El tramite ahora se encuentra en su ${
@@ -433,18 +367,12 @@ export class CommunicationService {
     } catch (error) {
       console.log(error);
       await session.abortTransaction();
-      throw new InternalServerErrorException(
-        'Ha ocurrido un error al cancelar un envio',
-      );
+      throw new InternalServerErrorException('Ha ocurrido un error al cancelar un envio');
     } finally {
       await session.endSession();
     }
   }
-  async recoverLastMailSend(
-    id_procedure: string,
-    id_currentEmitter: string,
-    session: mongoose.mongo.ClientSession,
-  ) {
+  async recoverLastMailSend(id_procedure: string, id_currentEmitter: string, session: mongoose.mongo.ClientSession) {
     const lastMailSend = await this.communicationModel
       .findOneAndUpdate(
         {
@@ -457,31 +385,22 @@ export class CommunicationService {
       )
       .populate('procedure');
     if (!lastMailSend) {
-      await this.procedureModel.updateOne(
-        { _id: id_procedure },
-        { send: false },
-        { session },
-      );
+      await this.procedureModel.updateOne({ _id: id_procedure }, { send: false }, { session });
     }
     return lastMailSend;
   }
   async checkIfMailsHaveBeenReceived(ids_mails: string[]) {
-    const canceledMails: { id_receiver: string; id_mail: string }[] = [];
+    const canceledMails: Communication[] = [];
     for (const id_mail of ids_mails) {
-      const { receiver, status } = await this.communicationModel.findById(
-        id_mail,
-      );
-      if (status !== statusMail.Pending) {
+      const mail = await this.communicationModel.findById(id_mail);
+      if (mail.status !== statusMail.Pending) {
         throw new BadRequestException(
           `El tramite ya ha sido ${
-            status === statusMail.Rejected ? 'rechazado' : ' recibido'
-          } por el funcionario ${receiver.fullname}`,
+            mail.status === statusMail.Rejected ? 'rechazado' : ' recibido'
+          } por el funcionario ${mail.receiver.fullname}`,
         );
       }
-      canceledMails.push({
-        id_mail,
-        id_receiver: receiver.cuenta._id.toString(),
-      });
+      canceledMails.push(mail);
     }
     return canceledMails;
   }
@@ -540,13 +459,8 @@ export class CommunicationService {
   }
 
   async getMailDetails(id_mail: string) {
-    const mailDB = await this.communicationModel
-      .findById(id_mail)
-      .populate('procedure');
-    if (!mailDB)
-      throw new BadRequestException(
-        'El envio de este tramite ha sido cancelado',
-      );
+    const mailDB = await this.communicationModel.findById(id_mail).populate('procedure');
+    if (!mailDB) throw new BadRequestException('El envio de este tramite ha sido cancelado');
     return mailDB;
   }
 }
