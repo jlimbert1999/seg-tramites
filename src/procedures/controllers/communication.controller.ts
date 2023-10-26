@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { InstitutionService, DependencieService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService } from '../services';
@@ -87,22 +87,27 @@ export class CommunicationController {
   async getMailDetails(@Param('id_mail') id_mail: string) {
     return await this.communicationService.getMailDetails(id_mail);
   }
-  @Get('search/:text')
-  async search(
-    @GetUser('_id')
-    id_account: string,
+  @Get('inbox/search/:text')
+  searchInbox(
+    @GetUser('_id') id_account: string,
     @Param('text') text: string,
-    @Query('offset', ParseIntPipe) offset: number,
-    @Query('limit', ParseIntPipe) limit: number,
+    @Query() paginationParamsDto: PaginationParamsDto,
   ) {
-    // return await this.inboxService.search(id_account, text, limit, offset);
+    return this.communicationService.searchInbox(id_account, text, paginationParamsDto);
+  }
+  @Get('outbox/search/:text')
+  searchOutbox(
+    @GetUser('_id') id_account: string,
+    @Param('text') text: string,
+    @Query() paginationParamsDto: PaginationParamsDto,
+  ) {
+    return this.communicationService.searchOutbox(id_account, text, paginationParamsDto);
   }
 
   @Post('inbox/observation/:id_procedure')
   async addObservation(
     @Param('id_procedure') id_procedure: string,
-    @GetUser()
-    account: Account,
+    @GetUser() account: Account,
     @Body() observationDto: CreateObservationDto,
   ) {
     return this.observationService.addObservation(id_procedure, account, observationDto);

@@ -182,48 +182,97 @@ export class CommunicationService {
     const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
     return { mails, length };
   }
-  async searchInbox(id_account: string, text: string, limit: number, offset: number) {
-    // const regex = new RegExp(text, 'i');
-    // const data = await this.inboxModel.aggregate([
-    //   {
-    //     $match: {
-    //       'receptor.cuenta': new mongoose.Types.ObjectId(id_account),
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'procedures',
-    //       localField: 'tramite',
-    //       foreignField: '_id',
-    //       as: 'tramite',
-    //     },
-    //   },
-    //   {
-    //     $unwind: '$tramite',
-    //   },
-    //   {
-    //     $match: {
-    //       $or: [
-    //         { 'tramite.code': regex },
-    //         { 'tramite.reference': regex },
-    //         { 'emisor.fullname': regex },
-    //       ],
-    //     },
-    //   },
-    //   {
-    //     $facet: {
-    //       paginatedResults: [{ $skip: offset }, { $limit: limit }],
-    //       totalCount: [
-    //         {
-    //           $count: 'count',
-    //         },
-    //       ],
-    //     },
-    //   },
-    // ]);
-    // const mails = data[0].paginatedResults;
-    // const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
-    // return { mails, length };
+  async searchInbox(id_account: string, text: string, { limit, offset }: PaginationParamsDto) {
+    const regex = new RegExp(text, 'i');
+    const data = await this.communicationModel.aggregate([
+      {
+        $match: {
+          'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
+          $or: [{ status: statusMail.Received }, { status: statusMail.Pending }],
+        },
+      },
+      {
+        $lookup: {
+          from: 'procedures',
+          localField: 'procedure',
+          foreignField: '_id',
+          as: 'procedure',
+        },
+      },
+      {
+        $unwind: '$procedure',
+      },
+      {
+        $match: {
+          $or: [{ 'procedure.code': regex }, { 'procedure.reference': regex }],
+        },
+      },
+      {
+        $facet: {
+          paginatedResults: [{ $skip: offset }, { $limit: limit }],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        },
+      },
+    ]);
+    const mails = data[0].paginatedResults;
+    const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
+    return { mails, length };
+  }
+  async searchOutbox(id_account: string, text: string, { limit, offset }: PaginationParamsDto) {
+    offset = offset * limit;
+    const regex = new RegExp(text);
+    const dataPaginated = await this.communicationModel.aggregate([
+      {
+        $match: {
+          'emitter.cuenta': id_account,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            account: '$emitter.cuenta',
+            procedure: '$procedure',
+            outboundDate: '$outboundDate',
+          },
+          sendings: { $push: '$$ROOT' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'procedures',
+          localField: '_id.procedure',
+          foreignField: '_id',
+          as: '_id.procedure',
+        },
+      },
+      {
+        $unwind: {
+          path: '$_id.procedure',
+        },
+      },
+      {
+        $match: {
+          $or: [{ '_id.procedure.code': regex }, { '_id.procedure.reference': regex }],
+        },
+      },
+      {
+        $facet: {
+          paginatedResults: [{ $skip: offset }, { $limit: limit }],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        },
+      },
+    ]);
+    const mails = dataPaginated[0].paginatedResults;
+    const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
+    return { mails, length };
   }
   async create(communication: CreateCommunicationDto, account: Account) {
     const { id_mail, id_procedure, receivers } = communication;
@@ -404,7 +453,6 @@ export class CommunicationService {
     }
     return canceledMails;
   }
-
   async getWorkflowOfProcedure(id_procedure: string) {
     const workflow = await this.communicationModel.aggregate([
       {
@@ -457,7 +505,6 @@ export class CommunicationService {
     }
     return workflow;
   }
-
   async getMailDetails(id_mail: string) {
     const mailDB = await this.communicationModel.findById(id_mail).populate('procedure');
     if (!mailDB) throw new BadRequestException('El envio de este tramite ha sido cancelado');
