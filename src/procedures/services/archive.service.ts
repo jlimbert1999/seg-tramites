@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Archivos } from '../schemas/archivos.schema';
-import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { Communication, ProcedureEvents, Procedure } from '../schemas';
 import { EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
@@ -116,21 +116,66 @@ export class ArchiveService {
       this.communicationModel
         .find({
           status: statusMail.Archived,
-          // 'receiver.cuenta': { $in: officersInDependency },
+          'receiver.cuenta': { $in: officersInDependency },
         })
         .limit(limit)
         .skip(offset)
         .sort({ _id: -1 })
         .select('procedure receiver')
-        .populate('procedure', 'code reference endDate'),
+        .populate('procedure'),
       this.communicationModel.count({
         status: statusMail.Archived,
-        // 'receiver.cuenta': { $in: officersInDependency },
+        'receiver.cuenta': { $in: officersInDependency },
       }),
     ]);
     return { archives, length };
   }
-
+  async search(text: string, { limit, offset }: PaginationParamsDto, account: Account) {
+    const officersInDependency = await this.accountModel
+      .find({
+        dependencia: account.dependencia._id,
+      })
+      .select('_id');
+    const ids_officers = officersInDependency.map((officer) => officer._id);
+    const regex = new RegExp(text, 'i');
+    const data = await this.communicationModel.aggregate([
+      {
+        $match: {
+          status: statusMail.Archived,
+          'receiver.cuenta': { $in: ids_officers },
+        },
+      },
+      {
+        $lookup: {
+          from: 'procedures',
+          localField: 'procedure',
+          foreignField: '_id',
+          as: 'procedure',
+        },
+      },
+      {
+        $unwind: '$procedure',
+      },
+      {
+        $match: {
+          $or: [{ 'procedure.code': regex }, { 'procedure.reference': regex }],
+        },
+      },
+      {
+        $facet: {
+          paginatedResults: [{ $skip: offset }, { $limit: limit }],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        },
+      },
+    ]);
+    const archives = data[0].paginatedResults;
+    const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
+    return { archives, length };
+  }
   async createProcedureEvent(
     { description, procedure }: EventProcedureDto,
     account: Account,
@@ -144,7 +189,6 @@ export class ArchiveService {
     });
     await createdEvent.save({ session });
   }
-
   async checkIfProcedureCanBeCompleted(id_procedure: string) {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (procedureDB.state === stateProcedure.CONCLUIDO)
@@ -154,7 +198,6 @@ export class ArchiveService {
     });
     if (isProcessStarted) throw new BadRequestException('Solo puede concluir tramites que no hayan sido remitidos');
   }
-
   async checkIfProcedureIsCompleted(
     id_procedure: string,
     stateCompleted: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
@@ -175,7 +218,6 @@ export class ArchiveService {
       );
     }
   }
-
   async insertPartipantInToWokflow(
     currentMail: Communication,
     participant: Account,
@@ -186,7 +228,7 @@ export class ArchiveService {
     const { receiver, attachmentQuantity, internalNumber } = currentMail;
     const { funcionario } = await participant.populate({
       path: 'funcionario',
-      populate: { path: 'cargo' },
+      populate: { path: 'cargo', select: 'nombre' },
     });
     const newMail = {
       procedure: currentMail.procedure._id,
@@ -198,7 +240,7 @@ export class ArchiveService {
       },
       outboundDate,
       inboundDate,
-      reference: 'Para su desarchivo',
+      reference: 'Para su continuacion',
       attachmentQuantity: attachmentQuantity,
       internalNumber: internalNumber,
       status: statusMail.Received,
@@ -206,8 +248,7 @@ export class ArchiveService {
     const createdMail = new this.communicationModel(newMail);
     await createdMail.save({ session });
   }
-
-  async getEventsOfProcedure(id_procedure: string) {
-    return this.procedureEventModel.find({ procedure: id_procedure }).sort({ date: -1 });
+  async getProcedureEvents(id_procedure: string) {
+    return await this.procedureEventModel.find({ procedure: id_procedure }).sort({ date: -1 });
   }
 }

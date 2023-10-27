@@ -11,7 +11,7 @@ import { Account } from 'src/auth/schemas/account.schema';
 import { ExternalDetail, Procedure } from '../schemas';
 import { groupProcedure, stateProcedure } from '../interfaces';
 import { ProcedureService } from './procedure.service';
-import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 
 @Injectable()
 export class ExternalService {

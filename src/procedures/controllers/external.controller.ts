@@ -10,7 +10,7 @@ import {
   UpdateProcedureDto,
 } from '../dto';
 
-import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { ExternalService } from '../services';
 
 @Controller('external')

@@ -5,7 +5,7 @@ import { CommunicationService } from '../services';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
-import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { CancelMailsDto, CreateCommunicationDto, CreateObservationDto, RejectionDetail } from '../dto';
 import { ObservationService } from '../services/observation.service';
 import { Account } from 'src/auth/schemas/account.schema';

@@ -5,7 +5,7 @@ import { InternalService } from '../services';
 import { OfficerService, TypeProcedureService } from 'src/administration/services';
 import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
 import { Account } from 'src/auth/schemas/account.schema';
-import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 
 @Controller('internal')
 @Auth(validResources.internal)

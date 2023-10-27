@@ -7,6 +7,7 @@ import { AdministrationModule } from './administration/administration.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { ProceduresModule } from './procedures/procedures.module';
 import { ConfigModule } from '@nestjs/config';
+import { EnvConfiguration } from './config/configuration';
 
 @Module({
   imports: [
@@ -15,7 +16,9 @@ import { ConfigModule } from '@nestjs/config';
     // MongooseModule.forRoot(
     //   'mongodb+srv://root:8835024limbert@cluster0.jmkbaqz.mongodb.net/?retryWrites=true&w=majority',
     // ),
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      load: [EnvConfiguration],
+    }),
     MongooseModule.forRootAsync({
       useFactory: () => ({
         uri: 'mongodb://127.0.0.1:27017/seg-tramites',

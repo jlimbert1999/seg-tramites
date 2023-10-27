@@ -4,7 +4,7 @@ import mongoose, { Model } from 'mongoose';
 import { Outbox, Inbox, Procedure, Communication } from '../schemas';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
-import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { CreateCommunicationDto, ReceiverDto } from '../dto';
 import { Account } from 'src/auth/schemas/account.schema';
 

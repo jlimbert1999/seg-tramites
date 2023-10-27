@@ -6,7 +6,7 @@ import { groupProcedure } from '../interfaces/group.interface';
 import { ProcedureService } from './procedure.service';
 import { Account } from 'src/auth/schemas/account.schema';
 import { InternalDetail, Procedure } from '../schemas';
-import { PaginationParamsDto } from 'src/shared/interfaces/pagination_params';
+import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 
 @Injectable()
 export class InternalService {
