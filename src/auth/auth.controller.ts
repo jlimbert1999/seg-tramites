@@ -1,8 +1,7 @@
 import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
-import { GetUser } from './decorators/get-user.decorator';
-import { Auth } from './decorators/auth.decorator';
+import { Auth, GetUserRequest } from './decorators';
 import { UpdateMyAccountDto } from './dto/my-account.dto';
 import { Account } from './schemas/account.schema';
 
@@ -23,16 +22,13 @@ export class AuthController {
 
   @Put('/:id_account')
   @Auth()
-  async updateMyAccount(
-    @Param('id_account') id_account: string,
-    @Body() data: UpdateMyAccountDto,
-  ) {
+  async updateMyAccount(@Param('id_account') id_account: string, @Body() data: UpdateMyAccountDto) {
     return await this.authService.updateMyAccount(id_account, data);
   }
 
   @Get()
   @Auth()
-  async verifyAuth(@GetUser() account: Account) {
+  async verifyAuth(@GetUserRequest() account: Account) {
     return await this.authService.checkAuthStatus(account._id);
   }
 }

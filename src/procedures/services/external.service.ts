@@ -1,12 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import {
-  CreateExternalDetailDto,
-  CreateProcedureDto,
-  UpdateExternalDto,
-  UpdateProcedureDto,
-} from '../dto';
+import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
 import { Account } from 'src/auth/schemas/account.schema';
 import { ExternalDetail, Procedure } from '../schemas';
 import { groupProcedure, stateProcedure } from '../interfaces';
@@ -23,11 +18,7 @@ export class ExternalService {
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async search(
-    { limit, offset }: PaginationParamsDto,
-    id_account: string,
-    text: string,
-  ) {
+  async search({ limit, offset }: PaginationParamsDto, id_account: string, text: string) {
     const regex = new RegExp(text, 'i');
     offset = offset * limit;
     const data = await this.procedureModel.aggregate([
@@ -66,11 +57,7 @@ export class ExternalService {
       },
       {
         $match: {
-          $or: [
-            { 'details.solicitante.fullname': regex },
-            { code: regex },
-            { reference: regex },
-          ],
+          $or: [{ 'details.solicitante.fullname': regex }, { code: regex }, { reference: regex }],
         },
       },
       {
@@ -117,45 +104,28 @@ export class ExternalService {
     return { procedures, length };
   }
 
-  async create(
-    procedure: CreateProcedureDto,
-    details: CreateExternalDetailDto,
-    account: Account,
-  ) {
+  async create(procedure: CreateProcedureDto, details: CreateExternalDetailDto, account: Account) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       const createdDetail = new this.externalDetailModel(details);
       await createdDetail.save({ session });
       const newProcedure = await this.procedureService.create(
-        procedure,
-        account,
-        createdDetail._id,
-        groupProcedure.EXTERNAL,
+        { procedure, account, id_detail: createdDetail._id, group: groupProcedure.EXTERNAL },
         session,
       );
       await session.commitTransaction();
       return newProcedure;
     } catch (error) {
       await session.abortTransaction();
-      throw new InternalServerErrorException(
-        'No se puedo registrar el tramite correctamente',
-      );
+      throw new InternalServerErrorException('No se puedo registrar el tramite correctamente');
     } finally {
       session.endSession();
     }
   }
 
-  async update(
-    id_procedure: string,
-    id_account: string,
-    procedure: UpdateProcedureDto,
-    details: UpdateExternalDto,
-  ) {
-    const procedureDB = await this.procedureService.checkIfEditable(
-      id_procedure,
-      id_account,
-    );
+  async update(id_procedure: string, id_account: string, procedure: UpdateProcedureDto, details: UpdateExternalDto) {
+    const procedureDB = await this.procedureService.checkIfEditable(id_procedure, id_account);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -166,11 +136,7 @@ export class ExternalService {
         details,
         { session },
       );
-      const updatedProcedure = await this.procedureService.update(
-        id_procedure,
-        procedure,
-        session,
-      );
+      const updatedProcedure = await this.procedureService.update(id_procedure, procedure, session);
       await session.commitTransaction();
       return updatedProcedure;
     } catch (error) {

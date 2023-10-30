@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { Auth, GetUser } from 'src/auth/decorators';
+import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { InternalService } from '../services';
 import { OfficerService, TypeProcedureService } from 'src/administration/services';
@@ -26,7 +26,7 @@ export class InternalController {
 
   @Get('search/:text')
   async search(
-    @GetUser('_id') id_account: string,
+    @GetUserRequest('_id') id_account: string,
     @Param('text') text: string,
     @Query() paginationParamsDto: PaginationParamsDto,
   ) {
@@ -34,13 +34,13 @@ export class InternalController {
   }
 
   @Get()
-  async get(@GetUser('_id') id_account: string, @Query() paginationParamsDto: PaginationParamsDto) {
+  async get(@GetUserRequest('_id') id_account: string, @Query() paginationParamsDto: PaginationParamsDto) {
     return await this.internalService.findAll(paginationParamsDto, id_account);
   }
 
   @Post()
   async add(
-    @GetUser() account: Account,
+    @GetUserRequest() account: Account,
     @Body('procedure') procedure: CreateProcedureDto,
     @Body('details') details: CreateInternalDetailDto,
   ) {
@@ -50,7 +50,7 @@ export class InternalController {
   @Put('/:id_procedure')
   async edit(
     @Param('id_procedure') id_procedure: string,
-    @GetUser('_id') id_account: string,
+    @GetUserRequest('_id') id_account: string,
     @Body('procedure')
     procedure: UpdateProcedureDto,
     @Body('details') details: UpdateInternalDetailDto,

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from 'src/auth/auth.module';
 import { AdministrationModule } from 'src/administration/administration.module';
 
@@ -7,12 +8,17 @@ import {
   InternalController,
   ExternalController,
   ArchiveController,
-} from './controllers/index';
+  ProcedureController,
+  CommunicationController,
+} from './controllers';
 import {
   ExternalService,
   InternalService,
   CommunicationService,
-} from './services/index';
+  ObservationService,
+  ArchiveService,
+  ProcedureService,
+} from './services';
 import {
   Communication,
   CommunicationSchema,
@@ -20,40 +26,34 @@ import {
   ProcedureEventSchema,
   Observaciones,
   ObservacionSchema,
-} from './schemas/index';
-import { Inbox, InboxSchema } from './schemas/inbox.schema';
-import {
   ExternalProcedure,
   ExternalProcedureSchema,
-} from './schemas/external.schema';
-import {
   InternalProcedure,
   InternalProcedureSchema,
-} from './schemas/internal.schema';
-import { Outbox, OutboxSchema } from './schemas/outbox.schema';
-import { GroupwareModule } from 'src/groupware/groupware.module';
-import { ProcedureController } from './controllers/procedure.controller';
-import { ProcedureService } from './services/procedure.service';
-import { Procedure, ProcedureSchema } from './schemas/procedure.schema';
-import {
+  Inbox,
+  InboxSchema,
+  Outbox,
+  OutboxSchema,
   ExternalDetail,
   ExternalDetailSchema,
-} from './schemas/external-detail.schema';
-import {
+  ArchivoSchema,
+  Archivos,
+  Procedure,
+  ProcedureSchema,
   InternalDetail,
   InternalDetailSchema,
-} from './schemas/internal-detail.schema';
-import { CommunicationController } from './controllers/communication.controller';
-import { Observation, ObservationSchema } from './schemas/observation.schema';
-import { ObservationService } from './services/observation.service';
-import { ArchivoSchema, Archivos } from './schemas/archivos.schema';
-import { ArchiveService } from './services/archive.service';
+  Observation,
+  ObservationSchema,
+} from './schemas/index';
+import { GroupwareModule } from 'src/groupware/groupware.module';
 
 @Module({
   imports: [
+    ConfigModule,
     MongooseModule.forFeature([
       { name: ExternalProcedure.name, schema: ExternalProcedureSchema },
       { name: InternalProcedure.name, schema: InternalProcedureSchema },
+      { name: ProcedureEvents.name, schema: ProcedureEventSchema },
       { name: Observaciones.name, schema: ObservacionSchema },
       { name: Inbox.name, schema: InboxSchema },
       { name: Outbox.name, schema: OutboxSchema },
@@ -63,7 +63,6 @@ import { ArchiveService } from './services/archive.service';
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
       { name: Archivos.name, schema: ArchivoSchema },
-      { name: ProcedureEvents.name, schema: ProcedureEventSchema },
     ]),
     AuthModule,
     AdministrationModule,

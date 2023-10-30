@@ -89,8 +89,10 @@ export class ArchiveService {
       if (String(mailDB.receiver.cuenta._id) === String(account._id)) {
         await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Received });
       } else {
-        await this.insertPartipantInToWokflow(mailDB, account, session);
+        await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Completed });
+        await this.insertPartipantInWokflow(mailDB, account, session);
       }
+      await this.procedureModel.updateOne({ _id: mailDB.procedure._id }, { state: stateProcedure.EN_REVISION });
       await this.createProcedureEvent(eventDto, account, session);
       await session.commitTransaction();
       return { message: 'Tramite desarchivado.' };
@@ -203,10 +205,14 @@ export class ArchiveService {
     stateCompleted: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
     session: mongoose.mongo.ClientSession,
   ) {
-    const isProcessActive = await this.communicationModel.findOne({
-      procedure: id_procedure,
-      $or: [{ status: statusMail.Pending }, { status: statusMail.Received }],
-    });
+    const isProcessActive = await this.communicationModel.findOne(
+      {
+        procedure: id_procedure,
+        $or: [{ status: statusMail.Pending }, { status: statusMail.Received }],
+      },
+      undefined,
+      { session },
+    );
     if (!isProcessActive) {
       await this.procedureModel.updateOne(
         { _id: id_procedure },
@@ -218,7 +224,7 @@ export class ArchiveService {
       );
     }
   }
-  async insertPartipantInToWokflow(
+  async insertPartipantInWokflow(
     currentMail: Communication,
     participant: Account,
     session: mongoose.mongo.ClientSession,

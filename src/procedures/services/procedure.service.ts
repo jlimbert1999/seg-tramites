@@ -1,16 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { ExternalProcedure, InternalProcedure, Outbox, Procedure } from '../schemas';
 import { ExternalDetail } from '../schemas/external-detail.schema';
 import { InternalDetail } from '../schemas/internal-detail.schema';
-import { Dependency, TypeProcedure } from 'src/administration/schemas';
+import { Dependency } from 'src/administration/schemas';
 import { groupProcedure } from '../interfaces/group.interface';
 import { CreateProcedureDto, UpdateProcedureDto } from '../dto';
 import { Inbox } from '../schemas/inbox.schema';
 import { Account } from 'src/auth/schemas/account.schema';
 import { stateProcedure } from '../interfaces';
+import { ConfigService } from '@nestjs/config';
 
+interface procedure {
+  procedure: CreateProcedureDto;
+  group: groupProcedure;
+  account: Account;
+  id_detail: string;
+}
 @Injectable()
 export class ProcedureService {
   constructor(
@@ -25,11 +32,9 @@ export class ProcedureService {
     @InjectModel(Inbox.name) private imboxModel: Model<Inbox>,
     @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
     @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
-    @InjectModel(TypeProcedure.name)
-    private typeProcedure: Model<TypeProcedure>,
-
     @InjectModel(Procedure.name)
     private procedureModel: Model<Procedure>,
+    private readonly configService: ConfigService,
   ) {}
   async updateAll() {
     // const procedures = await this.externalProcedureModel.find({});
@@ -108,20 +113,14 @@ export class ProcedureService {
     // }
     return { ok: true };
   }
-  async create(
-    procedure: CreateProcedureDto,
-    account: Account,
-    id_detail: string,
-    group: groupProcedure,
-    session: mongoose.mongo.ClientSession,
-  ) {
-    const code = await this.generateCode(account.dependencia._id, procedure.type, group);
+  async create({ procedure, account, group, id_detail }: procedure, session: mongoose.mongo.ClientSession) {
+    const { segment, ...procedureProperties } = procedure;
+    const code = await this.generateCode(account, segment, group);
     const createdProcedure = new this.procedureModel({
       code,
-      group,
       account: account._id,
       details: id_detail,
-      ...procedure,
+      ...procedureProperties,
     });
     await createdProcedure.save({ session });
     await createdProcedure.populate('details');
@@ -168,19 +167,20 @@ export class ProcedureService {
     return procedureDB;
   }
 
-  async generateCode(id_dependency: string, id_typeProcedure: string, group: groupProcedure) {
-    const [dependency, typeProcedure] = await Promise.all([
-      this.dependencyModel.findById(id_dependency).populate('institucion', 'sigla'),
-      this.typeProcedure.findById(id_typeProcedure).select('segmento'),
-    ]);
-    if (!dependency || !typeProcedure) throw new BadRequestException('Ha ocurrido un error al generar un alterno');
-    if (!dependency.institucion) throw new BadRequestException('Ha ocurrido un error al generar un alterno');
-    // TODO CONFIG YEAR IN ENV
-    const code: string = `${typeProcedure.segmento}-${dependency.institucion.sigla}-2023`.toUpperCase();
-    const regex = new RegExp(code, 'i');
+  async generateCode(account: Account, segmentProcedure: string, group: groupProcedure) {
+    const { dependencia } = await account.populate({
+      path: 'dependencia',
+      select: 'institucion',
+      populate: {
+        path: 'institucion',
+        select: 'sigla',
+      },
+    });
+    if (!dependencia) throw new InternalServerErrorException('Error al generar el codigo alterno');
+    const code = `${segmentProcedure}-${dependencia.institucion.sigla}-${this.configService.get('YEAR')}`.toUpperCase();
     const correlative = await this.procedureModel.count({
       group: group,
-      code: regex,
+      code: new RegExp(code, 'i'),
     });
     const zeros = group === groupProcedure.EXTERNAL ? 6 : 5;
     return `${code}-${String(correlative + 1).padStart(zeros, '0')}`;

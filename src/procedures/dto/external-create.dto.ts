@@ -80,7 +80,7 @@ export class CreateExternalDetailDto {
 
   @IsArray()
   @IsString({ each: true })
-  requerimientos: string[];
+  requirements: string[];
 
   @IsNumber()
   pin: number;

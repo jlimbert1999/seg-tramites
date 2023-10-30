@@ -14,4 +14,8 @@ export class CreateProcedureDto {
   @IsString()
   @IsNotEmpty()
   amount: string;
+
+  @IsString()
+  @IsNotEmpty()
+  segment: string;
 }

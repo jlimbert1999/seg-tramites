@@ -18,26 +18,26 @@ export class InternalService {
   ) {}
 
   async add(procedure: CreateProcedureDto, details: CreateInternalDetailDto, account: Account) {
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      const createdDetail = new this.internalDetailModel(details);
-      await createdDetail.save({ session });
-      const newProcedure = await this.procedureService.create(
-        procedure,
-        account,
-        createdDetail._id,
-        groupProcedure.INTERNAL,
-        session,
-      );
-      await session.commitTransaction();
-      return newProcedure;
-    } catch (error) {
-      await session.abortTransaction();
-      throw new InternalServerErrorException('No se puedo registrar el tramite correctamente');
-    } finally {
-      session.endSession();
-    }
+    // const session = await this.connection.startSession();
+    // try {
+    //   session.startTransaction();
+    //   const createdDetail = new this.internalDetailModel(details);
+    //   await createdDetail.save({ session });
+    //   const newProcedure = await this.procedureService.create(
+    //     procedure,
+    //     account,
+    //     createdDetail._id,
+    //     groupProcedure.INTERNAL,
+    //     session,
+    //   );
+    //   await session.commitTransaction();
+    //   return newProcedure;
+    // } catch (error) {
+    //   await session.abortTransaction();
+    //   throw new InternalServerErrorException('No se puedo registrar el tramite correctamente');
+    // } finally {
+    //   session.endSession();
+    // }
   }
 
   async update(

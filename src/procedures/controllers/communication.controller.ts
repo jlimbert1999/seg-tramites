@@ -2,13 +2,13 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/
 import { InstitutionService, DependencieService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService } from '../services';
-import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { CancelMailsDto, CreateCommunicationDto, CreateObservationDto, RejectionDetail } from '../dto';
 import { ObservationService } from '../services/observation.service';
 import { Account } from 'src/auth/schemas/account.schema';
+import { GetUserRequest } from 'src/auth/decorators/get-user-request.decorator';
 
 @Controller('communication')
 @Auth(validResources.communication)
@@ -37,23 +37,23 @@ export class CommunicationController {
     return await this.dependencieService.getActiveDependenciesOfInstitution(id_institution);
   }
   @Get('accounts/:id_dependency')
-  async getAcccount(@GetUser('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
+  async getAcccount(@GetUserRequest('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
     return await this.communicationService.getAccountsForSend(id_dependency, id_account);
   }
 
   @Post()
-  async create(@GetUser() account: Account, @Body() communication: CreateCommunicationDto) {
+  async create(@GetUserRequest() account: Account, @Body() communication: CreateCommunicationDto) {
     const mails = await this.communicationService.create(communication, account);
     this.groupwareGateway.sendMails(mails);
     return { message: 'Tramite enviado' };
   }
 
   @Get('inbox')
-  async getInbox(@GetUser('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
+  async getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
     return await this.communicationService.getInboxOfAccount(id_account, paginationParams);
   }
   @Get('outbox')
-  async getOutbox(@GetUser('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
+  async getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
     return await this.communicationService.getOutboxOfAccount(id_account, paginationParams);
   }
 
@@ -70,7 +70,7 @@ export class CommunicationController {
 
   @Delete('outbox/:id_procedure')
   async cancelMails(
-    @GetUser('_id') id_account: string,
+    @GetUserRequest('_id') id_account: string,
     @Body() body: CancelMailsDto,
     @Param('id_procedure') id_procedure: string,
   ) {
@@ -89,7 +89,7 @@ export class CommunicationController {
   }
   @Get('inbox/search/:text')
   searchInbox(
-    @GetUser('_id') id_account: string,
+    @GetUserRequest('_id') id_account: string,
     @Param('text') text: string,
     @Query() paginationParamsDto: PaginationParamsDto,
   ) {
@@ -97,7 +97,7 @@ export class CommunicationController {
   }
   @Get('outbox/search/:text')
   searchOutbox(
-    @GetUser('_id') id_account: string,
+    @GetUserRequest('_id') id_account: string,
     @Param('text') text: string,
     @Query() paginationParamsDto: PaginationParamsDto,
   ) {
@@ -107,7 +107,7 @@ export class CommunicationController {
   @Post('inbox/observation/:id_procedure')
   async addObservation(
     @Param('id_procedure') id_procedure: string,
-    @GetUser() account: Account,
+    @GetUserRequest() account: Account,
     @Body() observationDto: CreateObservationDto,
   ) {
     return this.observationService.addObservation(id_procedure, account, observationDto);
