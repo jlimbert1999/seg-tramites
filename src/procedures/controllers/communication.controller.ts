@@ -4,11 +4,11 @@ import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService } from '../services';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
-import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { CancelMailsDto, CreateCommunicationDto, CreateObservationDto, RejectionDetail } from '../dto';
 import { ObservationService } from '../services/observation.service';
 import { Account } from 'src/auth/schemas/account.schema';
 import { GetUserRequest } from 'src/auth/decorators/get-user-request.decorator';
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('communication')
 @Auth(validResources.communication)

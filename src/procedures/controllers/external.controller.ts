@@ -4,9 +4,8 @@ import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { Account } from 'src/auth/schemas/account.schema';
 import { TypeProcedureService } from 'src/administration/services/type-procedure.service';
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
-
-import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { ExternalService } from '../services';
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('external')
 @Auth(validResources.external)
@@ -51,10 +50,9 @@ export class ExternalController {
   @Put('/:id_procedure')
   async edit(
     @Param('id_procedure') id_procedure: string,
-    @GetUserRequest('_id') id_account: string,
     @Body('procedure') procedure: UpdateProcedureDto,
     @Body('details') details: UpdateExternalDto,
   ) {
-    return await this.externalService.update(id_procedure, id_account, procedure, details);
+    return await this.externalService.update(id_procedure, procedure, details);
   }
 }

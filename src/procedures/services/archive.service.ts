@@ -2,12 +2,12 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Archivos } from '../schemas/archivos.schema';
-import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { Communication, ProcedureEvents, Procedure } from '../schemas';
 import { EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { Account } from 'src/auth/schemas/account.schema';
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class ArchiveService {

@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ArchiveService } from '../services/archive.service';
 import { Auth, GetUserRequest } from 'src/auth/decorators';
-import { PaginationParamsDto } from 'src/common/interfaces/pagination_params';
 import { EventProcedureDto } from '../dto';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { Account } from 'src/auth/schemas/account.schema';
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('archive')
 @Auth()
@@ -17,7 +17,11 @@ export class ArchiveController {
   }
 
   @Post('mail/:id_mail')
-  archiveMail(@Param('id_mail') id_mail: string, @Body() eventDto: EventProcedureDto, @GetUserRequest() account: Account) {
+  archiveMail(
+    @Param('id_mail') id_mail: string,
+    @Body() eventDto: EventProcedureDto,
+    @GetUserRequest() account: Account,
+  ) {
     return this.archiveService.archiveMail(id_mail, eventDto, account);
   }
 
@@ -42,7 +46,11 @@ export class ArchiveController {
     return this.archiveService.findAll(paginationParams, account);
   }
   @Get('search/:text')
-  searc(@Query() paginationParams: PaginationParamsDto, @GetUserRequest() account: Account, @Param('text') text: string) {
+  searc(
+    @Query() paginationParams: PaginationParamsDto,
+    @GetUserRequest() account: Account,
+    @Param('text') text: string,
+  ) {
     return this.archiveService.search(text, paginationParams, account);
   }
 }
