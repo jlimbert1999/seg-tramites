@@ -69,7 +69,6 @@ export class InternalService {
     }
   }
   async findAll({ limit, offset }: PaginationParamsDto, id_account: string) {
-    offset = offset * limit;
     const [procedures, length] = await Promise.all([
       await this.procedureModel
         .find({
