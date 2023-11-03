@@ -1,13 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { InstitutionService, DependencieService } from 'src/administration/services';
+import { InstitutionService, DependencieService, AccountService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { CommunicationService } from '../services';
-import { Auth } from 'src/auth/decorators/auth.decorator';
+import { CommunicationService, ObservationService } from '../services';
+import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { CancelMailsDto, CreateCommunicationDto, CreateObservationDto, RejectionDetail } from '../dto';
-import { ObservationService } from '../services/observation.service';
 import { Account } from 'src/auth/schemas/account.schema';
-import { GetUserRequest } from 'src/auth/decorators/get-user-request.decorator';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('communication')
@@ -17,8 +15,9 @@ export class CommunicationController {
     private readonly institutionService: InstitutionService,
     private readonly dependencieService: DependencieService,
     private readonly groupwareGateway: GroupwareGateway,
-    private readonly communicationService: CommunicationService,
     private readonly observationService: ObservationService,
+    private readonly accountService: AccountService,
+    private readonly communicationService: CommunicationService,
   ) {}
 
   @Get('generate')
@@ -38,7 +37,7 @@ export class CommunicationController {
   }
   @Get('accounts/:id_dependency')
   async getAcccount(@GetUserRequest('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
-    return await this.communicationService.getAccountsForSend(id_dependency, id_account);
+    return await this.accountService.getAccountsForSend(id_dependency, id_account);
   }
 
   @Post()

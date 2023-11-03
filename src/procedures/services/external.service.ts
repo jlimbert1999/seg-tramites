@@ -3,13 +3,13 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
-import { groupProcedure, stateProcedure } from '../interfaces';
+import { ValidProcedureService, groupProcedure, stateProcedure } from '../interfaces';
 import { ExternalDetail, Procedure } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/auth/schemas/account.schema';
 
 @Injectable()
-export class ExternalService {
+export class ExternalService implements ValidProcedureService {
   constructor(
     private readonly configService: ConfigService,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,

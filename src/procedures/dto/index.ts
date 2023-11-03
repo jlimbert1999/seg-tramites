@@ -9,3 +9,4 @@ export * from './communication-create.dto';
 export * from './communication-update.dto';
 export * from './observation-create.dto';
 export * from './event_procedure.dto';
+export * from './get-procedure-params.dto';

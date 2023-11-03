@@ -7,10 +7,10 @@ import { groupProcedure } from '../interfaces/group.interface';
 import { Account } from 'src/auth/schemas/account.schema';
 import { InternalDetail, Procedure } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { stateProcedure } from '../interfaces';
+import { ValidProcedureService, stateProcedure } from '../interfaces';
 
 @Injectable()
-export class InternalService {
+export class InternalService implements ValidProcedureService {
   constructor(
     private readonly configService: ConfigService,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,

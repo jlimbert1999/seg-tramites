@@ -13,10 +13,8 @@ export class CommunicationService {
   constructor(
     @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
     @InjectModel(Inbox.name) private inboxModel: Model<Inbox>,
-    @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectModel(Procedure.name) private procedureModel: Model<Account>,
-    @InjectModel(Communication.name)
-    private communicationModel: Model<Communication>,
+    @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -107,23 +105,6 @@ export class CommunicationService {
     //   console.log('ok');
     // }
     // console.log('end');
-  }
-  async getAccountsForSend(id_dependencie: string, id_account: string) {
-    return await this.accountModel
-      .find({
-        dependencia: id_dependencie,
-        activo: true,
-        funcionario: { $ne: null },
-        _id: { $ne: id_account },
-      })
-      .select('_id')
-      .populate({
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-          select: 'nombre',
-        },
-      });
   }
   async getInboxOfAccount(id_account: string, { limit, offset }: PaginationParamsDto) {
     const query: mongoose.FilterQuery<Communication> = {

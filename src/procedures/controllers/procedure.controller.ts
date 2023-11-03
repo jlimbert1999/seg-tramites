@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import {
   CommunicationService,
@@ -7,7 +7,8 @@ import {
   ObservationService,
   ProcedureService,
 } from '../services';
-import { groupProcedure } from '../interfaces';
+import { ValidProcedureService, groupProcedure } from '../interfaces';
+import { GetProcedureParamsDto } from '../dto';
 
 @Controller('procedure')
 @Auth()
@@ -26,7 +27,8 @@ export class ProcedureController {
   }
 
   @Get('/:group/:id_procedure')
-  async getFullProcedure(@Param('id_procedure') id_procedure: string, @Param('group') group: groupProcedure) {
+  async getFullProcedure(@Param() procedureParamsDto: GetProcedureParamsDto) {
+    const { id_procedure, group } = procedureParamsDto;
     const procedureService = this.getServiceByGroup(group);
     const [procedure, workflow, observations] = await Promise.all([
       procedureService.getProcedureDetail(id_procedure),
@@ -36,14 +38,12 @@ export class ProcedureController {
     return { procedure, workflow, observations };
   }
 
-  private getServiceByGroup(group: groupProcedure) {
+  private getServiceByGroup(group: groupProcedure): ValidProcedureService {
     switch (group) {
       case groupProcedure.EXTERNAL:
         return this.externalService;
-      case groupProcedure.INTERNAL:
-        return this.internalService;
       default:
-        throw new BadRequestException('Tipo de tramite no definido');
+        return this.internalService;
     }
   }
 }
