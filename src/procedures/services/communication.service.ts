@@ -13,7 +13,7 @@ export class CommunicationService {
   constructor(
     @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
     @InjectModel(Inbox.name) private inboxModel: Model<Inbox>,
-    @InjectModel(Procedure.name) private procedureModel: Model<Account>,
+    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}

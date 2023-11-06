@@ -28,6 +28,7 @@ export class InternalService implements ValidProcedureService {
       const code = await this.generateInternalCode(account, segment);
       const createdProcedure = new this.procedureModel({
         code,
+        group: groupProcedure.INTERNAL,
         account: account._id,
         details: createdDetail._id,
         ...procedureProperties,
@@ -55,10 +56,12 @@ export class InternalService implements ValidProcedureService {
         details,
         { session },
       );
-      const updatedProcedure = await this.procedureModel.findByIdAndUpdate(id_procedure, procedure, {
-        session,
-        new: true,
-      });
+      const updatedProcedure = await this.procedureModel
+        .findByIdAndUpdate(id_procedure, procedure, {
+          session,
+          new: true,
+        })
+        .populate('details');
       await session.commitTransaction();
       return updatedProcedure;
     } catch (error) {

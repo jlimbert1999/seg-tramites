@@ -79,7 +79,6 @@ export class ExternalService implements ValidProcedureService {
     return { procedures, length };
   }
   async findAll({ limit, offset }: PaginationParamsDto, id_account: string) {
-    offset = offset * limit;
     const [procedures, length] = await Promise.all([
       await this.procedureModel
         .find({
@@ -109,6 +108,7 @@ export class ExternalService implements ValidProcedureService {
       const code = await this.generateExternalCode(account, segment);
       const createdProcedure = new this.procedureModel({
         code,
+        group: groupProcedure.EXTERNAL,
         account: account._id,
         details: createdDetail._id,
         ...procedureProperties,

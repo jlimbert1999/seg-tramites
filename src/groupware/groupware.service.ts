@@ -12,9 +12,7 @@ export class GroupwareService {
   }
 
   addUser(id_socket: string, payloadToken: JwtPayload) {
-    const indexFound = this.users.findIndex(
-      (user) => user.id_account == payloadToken.id_account,
-    );
+    const indexFound = this.users.findIndex((user) => user.id_account == payloadToken.id_account);
     if (indexFound === -1) {
       const newUserSocket: userSocket = {
         socketIds: [id_socket],
@@ -29,18 +27,12 @@ export class GroupwareService {
   }
 
   removeUser(id_socket: string) {
-    const indexFound = this.users.findIndex((acc) =>
-      acc.socketIds.includes(id_socket),
-    );
+    const indexFound = this.users.findIndex((acc) => acc.socketIds.includes(id_socket));
     if (indexFound !== -1) {
-      const mySocketConections = this.users[indexFound].socketIds.filter(
-        (element) => element !== id_socket,
-      );
+      const mySocketConections = this.users[indexFound].socketIds.filter((element) => element !== id_socket);
       this.users[indexFound].socketIds = mySocketConections;
       if (mySocketConections.length === 0) {
-        this.users = this.users.filter(
-          (user) => user.id_account !== this.users[indexFound].id_account,
-        );
+        this.users = this.users.filter((user) => user.id_account !== this.users[indexFound].id_account);
       }
     }
   }
