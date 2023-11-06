@@ -45,6 +45,7 @@ export class ArchiveController {
   findAll(@Query() paginationParams: PaginationParamsDto, @GetUserRequest() account: Account) {
     return this.archiveService.findAll(paginationParams, account);
   }
+  
   @Get('search/:text')
   searc(
     @Query() paginationParams: PaginationParamsDto,

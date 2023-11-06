@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
+
 import { Outbox, Inbox, Procedure, Communication } from '../schemas';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
@@ -283,6 +284,7 @@ export class CommunicationService {
   async acceptMail(id_mail: string) {
     const mailDB = await this.communicationModel.findById(id_mail).populate('procedure', 'state');
     if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
+    if (mailDB.status !== statusMail.Pending) throw new BadRequestException('El tramite ya ha sido aceptado');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -302,9 +304,8 @@ export class CommunicationService {
         procedure.state = stateProcedure.EN_REVISION;
       }
       await session.commitTransaction();
-      return procedure.state;
+      return { state: procedure.state, message: 'Tramite aceptado correctamente.' };
     } catch (error) {
-      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException('Ha ocurrido un error al aceptar el tramite');
     } finally {
@@ -314,6 +315,7 @@ export class CommunicationService {
   async rejectMail(id_mail: string, rejectionReason: string) {
     const mailDB = await this.communicationModel.findById(id_mail);
     if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
+    if (mailDB.status !== statusMail.Pending) throw new BadRequestException('El tramite ya fue rechazado');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -327,11 +329,10 @@ export class CommunicationService {
         },
         { session },
       );
-      const recoveredMail = await this.recoverLastMailSend(procedure._id, emitter.cuenta._id, session);
+      await this.recoverLastMailSend(procedure._id, emitter.cuenta._id, session);
       await session.commitTransaction();
-      return recoveredMail;
+      return { message: 'Tramite rechazado correctamente.' };
     } catch (error) {
-      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException('No se pudo rechazar el tramite');
     } finally {
@@ -395,7 +396,6 @@ export class CommunicationService {
         canceledMails,
       };
     } catch (error) {
-      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException('Ha ocurrido un error al cancelar un envio');
     } finally {

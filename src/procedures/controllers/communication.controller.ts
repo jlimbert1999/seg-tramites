@@ -12,12 +12,12 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 @Auth(validResources.communication)
 export class CommunicationController {
   constructor(
+    private readonly accountService: AccountService,
     private readonly institutionService: InstitutionService,
     private readonly dependencieService: DependencieService,
-    private readonly groupwareGateway: GroupwareGateway,
     private readonly observationService: ObservationService,
-    private readonly accountService: AccountService,
     private readonly communicationService: CommunicationService,
+    private readonly groupwareGateway: GroupwareGateway,
   ) {}
 
   @Get('generate')
@@ -57,14 +57,12 @@ export class CommunicationController {
   }
 
   @Put('inbox/accept/:id_mail')
-  async acceptMail(@Param('id_mail') id_mail: string) {
-    const state = await this.communicationService.acceptMail(id_mail);
-    return { state };
+  acceptMail(@Param('id_mail') id_mail: string) {
+    return this.communicationService.acceptMail(id_mail);
   }
   @Put('inbox/reject/:id_mail')
-  async rejectMail(@Param('id_mail') id_mail: string, @Body() body: RejectionDetail) {
-    await this.communicationService.rejectMail(id_mail, body.rejectionReason);
-    return { message: 'Se ha rechazado el tramite correctamente' };
+  rejectMail(@Param('id_mail') id_mail: string, @Body() body: RejectionDetail) {
+    return this.communicationService.rejectMail(id_mail, body.rejectionReason);
   }
 
   @Delete('outbox/:id_procedure')
