@@ -47,25 +47,26 @@ export class Inbox extends Document {
   receptor: Participant;
 
   //   ** for update
-  // @Prop({
-  //   type: String,
-  //   required: true,
-  //   enum: [ExternalProcedure.name, InternalProcedure.name],
-  // })
-  // tipo: 'ExternalProcedure' | 'InternalProcedure';
-  // @Prop({
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   required: true,
-  //   refPath: 'tipo',
-  // })
-  // tramite: any ;
+  @Prop({
+    type: String,
+    required: true,
+    enum: ['tramites_externos', 'tramites_internos'],
+  })
+  tipo: 'tramites_externos' | 'tramites_internos';
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: Procedure.name,
     required: true,
+    refPath: 'tipo',
   })
-  tramite: Procedure;
+  tramite: any;
+
+  // @Prop({
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: Procedure.name,
+  //   required: true,
+  // })
+  // tramite: Procedure;
 
   @Prop({
     type: String,

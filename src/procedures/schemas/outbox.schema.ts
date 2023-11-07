@@ -19,23 +19,24 @@ export class Outbox extends Document {
   })
   receptor: Participant;
 
-  // @Prop({
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   refPath: 'group',
-  // })
-  // tramite: Procedure;
-  //   @Prop({
-  //     required: true,
-  //     type: String,
-  //     enum: [ExternalProcedure.name, InternalProcedure.name],
-  //   })
-  //   tipo: 'ExternalProcedure' | 'InternalProcedure';
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: Procedure.name,
-    required: true,
+    refPath: 'group',
   })
   tramite: Procedure;
+
+  @Prop({
+    type: String,
+    required: true,
+    enum: ['tramites_externos', 'tramites_internos'],
+  })
+  tipo: 'tramites_externos' | 'tramites_internos';
+  // @Prop({
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: Procedure.name,
+  //   required: true,
+  // })
+  // tramite: Procedure;
 
   @Prop({
     type: String,

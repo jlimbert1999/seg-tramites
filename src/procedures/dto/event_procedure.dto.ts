@@ -9,6 +9,6 @@ export class EventProcedureDto {
   @IsNotEmpty()
   description: string;
 
-  @IsEnum([stateProcedure.SUSPENDIDO, stateProcedure.CONCLUIDO])
+  @IsEnum([stateProcedure.SUSPENDIDO, stateProcedure.CONCLUIDO], { message: 'State procedure is not valid' })
   stateProcedure: stateProcedure.CONCLUIDO | stateProcedure.SUSPENDIDO;
 }

@@ -52,7 +52,6 @@ export class ArchiveService {
       session.endSession();
     }
   }
-
   async archiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
     const { status, procedure } = await this.communicationModel.findById(id_mail);
     if (status !== statusMail.Received) throw new BadRequestException('El envio no puede archivarse.');
@@ -79,7 +78,6 @@ export class ArchiveService {
       session.endSession();
     }
   }
-
   async unarchiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
     const mailDB = await this.communicationModel.findById(id_mail);
     if (mailDB.status !== statusMail.Archived) throw new BadRequestException('El tramite ya fue desarchivado');
@@ -92,12 +90,14 @@ export class ArchiveService {
         await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Completed });
         await this.insertPartipantInWokflow(mailDB, account, session);
       }
-      await this.procedureModel.updateOne({ _id: mailDB.procedure._id }, { state: stateProcedure.EN_REVISION });
+      await this.procedureModel.updateOne(
+        { _id: mailDB.procedure._id },
+        { state: stateProcedure.EN_REVISION, $unset: { endDate: 1 } },
+      );
       await this.createProcedureEvent(eventDto, account, session);
       await session.commitTransaction();
       return { message: 'Tramite desarchivado.' };
     } catch (error) {
-      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException('Error al desarchivar tramite', {
         cause: error,
@@ -106,7 +106,6 @@ export class ArchiveService {
       session.endSession();
     }
   }
-
   async findAll({ limit, offset }: PaginationParamsDto, account: Account) {
     const officersInDependency = await this.accountModel
       .find({

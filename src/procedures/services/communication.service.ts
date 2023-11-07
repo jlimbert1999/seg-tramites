@@ -5,15 +5,17 @@ import mongoose, { Model } from 'mongoose';
 import { Outbox, Inbox, Procedure, Communication } from '../schemas';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
-import { CreateCommunicationDto, ReceiverDto } from '../dto';
+import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
 import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { Officer } from 'src/administration/schemas';
 
 @Injectable()
 export class CommunicationService {
   constructor(
     @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
     @InjectModel(Inbox.name) private inboxModel: Model<Inbox>,
+    @InjectModel(Officer.name) private officerModel: Model<Officer>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectConnection() private readonly connection: mongoose.Connection,
@@ -63,55 +65,72 @@ export class CommunicationService {
     // console.log('collection done!!!');
   }
   async repairOldSchemas() {
-    // const mails = await this.inboxModel.find({});
+    // FOR EMITTER
+    // const mails = await this.outboxModel.find({});
     // for (const mail of mails) {
     //   const participant = {};
     //   if (!mail.emisor.funcionario) {
-    //     await this.inboxModel.populate(mail, { path: 'emisor.cuenta' });
+    //     await this.outboxModel.populate(mail, { path: 'emisor.cuenta' });
     //     if (!mail.emisor.cuenta.funcionario) {
     //       participant['fullname'] = 'NO DESIGNADO';
     //     } else {
     //       const officer = await this.officerModel
     //         .findById(mail.emisor.cuenta.funcionario._id)
     //         .populate('cargo', 'nombre');
-    //       participant['fullname'] = [
-    //         officer.nombre,
-    //         officer.paterno,
-    //         officer.materno,
-    //       ]
-    //         .filter(Boolean)
-    //         .join(' ');
+    //       participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
     //       if (officer.cargo) {
     //         participant['jobtitle'] = officer.cargo.nombre;
     //       }
     //     }
     //   } else {
-    //     const officer = await this.officerModel
-    //       .findById(mail.emisor.funcionario._id)
-    //       .populate('cargo', 'nombre');
-    //     participant['fullname'] = [
-    //       officer.nombre,
-    //       officer.paterno,
-    //       officer.materno,
-    //     ]
-    //       .filter(Boolean)
-    //       .join(' ');
+    //     const officer = await this.officerModel.findById(mail.emisor.funcionario._id).populate('cargo', 'nombre');
+    //     participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
     //     if (officer.cargo) {
     //       participant['jobtitle'] = officer.cargo.nombre;
     //     }
     //   }
-    //   await this.inboxModel.findByIdAndUpdate(mail._id, {
+    //   await this.outboxModel.findByIdAndUpdate(mail._id, {
     //     emisor: { cuenta: mail.emisor.cuenta._id, ...participant },
     //   });
     //   console.log('ok');
     // }
     // console.log('end');
+    // FOR RECEIVER
+    // const mails = await this.outboxModel.find({});
+    // for (const mail of mails) {
+    //   const participant = {};
+    //   if (!mail.receptor.funcionario) {
+    //     await this.outboxModel.populate(mail, { path: 'receptor.cuenta' });
+    //     if (!mail.receptor.cuenta.funcionario) {
+    //       participant['fullname'] = 'NO DESIGNADO';
+    //     } else {
+    //       const officer = await this.officerModel
+    //         .findById(mail.receptor.cuenta.funcionario._id)
+    //         .populate('cargo', 'nombre');
+    //       participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
+    //       if (officer.cargo) {
+    //         participant['jobtitle'] = officer.cargo.nombre;
+    //       }
+    //     }
+    //   } else {
+    //     const officer = await this.officerModel.findById(mail.receptor.funcionario._id).populate('cargo', 'nombre');
+    //     participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
+    //     if (officer.cargo) {
+    //       participant['jobtitle'] = officer.cargo.nombre;
+    //     }
+    //   }
+    //   await this.outboxModel.findByIdAndUpdate(mail._id, {
+    //     receptor: { cuenta: mail.receptor.cuenta._id, ...participant },
+    //   });
+    //   console.log('ok');
+    // }
+    // console.log('end');
   }
-  async getInboxOfAccount(id_account: string, { limit, offset }: PaginationParamsDto) {
+  async getInboxOfAccount(id_account: string, { limit, offset, status }: GetInboxParamsDto) {
     const query: mongoose.FilterQuery<Communication> = {
       'receiver.cuenta': id_account,
-      $or: [{ status: 'received' }, { status: 'pending' }],
     };
+    status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
     const [mails, length] = await Promise.all([
       this.communicationModel.find(query).skip(offset).limit(limit).sort({ outboundDate: -1 }).populate('procedure'),
       this.communicationModel.count(query),
@@ -164,14 +183,15 @@ export class CommunicationService {
     const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
     return { mails, length };
   }
-  async searchInbox(id_account: string, text: string, { limit, offset }: PaginationParamsDto) {
+  async searchInbox(id_account: string, text: string, { limit, offset, status }: GetInboxParamsDto) {
     const regex = new RegExp(text, 'i');
+    const query: mongoose.FilterQuery<Communication> = {
+      'receiver.cuenta': id_account,
+    };
+    status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
     const data = await this.communicationModel.aggregate([
       {
-        $match: {
-          'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
-          $or: [{ status: statusMail.Received }, { status: statusMail.Pending }],
-        },
+        $match: query,
       },
       {
         $lookup: {

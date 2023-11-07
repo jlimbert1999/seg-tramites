@@ -51,31 +51,23 @@ export class ProcedureService {
     //     startDate: procedure.fecha_registro,
     //     tramite: procedure._id,
     //   };
-    //   if (procedure.fecha_finalizacion)
-    //     newProcedure['endDate'] = procedure.fecha_finalizacion;
+    //   if (procedure.fecha_finalizacion) newProcedure['endDate'] = procedure.fecha_finalizacion;
     //   const externalDetail = {
     //     solicitante: procedure.solicitante,
     //     requirements: procedure.requerimientos,
     //     pin: procedure.pin,
     //   };
-    //   if (procedure.representante)
-    //     externalDetail['representante'] = procedure.representante;
+    //   if (procedure.representante) externalDetail['representante'] = procedure.representante;
     //   const createdDetails = new this.externalDetailModel(externalDetail);
     //   await createdDetails.save();
     //   newProcedure.group = 'ExternalDetail';
     //   newProcedure.details = createdDetails._id;
     //   const createProcedure = new this.procedureModel(newProcedure);
     //   await createProcedure.save();
-    //   await this.imboxModel.updateMany(
-    //     { tramite: procedure._id },
-    //     { $set: { tramite: createProcedure._id } },
-    //   );
-    //   await this.outboxModel.updateMany(
-    //     { tramite: procedure._id },
-    //     { $set: { tramite: createProcedure._id } },
-    //   );
+    //   await this.imboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
+    //   await this.outboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
     // }
-
+    // console.log('end');
     // const procedures = await this.internalProcedureModel.find({});
     // for (const procedure of procedures) {
     //   const newProcedure: any = {
@@ -90,8 +82,7 @@ export class ProcedureService {
     //     startDate: procedure.fecha_registro,
     //     tramite: procedure._id,
     //   };
-    //   if (procedure.fecha_finalizacion)
-    //     newProcedure['endDate'] = procedure.fecha_finalizacion;
+    //   if (procedure.fecha_finalizacion) newProcedure['endDate'] = procedure.fecha_finalizacion;
     //   const internalDetail = {
     //     remitente: procedure.remitente,
     //     destinatario: procedure.destinatario,
@@ -102,16 +93,10 @@ export class ProcedureService {
     //   newProcedure.details = createdDetails._id;
     //   const createProcedure = new this.procedureModel(newProcedure);
     //   await createProcedure.save();
-    //   await this.imboxModel.updateMany(
-    //     { tramite: procedure._id },
-    //     { $set: { tramite: createProcedure._id } },
-    //   );
-    //   await this.outboxModel.updateMany(
-    //     { tramite: procedure._id },
-    //     { $set: { tramite: createProcedure._id } },
-    //   );
+    //   await this.imboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
+    //   await this.outboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
     // }
-    return { ok: true };
+    // return { ok: true };
   }
   async create({ procedure, account, group, id_detail }: procedure, session: mongoose.mongo.ClientSession) {
     const { segment, ...procedureProperties } = procedure;

@@ -11,7 +11,7 @@ import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { GetProcedureParamsDto } from '../dto';
 
 @Controller('procedure')
-@Auth()
+// @Auth()
 export class ProcedureController {
   constructor(
     private readonly procedureService: ProcedureService,
@@ -21,7 +21,7 @@ export class ProcedureController {
     private readonly observationService: ObservationService,
   ) {}
 
-  @Get()
+  @Get('generate')
   async get() {
     return await this.procedureService.updateAll();
   }

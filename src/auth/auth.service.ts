@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
+
 import { JwtPayload } from './interfaces/jwt.interface';
 import { AuthDto } from './dto/auth.dto';
 import { UpdateMyAccountDto } from './dto/my-account.dto';

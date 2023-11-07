@@ -4,12 +4,18 @@ import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService, ObservationService } from '../services';
 import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { validResources } from 'src/auth/interfaces/valid-resources.interface';
-import { CancelMailsDto, CreateCommunicationDto, CreateObservationDto, RejectionDetail } from '../dto';
+import {
+  CancelMailsDto,
+  CreateCommunicationDto,
+  CreateObservationDto,
+  GetInboxParamsDto,
+  RejectionDetail,
+} from '../dto';
 import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('communication')
-@Auth(validResources.communication)
+// @Auth(validResources.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,
@@ -20,9 +26,14 @@ export class CommunicationController {
     private readonly groupwareGateway: GroupwareGateway,
   ) {}
 
+  @Get('repair')
+  async repairCollection() {
+    await this.communicationService.repairOldSchemas();
+    return { ok: true };
+  }
   @Get('generate')
   async generateCollection() {
-    // await this.inboxService.generateCollection();
+    await this.communicationService.generateCollection();
     return { ok: true };
   }
 
@@ -48,7 +59,7 @@ export class CommunicationController {
   }
 
   @Get('inbox')
-  async getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
+  async getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: GetInboxParamsDto) {
     return await this.communicationService.getInboxOfAccount(id_account, paginationParams);
   }
   @Get('outbox')
@@ -88,7 +99,7 @@ export class CommunicationController {
   searchInbox(
     @GetUserRequest('_id') id_account: string,
     @Param('text') text: string,
-    @Query() paginationParamsDto: PaginationParamsDto,
+    @Query() paginationParamsDto: GetInboxParamsDto,
   ) {
     return this.communicationService.searchInbox(id_account, text, paginationParamsDto);
   }

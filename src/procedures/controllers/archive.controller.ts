@@ -31,9 +31,9 @@ export class ArchiveController {
     @Body() archiveDto: EventProcedureDto,
     @GetUserRequest() account: Account,
   ) {
-    await this.archiveService.unarchiveMail(id_mail, archiveDto, account);
+    const message = await this.archiveService.unarchiveMail(id_mail, archiveDto, account);
     this.groupwareGateway.notifyUnarchive(String(account.dependencia._id), id_mail);
-    return { message: 'Desarchivo' };
+    return { message };
   }
 
   @Get('events/:id_procedure')
@@ -45,7 +45,7 @@ export class ArchiveController {
   findAll(@Query() paginationParams: PaginationParamsDto, @GetUserRequest() account: Account) {
     return this.archiveService.findAll(paginationParams, account);
   }
-  
+
   @Get('search/:text')
   searc(
     @Query() paginationParams: PaginationParamsDto,
