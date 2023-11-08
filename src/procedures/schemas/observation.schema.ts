@@ -23,6 +23,12 @@ export class Observation extends Document {
     type: String,
     required: true,
   })
+  fullnameOfficer: string;
+
+  @Prop({
+    type: String,
+    required: true,
+  })
   description: string;
 
   @Prop({

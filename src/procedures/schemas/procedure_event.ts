@@ -29,5 +29,4 @@ export class ProcedureEvents extends Document {
   })
   date: Date;
 }
-export const ProcedureEventSchema =
-  SchemaFactory.createForClass(ProcedureEvents);
+export const ProcedureEventSchema = SchemaFactory.createForClass(ProcedureEvents);

@@ -15,7 +15,7 @@ import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('communication')
-// @Auth(validResources.communication)
+@Auth(validResources.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,
@@ -118,7 +118,7 @@ export class CommunicationController {
     @GetUserRequest() account: Account,
     @Body() observationDto: CreateObservationDto,
   ) {
-    return this.observationService.addObservation(id_procedure, account, observationDto);
+    // return this.observationService.addObservation(id_procedure, account, observationDto);
   }
   @Get('inbox/observations/:id_procedure')
   async getObservations(@Param('id_procedure') id_procedure: string) {

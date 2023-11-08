@@ -65,6 +65,12 @@ export class Communication extends Document {
     default: statusMail.Pending,
   })
   status: statusMail;
+
+  @Prop({
+    type: String,
+  })
+  // ! delete after update
+  id_old: string;
 }
 
 export const CommunicationSchema = SchemaFactory.createForClass(Communication);

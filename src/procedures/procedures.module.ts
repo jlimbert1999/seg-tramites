@@ -46,6 +46,7 @@ import {
   ObservationSchema,
 } from './schemas/index';
 import { GroupwareModule } from 'src/groupware/groupware.module';
+import { Eventos, EventosSchema } from './schemas/eventos.schema';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { GroupwareModule } from 'src/groupware/groupware.module';
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
       { name: Archivos.name, schema: ArchivoSchema },
+      { name: Eventos.name, schema: EventosSchema },
     ]),
     AuthModule,
     AdministrationModule,

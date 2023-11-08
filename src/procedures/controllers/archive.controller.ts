@@ -11,6 +11,15 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}
 
+  @Get('repair')
+  async repailCollectionArchives() {
+    // return this.archiveService.repiarOldArchives();
+  }
+  @Get('generate/events')
+  async generateObservatons() {
+    return this.archiveService.createEvents();
+  }
+
   @Post('procedure')
   archiveProcedure(@Body() eventProcedureDto: EventProcedureDto, @GetUserRequest() account: Account) {
     return this.archiveService.archiveProcedure(eventProcedureDto, account);

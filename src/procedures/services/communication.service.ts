@@ -26,12 +26,7 @@ export class CommunicationService {
     // FIRT STEP
     // const outbox = await this.outboxModel.find({});
     // for (const item of outbox) {
-    //   const status =
-    //     item.recibido === true
-    //       ? 'completed'
-    //       : item.recibido === false
-    //       ? 'rejected'
-    //       : 'pending';
+    //   const status = item.recibido === true ? 'completed' : item.recibido === false ? 'rejected' : 'pending';
     //   const newCommunication = new this.communicationModel({
     //     emitter: item.emisor,
     //     receiver: item.receptor,
@@ -43,9 +38,11 @@ export class CommunicationService {
     //     inboundDate: item.fecha_recibido,
     //     rejectionReason: item.motivo_rechazo,
     //     status,
+    //     id_old: item._id,
     //   });
     //   await newCommunication.save();
     // }
+    // console.log('completed');
     // SECOND STEP
     // const inbox = await this.inboxModel.find({});
     // for (const item of inbox) {

@@ -8,6 +8,7 @@ import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { Eventos } from '../schemas/eventos.schema';
 
 @Injectable()
 export class ArchiveService {
@@ -15,15 +16,36 @@ export class ArchiveService {
     @InjectModel(Archivos.name) private oldArchiveModel: Model<Archivos>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
-    @InjectModel(ProcedureEvents.name)
-    private procedureEventModel: Model<ProcedureEvents>,
+    @InjectModel(ProcedureEvents.name) private procedureEventModel: Model<ProcedureEvents>,
     @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Communication.name)
     private communicationModel: Model<Communication>,
+    @InjectModel(Eventos.name) private eventoModel: Model<Eventos>,
   ) {}
 
-  async getOldArchives({ limit, offset }: PaginationParamsDto) {
-    return await this.oldArchiveModel.find({}).limit(limit).skip(offset);
+  async repiarOldArchives() {
+    // const oldArchives = await this.oldArchiveModel.find({ location: { $ne: null } });
+    // for (const archive of oldArchives) {
+    //   await this.communicationModel.updateOne({ id_old: archive.location }, { status: statusMail.Archived });
+    // }
+    // console.log('ok');
+    // return { message: 'ok' };
+  }
+  async createEvents() {
+    // const eventos = await this.eventoModel.find({});
+    // for (const evento of eventos) {
+    //   const { officer } = await evento.populate({ path: 'officer' });
+    //   const fullname = createFullName(officer);
+    //   const procedureDB = await this.procedureModel.findOne({ tramite: evento.procedure });
+    //   const newEvent = new this.procedureEventModel({
+    //     procedure: procedureDB._id,
+    //     fullNameOfficer: fullname,
+    //     description: evento.description,
+    //     date: evento.date,
+    //   });
+    //   await newEvent.save();
+    // }
+    // return { message: 'ok' };
   }
 
   async archiveProcedure(eventProcedureDto: EventProcedureDto, account: Account) {
