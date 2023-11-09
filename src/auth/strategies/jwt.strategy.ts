@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectModel } from '@nestjs/mongoose';
-import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Model } from 'mongoose';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayload } from '../interfaces/jwt.interface';
 import { Account } from '../schemas/account.schema';
 
@@ -22,7 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Esta cuenta no tiene ningun permiso asignado');
     if (account._id == '639dde6d495c82b3794d6606') return account;
     if (!account.activo || !account.funcionario) throw new UnauthorizedException('Esta cuenta ha sido deshablitada');
-    console.log('PASO POR JWT STRATEGY');
     return account;
   }
 }

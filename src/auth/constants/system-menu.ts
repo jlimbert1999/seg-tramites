@@ -104,11 +104,11 @@ export const SystemMenu = [
   {
     resource: validResources.communication,
     text: 'Bandeja de entrada',
-    icon: 'mail',
+    icon: 'drafts',
     routerLink: 'bandejas/entrada',
     group: {
       text: 'Bandejas',
-      icon: 'description',
+      icon: 'inbox',
     },
   },
   {
@@ -118,7 +118,17 @@ export const SystemMenu = [
     routerLink: 'bandejas/salida',
     group: {
       text: 'Bandejas',
-      icon: 'description',
+      icon: 'inbox',
+    },
+  },
+  {
+    resource: validResources.communication,
+    text: 'Busqueda rapida',
+    icon: 'manage_search',
+    routerLink: 'reportes/busqueda',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
     },
   },
 ];

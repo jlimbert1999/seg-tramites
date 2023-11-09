@@ -44,23 +44,6 @@ export class ProcedureController {
     ]);
     return { procedure, workflow, observations };
   }
-
-  @Post('/:id_procedure/observation')
-  @Permission({ resource: validResources.communication })
-  addObservation(
-    @GetUserRequest() account: Account,
-    @Param('id_procedure') id_procedure: string,
-    @Body() observationDto: CreateObservationDto,
-  ) {
-    this.observationService.add(id_procedure, account, observationDto);
-  }
-
-  @Put('observation/:id_observation')
-  @Permission({ resource: validResources.communication })
-  solveObservation(@Param('id_observation') id_observation: string) {
-    this.observationService.solveObservation(id_observation);
-  }
-
   private getServiceByGroup(group: groupProcedure): ValidProcedureService {
     switch (group) {
       case groupProcedure.EXTERNAL:
@@ -68,5 +51,20 @@ export class ProcedureController {
       default:
         return this.internalService;
     }
+  }
+  @Post('/:id_procedure/observation')
+  @Permission({ resource: validResources.communication })
+  addObservation(
+    @GetUserRequest() account: Account,
+    @Param('id_procedure') id_procedure: string,
+    @Body() observationDto: CreateObservationDto,
+  ) {
+    return this.observationService.add(id_procedure, account, observationDto);
+  }
+
+  @Put('observation/:id_observation')
+  @Permission({ resource: validResources.communication })
+  solveObservation(@Param('id_observation') id_observation: string) {
+    return this.observationService.solveObservation(id_observation);
   }
 }

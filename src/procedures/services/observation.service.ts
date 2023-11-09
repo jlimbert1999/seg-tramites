@@ -37,7 +37,7 @@ export class ObservationService {
   }
 
   async getObservationsOfProcedure(id_procedure: string) {
-    return await this.observationModel.find({ procedure: id_procedure });
+    return await this.observationModel.find({ procedure: id_procedure }).sort({ date: -1 });
   }
 
   async add(id_procedure: string, account: Account, { description }: CreateObservationDto) {
@@ -87,10 +87,15 @@ export class ObservationService {
       );
       if (!observationDB) throw new BadRequestException('La observacion no existe');
       let state = stateProcedure.OBSERVADO;
-      const pendingObservation = await this.observationModel.findOne({
-        procedure: observationDB.procedure._id,
-        isSolved: false,
-      });
+      const pendingObservation = await this.observationModel.findOne(
+        {
+          procedure: observationDB.procedure._id,
+          isSolved: false,
+        },
+        undefined,
+        { session },
+      );
+      console.log(pendingObservation);
       if (!pendingObservation) {
         await this.procedureModel.updateOne(
           { _id: observationDB.procedure._id },
@@ -108,15 +113,4 @@ export class ObservationService {
       session.endSession();
     }
   }
-
-  // async solveObservation(id_observation: string) {
-  //   const observationDB = await this.observationModel.findByIdAndUpdate(
-  //     id_observation,
-  //     {
-  //       isSolved: true,
-  //     },
-  //   );
-
-  //   await this.observationModel.fin;
-  // }
 }

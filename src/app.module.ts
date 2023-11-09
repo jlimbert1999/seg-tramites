@@ -8,6 +8,7 @@ import { GroupwareModule } from './groupware/groupware.module';
 import { ProceduresModule } from './procedures/procedures.module';
 import { ConfigModule } from '@nestjs/config';
 import { EnvConfiguration } from './config/configuration';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { EnvConfiguration } from './config/configuration';
     AdministrationModule,
     GroupwareModule,
     ProceduresModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

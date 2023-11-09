@@ -52,17 +52,18 @@ import { Eventos, EventosSchema } from './schemas/eventos.schema';
   imports: [
     ConfigModule,
     MongooseModule.forFeature([
+      { name: Procedure.name, schema: ProcedureSchema },
+      { name: InternalDetail.name, schema: InternalDetailSchema },
+      { name: ExternalDetail.name, schema: ExternalDetailSchema },
+      { name: ProcedureEvents.name, schema: ProcedureEventSchema },
+      { name: Communication.name, schema: CommunicationSchema },
+      { name: Observation.name, schema: ObservationSchema },
+
       { name: ExternalProcedure.name, schema: ExternalProcedureSchema },
       { name: InternalProcedure.name, schema: InternalProcedureSchema },
-      { name: ProcedureEvents.name, schema: ProcedureEventSchema },
       { name: Observaciones.name, schema: ObservacionSchema },
       { name: Inbox.name, schema: InboxSchema },
       { name: Outbox.name, schema: OutboxSchema },
-      { name: Procedure.name, schema: ProcedureSchema },
-      { name: ExternalDetail.name, schema: ExternalDetailSchema },
-      { name: InternalDetail.name, schema: InternalDetailSchema },
-      { name: Communication.name, schema: CommunicationSchema },
-      { name: Observation.name, schema: ObservationSchema },
       { name: Archivos.name, schema: ArchivoSchema },
       { name: Eventos.name, schema: EventosSchema },
     ]),
@@ -85,5 +86,6 @@ import { Eventos, EventosSchema } from './schemas/eventos.schema';
     ObservationService,
     ArchiveService,
   ],
+  exports: [MongooseModule],
 })
 export class ProceduresModule {}
