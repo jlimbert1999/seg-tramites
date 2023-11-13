@@ -131,4 +131,14 @@ export const SystemMenu = [
       icon: 'analytics',
     },
   },
+  {
+    resource: validResources.communication,
+    text: 'Solicitante',
+    icon: 'manage_search',
+    routerLink: 'reportes/solicitante',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
 ];

@@ -1,9 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, BadRequestException } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { CreateReportDto } from './dto/create-report.dto';
-import { UpdateReportDto } from './dto/update-report.dto';
-import { SearchProcedureByCodeDto } from './dto';
+import { SearchProcedureByApplicantDto, SearchProcedureByCodeDto } from './dto';
 import { Auth } from 'src/auth/decorators';
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('reports')
 @Auth()
@@ -14,24 +13,15 @@ export class ReportsController {
   searchProcedyreByCode(@Query() searchDto: SearchProcedureByCodeDto) {
     return this.reportsService.searchProcedureByCode(searchDto);
   }
-
-  @Get()
-  findAll() {
-    return this.reportsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reportsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReportDto: UpdateReportDto) {
-    return this.reportsService.update(+id, updateReportDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reportsService.remove(+id);
+  @Post('procedure/:applicant')
+  async searchProcedyreByApplicant(
+    @Param('applicant') applicant: 'solicitante' | 'representante',
+    @Body() searchDto: SearchProcedureByApplicantDto,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    if (!['solicitante', 'representante'].includes(applicant)) {
+      throw new BadRequestException('Tipo de solicitante no valido');
+    }
+    return await this.reportsService.searchProcedureByApplicant(applicant, searchDto, paginationParams);
   }
 }
