@@ -141,4 +141,14 @@ export const SystemMenu = [
       icon: 'analytics',
     },
   },
+  {
+    resource: validResources.communication,
+    text: 'Informe general',
+    icon: 'manage_search',
+    routerLink: 'reportes/dashboard',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
 ];

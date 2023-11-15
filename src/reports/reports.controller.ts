@@ -5,7 +5,7 @@ import { Auth } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('reports')
-@Auth()
+// @Auth()
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
@@ -23,5 +23,9 @@ export class ReportsController {
       throw new BadRequestException('Tipo de solicitante no valido');
     }
     return await this.reportsService.searchProcedureByApplicant(applicant, searchDto, paginationParams);
+  }
+  @Get('work/details/:id_account')
+  getWorkDetailsOfAccount(@Param('id_account') id_account: string) {
+    return this.reportsService.getWorkDetailsOfAccount(id_account);
   }
 }
