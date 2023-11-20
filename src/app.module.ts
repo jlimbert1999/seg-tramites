@@ -9,6 +9,8 @@ import { ProceduresModule } from './procedures/procedures.module';
 import { ConfigModule } from '@nestjs/config';
 import { EnvConfiguration } from './config/configuration';
 import { ReportsModule } from './reports/reports.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -24,6 +26,9 @@ import { ReportsModule } from './reports/reports.module';
       useFactory: () => ({
         uri: process.env.MONGODB_URL,
       }),
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
     }),
     AuthModule,
     AdministrationModule,
