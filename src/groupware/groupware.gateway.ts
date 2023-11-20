@@ -28,6 +28,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
       if (decoded.id_dependency !== '') client.join(decoded.id_dependency.toString());
       this.groupwareService.addUser(client.id, decoded);
       this.server.emit('listar', this.groupwareService.getAll());
+      console.log(this.groupwareService.getAll());
     } catch (error) {
       client.disconnect();
       return;
@@ -36,6 +37,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
   handleDisconnect(client: Socket) {
     this.groupwareService.removeUser(client.id);
     client.broadcast.emit('listar', this.groupwareService.getAll());
+    console.log(this.groupwareService.getAll());
   }
 
   sendMails(data: Communication[]) {

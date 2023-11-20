@@ -17,7 +17,7 @@ export class ExternalController {
 
   @Get('segments')
   async getSegmentsOfTypesProcedures() {
-    return await this.typeProcedure.getSegmentsOfTypesProcedures();
+    return await this.typeProcedure.getSegmentsOfTypesProcedures('EXTERNO');
   }
   @Get('segments/:segment')
   async getTypesProceduresBySegment(@Param('segment') segment: string) {

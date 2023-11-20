@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { SearchProcedureByApplicantDto, SearchProcedureByCodeDto } from './dto';
+import { SearchProcedureByApplicantDto, SearchProcedureByCodeDto, searchProcedureByPropertiesDto } from './dto';
 import { Account } from 'src/auth/schemas/account.schema';
 import { workDetailsAccount } from './interfaces';
 import { validResources } from 'src/auth/interfaces';
@@ -36,7 +36,27 @@ export class ReportsService {
       this.externalProcedureModel.find(query).limit(limit).skip(offset).select('_id'),
       this.externalProcedureModel.count(query),
     ]);
-    const procedures = await this.procedureModel.find({ details: { $in: details } }).populate('details');
+    const procedures = await this.procedureModel
+      .find({ details: { $in: details.map((detail) => detail._id) } })
+      .populate('details');
+    return { procedures, length };
+  }
+
+  async searchProcedureByProperties(
+    { limit, offset }: PaginationParamsDto,
+    properties: searchProcedureByPropertiesDto,
+  ) {
+    const query = Object.entries(properties).map(([key, value]) => {
+      if (key === 'code' || key === 'reference') return { [key]: new RegExp(value) };
+      if (key === 'startDate') return { [key]: { $gte: new Date(value) } };
+      if (key === 'endDate') return { [key]: { $lt: new Date(value) } };
+      return { [key]: value };
+    });
+    if (query.length === 0) throw new BadRequestException('Los parametros ingresados no son validos');
+    const [procedures, length] = await Promise.all([
+      this.procedureModel.find({ $and: query }).limit(limit).skip(offset),
+      this.procedureModel.count({ $and: query }),
+    ]);
     return { procedures, length };
   }
 

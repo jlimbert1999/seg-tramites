@@ -143,6 +143,16 @@ export const SystemMenu = [
   },
   {
     resource: validResources.communication,
+    text: 'Busqueda avanzada',
+    icon: 'manage_search',
+    routerLink: 'reportes/busqueda-avanzada',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
+  {
+    resource: validResources.communication,
     text: 'Informe general',
     icon: 'manage_search',
     routerLink: 'reportes/dashboard',

@@ -82,7 +82,6 @@ export class JobService {
   async removeDependent(idDependentJob: string) {
     return this.jobModel.findByIdAndUpdate(idDependentJob, { superior: null });
   }
-
   async get(limit: number, offset: number) {
     const [jobs, length] = await Promise.all([
       this.jobModel.find({}).sort({ _id: -1 }).skip(offset).limit(limit),
