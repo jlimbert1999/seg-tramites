@@ -46,12 +46,16 @@ export class ReportsService {
     { limit, offset }: PaginationParamsDto,
     properties: searchProcedureByPropertiesDto,
   ) {
-    const query = Object.entries(properties).map(([key, value]) => {
+    const { start, end, ...values } = properties;
+    const query: mongoose.FilterQuery<Procedure>[] = Object.entries(values).map(([key, value]) => {
       if (key === 'code' || key === 'reference') return { [key]: new RegExp(value) };
-      if (key === 'startDate') return { [key]: { $gte: new Date(value) } };
-      if (key === 'endDate') return { [key]: { $lt: new Date(value) } };
       return { [key]: value };
     });
+    const interval = {
+      ...(start && { $gte: new Date(start) }),
+      ...(end && { $lte: new Date(end) }),
+    };
+    if (Object.keys(interval).length > 0) query.push({ startDate: interval });
     if (query.length === 0) throw new BadRequestException('Los parametros ingresados no son validos');
     const [procedures, length] = await Promise.all([
       this.procedureModel.find({ $and: query }).limit(limit).skip(offset),

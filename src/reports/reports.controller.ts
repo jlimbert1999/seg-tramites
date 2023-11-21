@@ -10,13 +10,9 @@ import { TypeProcedureService } from 'src/administration/services';
 export class ReportsController {
   constructor(private reportsService: ReportsService, private typeProcedureService: TypeProcedureService) {}
 
-  @Get('procedure/segments/:type')
-  async getSegmentsOfTypesProcedures(@Param('type') type: string) {
-    return await this.typeProcedureService.getSegmentsOfTypesProcedures(type);
-  }
-  @Get('procedure/segment/:segment')
-  async getTypesProceduresBySegment(@Param('segment') segment: string) {
-    return await this.typeProcedureService.getTypeProceduresBySegments(segment);
+  @Get('types-procedures/:text')
+  async getTypeProceduresByText(@Param('text') text: string) {
+    return await this.typeProcedureService.getTypesProceduresByText(text);
   }
 
   @Get('procedure/code')

@@ -69,4 +69,11 @@ export class TypeProcedureService {
   async getTypesProceduresByGroup(group: 'INTERNO' | 'EXTERNO') {
     return await this.typeProcedureModel.find({ activo: true, tipo: group });
   }
+
+  async getTypesProceduresByText(text: string) {
+    return await this.typeProcedureModel
+      .find({ nombre: new RegExp(text, 'i') })
+      .limit(5)
+      .select('nombre');
+  }
 }

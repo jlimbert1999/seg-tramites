@@ -23,12 +23,12 @@ export class searchProcedureByPropertiesDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  startDate?: string;
+  start?: string;
 
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  endDate?: string;
+  end?: string;
 
   @IsEnum(Object.values(groupProcedure))
   @IsOptional()
