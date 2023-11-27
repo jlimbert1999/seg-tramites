@@ -65,9 +65,43 @@ export class ReportsService {
   }
 
   async getDetailsDependentsByUnit(id_dependency: string) {
-    const accounts = await this.accountModel.find({ dependencia: id_dependency });
-    for (const account of accounts) {
-    }
+    const accounts = await this.accountModel
+      .find({ dependencia: id_dependency })
+      .select('funcionario')
+      .populate({
+        path: 'funcionario',
+        select: 'nombre paterno materno cargo',
+        populate: { path: 'cargo', select: 'nombre' },
+      });
+    const results = await this.communicationModel
+      .aggregate()
+      .match({
+        'receiver.cuenta': { $in: accounts.map((account) => account._id) },
+        status: { $in: [statusMail.Received, statusMail.Pending, statusMail.Rejected, statusMail.Archived] },
+      })
+      .group({
+        _id: {
+          account: '$receiver.cuenta',
+          status: '$status',
+        },
+        count: { $sum: 1 },
+      })
+      .group({
+        _id: '$_id.account',
+        details: {
+          $push: {
+            status: '$_id.status',
+            total: '$count',
+          },
+        },
+        count: { $sum: '$count' },
+      })
+      .sort({ count: -1 });
+    const dependents = results.map((result) => {
+      result['_id'] = accounts.find((account) => String(account._id) == result._id);
+      return result;
+    });
+    return dependents;
   }
 
   async getWorkDetailsOfAccount(id_account: string): Promise<workDetailsAccount> {

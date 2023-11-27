@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Body, Query, Param, BadRequestException } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { SearchProcedureByApplicantDto, SearchProcedureByCodeDto, searchProcedureByPropertiesDto } from './dto';
-import { Auth } from 'src/auth/decorators';
+import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { TypeProcedureService } from 'src/administration/services';
+import { Account } from 'src/auth/schemas/account.schema';
 
 @Controller('reports')
 @Auth()
@@ -14,7 +15,6 @@ export class ReportsController {
   async getTypeProceduresByText(@Param('text') text: string) {
     return await this.typeProcedureService.getTypesProceduresByText(text);
   }
-
   @Get('procedure/code')
   searchProcedyreByCode(@Query() searchDto: SearchProcedureByCodeDto) {
     return this.reportsService.searchProcedureByCode(searchDto);
@@ -37,6 +37,12 @@ export class ReportsController {
   ) {
     return this.reportsService.searchProcedureByProperties(paginationParams, searchDto);
   }
+
+  @Get('dependents')
+  getDetailsDependentsByUnit(@GetUserRequest() accont: Account) {
+    return this.reportsService.getDetailsDependentsByUnit(accont.dependencia._id);
+  }
+
   @Get('work/details/:id_account')
   getWorkDetailsOfAccount(@Param('id_account') id_account: string) {
     return this.reportsService.getWorkDetailsOfAccount(id_account);

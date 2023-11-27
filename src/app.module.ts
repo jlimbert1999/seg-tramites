@@ -9,7 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { AdministrationModule } from './administration/administration.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { ProceduresModule } from './procedures/procedures.module';
-import { EnvConfiguration } from './config/configuration';
+import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
 
 @Module({
