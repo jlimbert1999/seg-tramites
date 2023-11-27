@@ -11,7 +11,7 @@ export class ActionGuard implements CanActivate {
     const validPermission: permission = this.reflector.get(META_PERMISSION, context.getHandler());
     const req = context.switchToHttp().getRequest();
     const account = req.user as Account;
-    if (!account) throw new InternalServerErrorException('ActionGuard error, call Auth in controller');
+    if (!account) throw new InternalServerErrorException('ActionGuard error, user not found in request');
     return account.rol.permissions.some((el) => el.resource === validPermission.resource);
   }
 }

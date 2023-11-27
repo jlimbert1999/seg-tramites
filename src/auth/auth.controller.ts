@@ -8,7 +8,11 @@ import { Account } from './schemas/account.schema';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
+  @Get()
+  @Auth()
+  async verifyAuth(@GetUserRequest() account: Account) {
+    return await this.authService.checkAuthStatus(account._id);
+  }
   @Post()
   async login(@Body() body: AuthDto) {
     return await this.authService.loginUser(body);
@@ -24,11 +28,5 @@ export class AuthController {
   @Auth()
   async updateMyAccount(@Param('id_account') id_account: string, @Body() data: UpdateMyAccountDto) {
     return await this.authService.updateMyAccount(id_account, data);
-  }
-
-  @Get()
-  @Auth()
-  async verifyAuth(@GetUserRequest() account: Account) {
-    return await this.authService.checkAuthStatus(account._id);
   }
 }

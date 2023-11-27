@@ -1,27 +1,25 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 
-import { JwtPayload } from './interfaces/jwt.interface';
 import { AuthDto } from './dto/auth.dto';
 import { UpdateMyAccountDto } from './dto/my-account.dto';
 import { SystemMenu } from './constants/system-menu';
 import { Account } from './schemas/account.schema';
+import { EnvConfig, JwtPayload } from './interfaces';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
+    private configService: ConfigService<EnvConfig>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
   ) {}
 
-  async loginUser(authDto: AuthDto) {
+  async loginUser(authDto: AuthDto): Promise<{ token: string; resources: string[] }> {
     const account = await this.accountModel
       .findOne({ login: authDto.login })
       .populate('rol')
@@ -32,44 +30,22 @@ export class AuthService {
         },
       });
     if (!account) throw new BadRequestException('login o password incorrectos');
-    if (!bcrypt.compareSync(authDto.password, account.password))
+    if (!bcrypt.compareSync(authDto.password, account.password)) {
       throw new BadRequestException('login o password incorrectos');
-    if (account._id == '639dde6d495c82b3794d6606')
-      return {
-        token: this.getToken({
-          id_account: account._id,
-          id_dependency: '',
-          officer: {
-            fullname: 'ADMINISTRADOR',
-            jobtitle: 'Configuraciones',
-          },
-        }),
-        resources: account.rol.permissions.map(
-          (privilege) => privilege.resource,
-        ),
-      };
-    if (!account.activo || !account.funcionario)
-      throw new BadRequestException('La cuenta ha sido deshabilitada');
-    return {
-      token: this.getToken({
-        id_account: account._id,
-        id_dependency: account.dependencia._id,
-        officer: {
-          fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
-          jobtitle: account.funcionario.cargo
-            ? account.funcionario.cargo.nombre
-            : '',
-        },
-      }),
-      resources: account.rol.permissions.map((privilege) => privilege.resource),
-    };
+    }
+    const resources = account.rol.permissions.map((privilege) => privilege.resource);
+    if (resources.length === 0) throw new UnauthorizedException();
+    if (String(account._id) === this.configService.getOrThrow('id_root')) {
+      return { token: this.generateRootToken(account), resources };
+    }
+    if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
+    return { token: this.generateToken(account), resources };
   }
 
   async checkAuthStatus(id_account: string) {
     const account = await this.accountModel
       .findById(id_account)
       .populate('rol')
-      .populate('dependencia')
       .populate({
         path: 'funcionario',
         populate: {
@@ -77,40 +53,13 @@ export class AuthService {
         },
       });
     if (!account) throw new UnauthorizedException();
-    const resources = account.rol.permissions.map(
-      (privilege) => privilege.resource,
-    );
+    const resources = account.rol.permissions.map((privilege) => privilege.resource);
     if (resources.length === 0) throw new UnauthorizedException();
-    if (id_account == '639dde6d495c82b3794d6606')
-      return {
-        token: this.getToken({
-          id_account: account._id,
-          id_dependency: '',
-          officer: {
-            fullname: 'ADMINISTRADOR',
-            jobtitle: 'Configuraciones',
-          },
-        }),
-        menu: this.getSystemMenu(resources),
-        resources,
-      };
-    if (!account.activo || !account.funcionario)
-      throw new UnauthorizedException('La cuenta ha sido deshabilitada');
-    return {
-      token: this.getToken({
-        id_account: account._id,
-        id_dependency: account.dependencia._id,
-        officer: {
-          fullname: `${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}`,
-          jobtitle: account.funcionario.cargo
-            ? account.funcionario.cargo.nombre
-            : '',
-        },
-      }),
-      menu: this.getSystemMenu(resources),
-      code: account.dependencia.codigo,
-      resources,
-    };
+    if (String(account._id) === this.configService.getOrThrow('id_root')) {
+      return { token: this.generateRootToken(account), resources, menu: this.getSystemMenu(resources) };
+    }
+    if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
+    return { token: this.generateToken(account), resources, menu: this.getSystemMenu(resources) };
   }
 
   async getMyAuthDetails(id_account: string) {
@@ -138,11 +87,7 @@ export class AuthService {
     const salt = bcrypt.genSaltSync();
     const encryptedPassword = bcrypt.hashSync(password.toString(), salt);
     return await this.accountModel
-      .findByIdAndUpdate(
-        id_account,
-        { password: encryptedPassword },
-        { new: true },
-      )
+      .findByIdAndUpdate(id_account, { password: encryptedPassword }, { new: true })
       .populate({
         path: 'funcionario',
         populate: {
@@ -160,14 +105,32 @@ export class AuthService {
       .select('-password -rol');
   }
 
-  getToken(payload: JwtPayload) {
+  generateRootToken(account: Account): string {
+    const payload: JwtPayload = {
+      id_account: account._id,
+      id_dependency: '',
+      officer: {
+        fullname: 'ADMINISTRADOR',
+        jobtitle: 'Configuraciones',
+      },
+    };
+    return this.jwtService.sign(payload);
+  }
+  generateToken(account: Account): string {
+    const { funcionario, dependencia } = account;
+    const payload: JwtPayload = {
+      id_account: account._id,
+      id_dependency: dependencia._id,
+      officer: {
+        fullname: [funcionario.nombre, funcionario.paterno, funcionario.materno].filter(Boolean).join(' '),
+        jobtitle: funcionario.cargo ? funcionario.cargo.nombre : '',
+      },
+    };
     return this.jwtService.sign(payload);
   }
 
   getSystemMenu(myResources: string[]) {
-    const allowedResources = SystemMenu.filter((menuItem) =>
-      myResources.includes(menuItem.resource),
-    );
+    const allowedResources = SystemMenu.filter((menuItem) => myResources.includes(menuItem.resource));
     const groupedMenu = allowedResources.reduce((result, menuItem) => {
       if (!menuItem.group) {
         const category = menuItem.routerLink;

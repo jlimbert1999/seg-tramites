@@ -14,11 +14,6 @@ import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
-    // local mongodb://127.0.0.1:27017/new-seg-tramitesDB
-    // atlas mongodb+srv://root:<password>@cluster0.jmkbaqz.mongodb.net/?retryWrites=true&w=majority
-    // MongooseModule.forRoot(
-    //   'mongodb+srv://root:8835024limbert@cluster0.jmkbaqz.mongodb.net/?retryWrites=true&w=majority',
-    // ),
     ConfigModule.forRoot({
       load: [EnvConfiguration],
     }),
@@ -27,9 +22,6 @@ import { ReportsModule } from './reports/reports.module';
         uri: process.env.MONGODB_URL,
       }),
     }),
-    // ServeStaticModule.forRoot({
-    //   rootPath: join(__dirname, '..', 'public'),
-    // }),
     AuthModule,
     AdministrationModule,
     GroupwareModule,

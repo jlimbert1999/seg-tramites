@@ -1,17 +1,22 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayload } from '../interfaces/jwt.interface';
+
 import { Account } from '../schemas/account.schema';
+import { EnvConfig, JwtPayload } from '../interfaces';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(@InjectModel(Account.name) private readonly accountModel: Model<Account>) {
+  constructor(
+    private configService: ConfigService<EnvConfig>,
+    @InjectModel(Account.name) private accountModel: Model<Account>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: 'secret',
+      secretOrKey: configService.getOrThrow('jwt_key'),
     });
   }
   async validate(payload: JwtPayload): Promise<Account> {
@@ -20,8 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!account) throw new UnauthorizedException('Token invalido, vuelva a iniciar sesion');
     if (account.rol.permissions.length === 0)
       throw new UnauthorizedException('Esta cuenta no tiene ningun permiso asignado');
-    if (account._id == '639dde6d495c82b3794d6606') return account;
+    if (String(account._id) === this.configService.get('id_root')) return account;
     if (!account.activo || !account.funcionario) throw new UnauthorizedException('Esta cuenta ha sido deshablitada');
+    console.log('pass jwt strategy');
     return account;
   }
 }
