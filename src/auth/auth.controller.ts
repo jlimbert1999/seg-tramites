@@ -14,19 +14,19 @@ export class AuthController {
     return await this.authService.checkAuthStatus(account._id);
   }
   @Post()
-  async login(@Body() body: AuthDto) {
-    return await this.authService.loginUser(body);
+  login(@Body() body: AuthDto) {
+    return this.authService.login(body);
   }
 
   @Get('/:id_account')
   @Auth()
-  async getMyAuthDetails(@Param('id_account') id_account: string) {
-    return await this.authService.getMyAuthDetails(id_account);
+  getMyAuthDetails(@Param('id_account') id_account: string) {
+    return this.authService.getMyAuthDetails(id_account);
   }
 
   @Put('/:id_account')
   @Auth()
-  async updateMyAccount(@Param('id_account') id_account: string, @Body() data: UpdateMyAccountDto) {
-    return await this.authService.updateMyAccount(id_account, data);
+  updateMyAccount(@Param('id_account') id_account: string, @Body() data: UpdateMyAccountDto) {
+    return this.authService.updateMyAccount(id_account, data);
   }
 }

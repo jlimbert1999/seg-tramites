@@ -19,47 +19,40 @@ export class AuthService {
     @InjectModel(Account.name) private accountModel: Model<Account>,
   ) {}
 
-  async loginUser(authDto: AuthDto): Promise<{ token: string; resources: string[] }> {
-    const account = await this.accountModel
-      .findOne({ login: authDto.login })
-      .populate('rol')
-      .populate({
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-        },
-      });
+  async login({ login, password }: AuthDto) {
+    const account = await this.accountModel.findOne({ login }).populate({
+      path: 'funcionario',
+      populate: {
+        path: 'cargo',
+      },
+    });
     if (!account) throw new BadRequestException('login o password incorrectos');
-    if (!bcrypt.compareSync(authDto.password, account.password)) {
-      throw new BadRequestException('login o password incorrectos');
-    }
-    const resources = account.rol.permissions.map((privilege) => privilege.resource);
-    if (resources.length === 0) throw new UnauthorizedException();
+    if (!bcrypt.compareSync(password, account.password)) throw new BadRequestException('login o password incorrectos');
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
-      return { token: this.generateRootToken(account), resources };
+      return { token: this.generateRootToken(account) };
     }
-    if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
-    return { token: this.generateToken(account), resources };
+    if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahabilidata');
+    return { token: this.generateToken(account) };
   }
 
   async checkAuthStatus(id_account: string) {
     const account = await this.accountModel
       .findById(id_account)
-      .populate('rol')
       .populate({
         path: 'funcionario',
         populate: {
           path: 'cargo',
         },
-      });
+      })
+      .populate('rol');
     if (!account) throw new UnauthorizedException();
     const resources = account.rol.permissions.map((privilege) => privilege.resource);
     if (resources.length === 0) throw new UnauthorizedException();
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
-      return { token: this.generateRootToken(account), resources, menu: this.getSystemMenu(resources) };
+      return { token: this.generateRootToken(account), menu: this.getSystemMenu(resources) };
     }
     if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
-    return { token: this.generateToken(account), resources, menu: this.getSystemMenu(resources) };
+    return { token: this.generateToken(account), menu: this.getSystemMenu(resources) };
   }
 
   async getMyAuthDetails(id_account: string) {
@@ -129,8 +122,8 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  getSystemMenu(myResources: string[]) {
-    const allowedResources = SystemMenu.filter((menuItem) => myResources.includes(menuItem.resource));
+  getSystemMenu(resources: string[]) {
+    const allowedResources = SystemMenu.filter((menuItem) => resources.includes(menuItem.resource));
     const groupedMenu = allowedResources.reduce((result, menuItem) => {
       if (!menuItem.group) {
         const category = menuItem.routerLink;
