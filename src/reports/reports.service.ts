@@ -3,7 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { SearchProcedureByApplicantDto, SearchProcedureByCodeDto, searchProcedureByPropertiesDto } from './dto';
+import {
+  SearchProcedureByApplicantDto,
+  SearchProcedureByCodeDto,
+  searchProcedureByPropertiesDto,
+  searchProcedureByUnitDto,
+} from './dto';
 import { Account } from 'src/auth/schemas/account.schema';
 import { workDetailsAccount } from './interfaces';
 import { validResources } from 'src/auth/interfaces';
@@ -65,14 +70,7 @@ export class ReportsService {
   }
 
   async getDetailsDependentsByUnit(id_dependency: string) {
-    const accounts = await this.accountModel
-      .find({ dependencia: id_dependency })
-      .select('funcionario')
-      .populate({
-        path: 'funcionario',
-        select: 'nombre paterno materno cargo',
-        populate: { path: 'cargo', select: 'nombre' },
-      });
+    const accounts = await this.getOfficersInDependency(id_dependency);
     const results = await this.communicationModel
       .aggregate()
       .match({
@@ -102,6 +100,38 @@ export class ReportsService {
       return result;
     });
     return dependents;
+  }
+
+  async searchProcedureByUnit(
+    id_dependency: string,
+    properties: searchProcedureByUnitDto,
+    { limit, offset }: PaginationParamsDto,
+  ) {
+    const { start, end, status, account } = properties;
+    const query: mongoose.FilterQuery<Communication>[] = [];
+    const interval = {
+      ...(start && { $gte: new Date(start) }),
+      ...(end && { $lte: new Date(end) }),
+    };
+    if (Object.keys(interval).length > 0) query.push({ outboundDate: interval });
+    if (status) query.push({ status });
+    if (!account) {
+      const accounts = await this.accountModel.find({ dependencia: id_dependency });
+      const ids_receivers = accounts.map((account) => account._id);
+      query.push({ 'receiver.cuenta': { $in: ids_receivers } });
+    } else {
+      query.push({ 'receiver.cuenta': account });
+    }
+    if (query.length === 0) throw new BadRequestException('No se ingresaron parametros para la busqueda');
+    const [communications, length] = await Promise.all([
+      this.communicationModel
+        .find({ $and: query })
+        .populate('procedure', 'code reference group state')
+        .limit(limit)
+        .skip(offset),
+      this.communicationModel.count({ $and: query }),
+    ]);
+    return { communications, length };
   }
 
   async getWorkDetailsOfAccount(id_account: string): Promise<workDetailsAccount> {
@@ -141,5 +171,16 @@ export class ReportsService {
       results.forEach((result) => (workdetails.numberOfShipments[result._id] = result.count));
     }
     return workdetails;
+  }
+
+  async getOfficersInDependency(id_dependency: string): Promise<Account[]> {
+    return await this.accountModel
+      .find({ dependencia: id_dependency })
+      .select('funcionario')
+      .populate({
+        path: 'funcionario',
+        select: 'nombre paterno materno cargo',
+        populate: { path: 'cargo', select: 'nombre' },
+      });
   }
 }

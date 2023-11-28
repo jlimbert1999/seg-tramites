@@ -33,9 +33,7 @@ export class ProcedureController {
   }
 
   @Get('/:group/:id_procedure')
-  @Permission({ resource: validResources.communication })
-  async getFullProcedure(@Param() procedureParamsDto: GetProcedureParamsDto) {
-    const { id_procedure, group } = procedureParamsDto;
+  async getFullProcedure(@Param() { id_procedure, group }: GetProcedureParamsDto) {
     const procedureService = this.getServiceByGroup(group);
     const [procedure, workflow, observations] = await Promise.all([
       procedureService.getProcedureDetail(id_procedure),
@@ -44,6 +42,7 @@ export class ProcedureController {
     ]);
     return { procedure, workflow, observations };
   }
+
   private getServiceByGroup(group: groupProcedure): ValidProcedureService {
     switch (group) {
       case groupProcedure.EXTERNAL:

@@ -1,6 +1,11 @@
 import { Controller, Get, Post, Body, Query, Param, BadRequestException } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { SearchProcedureByApplicantDto, SearchProcedureByCodeDto, searchProcedureByPropertiesDto } from './dto';
+import {
+  SearchProcedureByApplicantDto,
+  SearchProcedureByCodeDto,
+  searchProcedureByPropertiesDto,
+  searchProcedureByUnitDto,
+} from './dto';
 import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { TypeProcedureService } from 'src/administration/services';
@@ -15,6 +20,11 @@ export class ReportsController {
   async getTypeProceduresByText(@Param('text') text: string) {
     return await this.typeProcedureService.getTypesProceduresByText(text);
   }
+  @Get('dependency/accounts')
+  getOfficersInMyDependency(@GetUserRequest() account: Account) {
+    return this.reportsService.getOfficersInDependency(account.dependencia._id);
+  }
+
   @Get('procedure/code')
   searchProcedyreByCode(@Query() searchDto: SearchProcedureByCodeDto) {
     return this.reportsService.searchProcedureByCode(searchDto);
@@ -36,6 +46,14 @@ export class ReportsController {
     @Query() paginationParams: PaginationParamsDto,
   ) {
     return this.reportsService.searchProcedureByProperties(paginationParams, searchDto);
+  }
+  @Post('unit')
+  searchProcedureByUnit(
+    @Body() searchDto: searchProcedureByUnitDto,
+    @Query() paginationParams: PaginationParamsDto,
+    @GetUserRequest() account: Account,
+  ) {
+    return this.reportsService.searchProcedureByUnit(account.dependencia._id, searchDto, paginationParams);
   }
 
   @Get('dependents')
