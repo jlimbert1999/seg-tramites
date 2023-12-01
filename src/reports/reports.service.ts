@@ -133,6 +133,23 @@ export class ReportsService {
     ]);
     return { communications, length };
   }
+  async getTotalByDependency() {
+    const id_institucion = '63af37ba1b1e2505e47e77c8';
+    const account = await this.accountModel
+      .aggregate()
+      .lookup({ from: 'dependencias', localField: 'dependencia', foreignField: '_id', as: 'dependencia' })
+      .unwind('$dependencia')
+      .match({ 'dependencia.institucion': new mongoose.Types.ObjectId(id_institucion) });
+    const ids = account.map((el) => el._id);
+    const data = await this.communicationModel
+      .aggregate()
+      .match({ 'receiver.cuenta': { $in: ids } })
+      .group({
+        _id: '$receiver.cuenta',
+        count: { $sum: 1 },
+      });
+    console.log(data);
+  }
 
   async getWorkDetailsOfAccount(id_account: string): Promise<workDetailsAccount> {
     const account = await this.accountModel.findById(id_account).select('rol').populate('rol');
