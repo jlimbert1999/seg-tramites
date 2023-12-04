@@ -25,7 +25,7 @@ export class ReportsService {
   ) {}
   async searchProcedureByCode({ code }: SearchProcedureByCodeDto) {
     const procedureDB = await this.procedureModel.findOne({ code: code.toUpperCase() }).select('_id group');
-    if (!procedureDB) throw new BadRequestException(`El tramite ${code} no existe. Revise los caracteres`);
+    if (!procedureDB) throw new BadRequestException(`El alterno: ${code} no existe.`);
     return procedureDB;
   }
   async searchProcedureByApplicant(
@@ -53,7 +53,7 @@ export class ReportsService {
   ) {
     const { start, end, ...values } = properties;
     const query: mongoose.FilterQuery<Procedure>[] = Object.entries(values).map(([key, value]) => {
-      if (key === 'code' || key === 'reference') return { [key]: new RegExp(value) };
+      if (key === 'code' || key === 'reference') return { [key]: new RegExp(value, 'i') };
       return { [key]: value };
     });
     const interval = {

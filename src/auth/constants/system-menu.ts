@@ -123,16 +123,6 @@ export const SystemMenu = [
   },
   {
     resource: validResources.communication,
-    text: 'Busqueda rapida',
-    icon: 'manage_search',
-    routerLink: 'reportes/busqueda',
-    group: {
-      text: 'Reportes',
-      icon: 'analytics',
-    },
-  },
-  {
-    resource: validResources.communication,
     text: 'Solicitante',
     icon: 'manage_search',
     routerLink: 'reportes/solicitante',
@@ -143,9 +133,9 @@ export const SystemMenu = [
   },
   {
     resource: validResources.communication,
-    text: 'Busqueda avanzada',
+    text: 'Busqueda rapida',
     icon: 'manage_search',
-    routerLink: 'reportes/busqueda-avanzada',
+    routerLink: 'reportes/busqueda',
     group: {
       text: 'Reportes',
       icon: 'analytics',
@@ -153,9 +143,9 @@ export const SystemMenu = [
   },
   {
     resource: validResources.communication,
-    text: 'Informe general',
+    text: 'Busqueda avanzada',
     icon: 'manage_search',
-    routerLink: 'reportes/dashboard',
+    routerLink: 'reportes/busqueda-avanzada',
     group: {
       text: 'Reportes',
       icon: 'analytics',
@@ -176,6 +166,17 @@ export const SystemMenu = [
     text: 'Unidad',
     icon: 'manage_search',
     routerLink: 'reportes/unidad',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
+
+  {
+    resource: validResources.communication,
+    text: 'Informe general',
+    icon: 'manage_search',
+    routerLink: 'reportes/dashboard',
     group: {
       text: 'Reportes',
       icon: 'analytics',
