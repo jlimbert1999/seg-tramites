@@ -134,21 +134,23 @@ export class ReportsService {
     return { communications, length };
   }
   async getTotalByDependency() {
-    const id_institucion = '63af37ba1b1e2505e47e77c8';
+    const id_institucion = '63af377f1b1e2505e47e77c5';
     const account = await this.accountModel
       .aggregate()
       .lookup({ from: 'dependencias', localField: 'dependencia', foreignField: '_id', as: 'dependencia' })
       .unwind('$dependencia')
-      .match({ 'dependencia.institucion': new mongoose.Types.ObjectId(id_institucion) });
+      .match({ 'dependencia.institucion': new mongoose.Types.ObjectId(id_institucion) }).limit(10);
     const ids = account.map((el) => el._id);
     const data = await this.communicationModel
       .aggregate()
       .match({ 'receiver.cuenta': { $in: ids } })
+      .lookup({ from: 'cuentas', localField: 'receiver.cuenta', foreignField: '_id', as: 'receiver.cuenta' })
+      .unwind('$receiver.cuenta')
       .group({
-        _id: '$receiver.cuenta',
+        _id: '$receiver.cuenta.dependencia',
         count: { $sum: 1 },
       });
-    console.log(data);
+    return data;
   }
 
   async getWorkDetailsOfAccount(id_account: string): Promise<workDetailsAccount> {

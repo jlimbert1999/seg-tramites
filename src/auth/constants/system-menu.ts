@@ -76,50 +76,30 @@ export const SystemMenu = [
     text: 'Tramites externos',
     icon: 'folder_shared',
     routerLink: 'tramites/externos',
-    group: {
-      text: 'Administracion',
-      icon: 'description',
-    },
   },
   {
     resource: validResources.internal,
     text: 'Tramites internos',
     icon: 'folder',
     routerLink: 'tramites/internos',
-    group: {
-      text: 'Administracion',
-      icon: 'description',
-    },
   },
   {
     resource: validResources.archived,
     text: 'Archivos',
     icon: 'folder_copy',
     routerLink: 'tramites/archivados',
-    group: {
-      text: 'Administracion',
-      icon: 'description',
-    },
   },
   {
     resource: validResources.communication,
     text: 'Bandeja de entrada',
     icon: 'drafts',
     routerLink: 'bandejas/entrada',
-    group: {
-      text: 'Bandejas',
-      icon: 'inbox',
-    },
   },
   {
     resource: validResources.communication,
     text: 'Bandeja de salida',
     icon: 'mark_as_unread',
     routerLink: 'bandejas/salida',
-    group: {
-      text: 'Bandejas',
-      icon: 'inbox',
-    },
   },
   {
     resource: validResources.communication,
