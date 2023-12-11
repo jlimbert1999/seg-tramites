@@ -13,6 +13,7 @@ import { Account } from 'src/auth/schemas/account.schema';
 import { workDetailsAccount } from './interfaces';
 import { validResources } from 'src/auth/interfaces';
 import { groupProcedure, statusMail } from 'src/procedures/interfaces';
+import { Dependency } from 'src/administration/schemas';
 // import { workAccountDetails } from 'src/procedures/interfaces/work-account-details.interface';
 
 @Injectable()
@@ -22,6 +23,7 @@ export class ReportsService {
     @InjectModel(ExternalDetail.name) private externalProcedureModel: Model<ExternalDetail>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
+    @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
   ) {}
   async searchProcedureByCode({ code }: SearchProcedureByCodeDto) {
     const procedureDB = await this.procedureModel.findOne({ code: code.toUpperCase() }).select('_id group');
@@ -133,25 +135,6 @@ export class ReportsService {
     ]);
     return { communications, length };
   }
-  async getTotalByDependency() {
-    const id_institucion = '63af377f1b1e2505e47e77c5';
-    const account = await this.accountModel
-      .aggregate()
-      .lookup({ from: 'dependencias', localField: 'dependencia', foreignField: '_id', as: 'dependencia' })
-      .unwind('$dependencia')
-      .match({ 'dependencia.institucion': new mongoose.Types.ObjectId(id_institucion) }).limit(10);
-    const ids = account.map((el) => el._id);
-    const data = await this.communicationModel
-      .aggregate()
-      .match({ 'receiver.cuenta': { $in: ids } })
-      .lookup({ from: 'cuentas', localField: 'receiver.cuenta', foreignField: '_id', as: 'receiver.cuenta' })
-      .unwind('$receiver.cuenta')
-      .group({
-        _id: '$receiver.cuenta.dependencia',
-        count: { $sum: 1 },
-      });
-    return data;
-  }
 
   async getWorkDetailsOfAccount(id_account: string): Promise<workDetailsAccount> {
     const account = await this.accountModel.findById(id_account).select('rol').populate('rol');
@@ -201,5 +184,39 @@ export class ReportsService {
         select: 'nombre paterno materno cargo',
         populate: { path: 'cargo', select: 'nombre' },
       });
+  }
+
+  async getTotalIncomingMailsByInstitution(id_institution: string) {
+    const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
+    const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
+    const data = await this.communicationModel
+      .aggregate()
+      .match({ 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } })
+      .lookup({ from: 'cuentas', foreignField: '_id', localField: 'receiver.cuenta', as: 'receiver.cuenta' })
+      .group({
+        _id: {
+          account: '$receiver.cuenta.dependencia',
+          status: '$status',
+        },
+        count: { $sum: 1 },
+      })
+      .group({
+        _id: '$_id.account',
+        details: {
+          $push: {
+            status: '$_id.status',
+            count: '$count',
+          },
+        },
+        total: { $sum: '$count' },
+      })
+      .unwind('$_id')
+      .sort({ total: -1 });
+    data.map((element) => {
+      const dependency = dependencies.find((dep) => String(dep._id) === String(element._id));
+      element['name'] = dependency ? dependency.nombre : 'Sin nombre';
+      return element;
+    });
+    return data;
   }
 }

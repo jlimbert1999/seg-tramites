@@ -61,13 +61,13 @@ export class ReportsController {
     return this.reportsService.getDetailsDependentsByUnit(accont.dependencia._id);
   }
 
-  @Get('total')
-  getTotal() {
-    return this.reportsService.getTotalByDependency();
-  }
-
   @Get('work/details/:id_account')
   getWorkDetailsOfAccount(@Param('id_account') id_account: string) {
     return this.reportsService.getWorkDetailsOfAccount(id_account);
+  }
+
+  @Get('total/incoming/:id_institution')
+  getTotal(@Param('id_institution') id_institution: string) {
+    return this.reportsService.getTotalIncomingMailsByInstitution(id_institution);
   }
 }

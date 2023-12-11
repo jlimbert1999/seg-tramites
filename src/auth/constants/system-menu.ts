@@ -162,4 +162,14 @@ export const SystemMenu = [
       icon: 'analytics',
     },
   },
+  {
+    resource: validResources.communication,
+    text: 'Informe mas general',
+    icon: 'manage_search',
+    routerLink: 'reportes/total',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
 ];
