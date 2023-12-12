@@ -14,7 +14,6 @@ import { workDetailsAccount } from './interfaces';
 import { validResources } from 'src/auth/interfaces';
 import { groupProcedure, statusMail } from 'src/procedures/interfaces';
 import { Dependency } from 'src/administration/schemas';
-// import { workAccountDetails } from 'src/procedures/interfaces/work-account-details.interface';
 
 @Injectable()
 export class ReportsService {
@@ -48,7 +47,6 @@ export class ReportsService {
       .populate('details');
     return { procedures, length };
   }
-
   async searchProcedureByProperties(
     { limit, offset }: PaginationParamsDto,
     properties: searchProcedureByPropertiesDto,
@@ -70,7 +68,6 @@ export class ReportsService {
     ]);
     return { procedures, length };
   }
-
   async getDetailsDependentsByUnit(id_dependency: string) {
     const accounts = await this.getOfficersInDependency(id_dependency);
     const results = await this.communicationModel
@@ -103,7 +100,6 @@ export class ReportsService {
     });
     return dependents;
   }
-
   async searchProcedureByUnit(
     id_dependency: string,
     properties: searchProcedureByUnitDto,
@@ -135,7 +131,6 @@ export class ReportsService {
     ]);
     return { communications, length };
   }
-
   async getWorkDetailsOfAccount(id_account: string): Promise<workDetailsAccount> {
     const account = await this.accountModel.findById(id_account).select('rol').populate('rol');
     const workdetails: workDetailsAccount = {
@@ -174,7 +169,6 @@ export class ReportsService {
     }
     return workdetails;
   }
-
   async getOfficersInDependency(id_dependency: string): Promise<Account[]> {
     return await this.accountModel
       .find({ dependencia: id_dependency })
@@ -185,17 +179,25 @@ export class ReportsService {
         populate: { path: 'cargo', select: 'nombre' },
       });
   }
-
-  async getTotalIncomingMailsByInstitution(id_institution: string) {
+  async getTotalMailsByInstitution(id_institution: string, group: 'receiver' | 'emitter') {
     const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
     const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
+    const query: mongoose.FilterQuery<Communication> =
+      group === 'receiver'
+        ? { 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } }
+        : { 'emitter.cuenta': { $in: accounts.map((acc) => acc._id) } };
     const data = await this.communicationModel
       .aggregate()
-      .match({ 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } })
-      .lookup({ from: 'cuentas', foreignField: '_id', localField: 'receiver.cuenta', as: 'receiver.cuenta' })
+      .match(query)
+      .lookup({
+        from: 'cuentas',
+        foreignField: '_id',
+        localField: `${group}.cuenta`,
+        as: `${group}.cuenta`,
+      })
       .group({
         _id: {
-          account: '$receiver.cuenta.dependencia',
+          account: `$${group}.cuenta.dependencia`,
           status: '$status',
         },
         count: { $sum: 1 },
@@ -205,6 +207,44 @@ export class ReportsService {
         details: {
           $push: {
             status: '$_id.status',
+            count: '$count',
+          },
+        },
+        total: { $sum: '$count' },
+      })
+      .unwind('$_id')
+      .sort({ total: -1 });
+    data.map((element) => {
+      const dependency = dependencies.find((dep) => String(dep._id) === String(element._id));
+      element['name'] = dependency ? dependency.nombre : 'Sin nombre';
+      return element;
+    });
+    return data;
+  }
+  async getTotalProceduresByInstitution(id_institution: string, group: groupProcedure) {
+    const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
+    const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
+    const data = await this.procedureModel
+      .aggregate()
+      .match({ group, account: { $in: accounts.map((acc) => acc._id) } })
+      .lookup({
+        from: 'cuentas',
+        localField: 'account',
+        foreignField: '_id',
+        as: 'account',
+      })
+      .group({
+        _id: {
+          dependency: '$account.dependencia',
+          state: '$state',
+        },
+        count: { $sum: 1 },
+      })
+      .group({
+        _id: '$_id.dependency',
+        details: {
+          $push: {
+            state: '$_id.state',
             count: '$count',
           },
         },

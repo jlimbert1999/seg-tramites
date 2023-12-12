@@ -2,19 +2,25 @@ import { Controller, Get, Post, Body, Query, Param, BadRequestException } from '
 import { ReportsService } from './reports.service';
 import {
   SearchProcedureByApplicantDto,
-  SearchProcedureByCodeDto,
   searchProcedureByPropertiesDto,
+  SearchProcedureByCodeDto,
   searchProcedureByUnitDto,
+  GetTotalMailsDto,
+  GetTotalProceduresDto,
 } from './dto';
 import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { TypeProcedureService } from 'src/administration/services';
+import { InstitutionService, TypeProcedureService } from 'src/administration/services';
 import { Account } from 'src/auth/schemas/account.schema';
 
 @Controller('reports')
 @Auth()
 export class ReportsController {
-  constructor(private reportsService: ReportsService, private typeProcedureService: TypeProcedureService) {}
+  constructor(
+    private reportsService: ReportsService,
+    private typeProcedureService: TypeProcedureService,
+    private institutionService: InstitutionService,
+  ) {}
 
   @Get('types-procedures/:text')
   async getTypeProceduresByText(@Param('text') text: string) {
@@ -23,6 +29,10 @@ export class ReportsController {
   @Get('dependency/accounts')
   getOfficersInMyDependency(@GetUserRequest() account: Account) {
     return this.reportsService.getOfficersInDependency(account.dependencia._id);
+  }
+  @Get('institutions')
+  getInstitutions() {
+    return this.institutionService.getActiveInstitutions();
   }
 
   @Get('procedure/code')
@@ -66,8 +76,13 @@ export class ReportsController {
     return this.reportsService.getWorkDetailsOfAccount(id_account);
   }
 
-  @Get('total/incoming/:id_institution')
-  getTotal(@Param('id_institution') id_institution: string) {
-    return this.reportsService.getTotalIncomingMailsByInstitution(id_institution);
+  @Get('total/communication/:id_institution/:group')
+  getTotalMailsByInstitution(@Param() params: GetTotalMailsDto) {
+    return this.reportsService.getTotalMailsByInstitution(params.id_institution, params.group);
+  }
+  
+  @Get('total/procedures/:id_institution/:group')
+  getTotalProceduresByInstitution(@Param() params: GetTotalProceduresDto) {
+    return this.reportsService.getTotalProceduresByInstitution(params.id_institution, params.group);
   }
 }
