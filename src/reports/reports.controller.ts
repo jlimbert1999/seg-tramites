@@ -76,13 +76,16 @@ export class ReportsController {
     return this.reportsService.getWorkDetailsOfAccount(id_account);
   }
 
-  @Get('total/communication/:id_institution/:group')
-  getTotalMailsByInstitution(@Param() params: GetTotalMailsDto) {
-    return this.reportsService.getTotalMailsByInstitution(params.id_institution, params.group);
+  @Get('total/communications/:id_institution')
+  getTotalMailsByInstitution(@Param('id_institution') id_procedure: string, @Query() params: GetTotalMailsDto) {
+    return this.reportsService.getTotalMailsByInstitution(id_procedure, params);
   }
-  
-  @Get('total/procedures/:id_institution/:group')
-  getTotalProceduresByInstitution(@Param() params: GetTotalProceduresDto) {
-    return this.reportsService.getTotalProceduresByInstitution(params.id_institution, params.group);
+
+  @Get('total/procedures/:id_institution')
+  getTotalProceduresByInstitution(
+    @Param('id_institution') id_procedure: string,
+    @Query() params: GetTotalProceduresDto,
+  ) {
+    return this.reportsService.getTotalProceduresByInstitution(id_procedure, params);
   }
 }

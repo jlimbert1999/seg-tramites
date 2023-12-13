@@ -4,6 +4,8 @@ import mongoose, { Model } from 'mongoose';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import {
+  GetTotalMailsDto,
+  GetTotalProceduresDto,
   SearchProcedureByApplicantDto,
   SearchProcedureByCodeDto,
   searchProcedureByPropertiesDto,
@@ -179,11 +181,11 @@ export class ReportsService {
         populate: { path: 'cargo', select: 'nombre' },
       });
   }
-  async getTotalMailsByInstitution(id_institution: string, group: 'receiver' | 'emitter') {
+  async getTotalMailsByInstitution(id_institution: string, { group, participant }: GetTotalMailsDto) {
     const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
     const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
     const query: mongoose.FilterQuery<Communication> =
-      group === 'receiver'
+      participant === 'receiver'
         ? { 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } }
         : { 'emitter.cuenta': { $in: accounts.map((acc) => acc._id) } };
     const data = await this.communicationModel
@@ -192,12 +194,19 @@ export class ReportsService {
       .lookup({
         from: 'cuentas',
         foreignField: '_id',
-        localField: `${group}.cuenta`,
-        as: `${group}.cuenta`,
+        localField: `${participant}.cuenta`,
+        as: `${participant}.cuenta`,
       })
+      .lookup({
+        from: 'procedures',
+        foreignField: '_id',
+        localField: `procedure`,
+        as: `procedure`,
+      })
+      .match({ 'procedure.group': group })
       .group({
         _id: {
-          account: `$${group}.cuenta.dependencia`,
+          account: `$${participant}.cuenta.dependencia`,
           status: '$status',
         },
         count: { $sum: 1 },
@@ -206,7 +215,7 @@ export class ReportsService {
         _id: '$_id.account',
         details: {
           $push: {
-            status: '$_id.status',
+            field: '$_id.status',
             count: '$count',
           },
         },
@@ -221,7 +230,7 @@ export class ReportsService {
     });
     return data;
   }
-  async getTotalProceduresByInstitution(id_institution: string, group: groupProcedure) {
+  async getTotalProceduresByInstitution(id_institution: string, { group }: GetTotalProceduresDto) {
     const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
     const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
     const data = await this.procedureModel
@@ -244,7 +253,7 @@ export class ReportsService {
         _id: '$_id.dependency',
         details: {
           $push: {
-            state: '$_id.state',
+            field: '$_id.state',
             count: '$count',
           },
         },

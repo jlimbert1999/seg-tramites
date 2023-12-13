@@ -1,11 +1,11 @@
-import { IsIn, IsMongoId } from 'class-validator';
-import { group } from 'console';
-type group = 'emitter' | 'receiver';
+import { IsEnum, IsIn } from 'class-validator';
+import { groupProcedure } from 'src/procedures/interfaces';
+type participantTypes = 'emitter' | 'receiver';
 
 export class GetTotalMailsDto {
-  @IsMongoId()
-  id_institution: string;
-
   @IsIn(['emitter', 'receiver'])
-  group: group;
+  participant: participantTypes;
+
+  @IsEnum(groupProcedure)
+  group: groupProcedure;
 }
