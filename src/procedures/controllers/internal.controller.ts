@@ -17,7 +17,7 @@ export class InternalController {
   ) {}
   @Get('types-procedures')
   async getTypesProcedures() {
-    return await this.typeProcedureService.getTypesProceduresByGroup('INTERNO');
+    return await this.typeProcedureService.getEnabledTypesByGroup('INTERNO');
   }
   @Get('participant/:text')
   async findParticipantForProcess(@Param('text') text: string) {

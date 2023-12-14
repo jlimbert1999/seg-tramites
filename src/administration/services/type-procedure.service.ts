@@ -9,24 +9,11 @@ import { UpdateTypeProcedureDto } from '../dto/update-typeProcedure.dto';
 export class TypeProcedureService {
   constructor(@InjectModel(TypeProcedure.name) private typeProcedureModel: Model<TypeProcedure>) {}
   async getSegmentsOfTypesProcedures(type: string) {
-    return await this.typeProcedureModel.aggregate([
-      {
-        $match: {
-          activo: true,
-          tipo: type,
-        },
-      },
-      {
-        $group: {
-          _id: '$segmento',
-        },
-      },
-      {
-        $project: {
-          segmento: 1,
-        },
-      },
-    ]);
+    return await this.typeProcedureModel
+      .aggregate()
+      .match({ activo: true, tipo: type })
+      .group({ _id: '$segmento' })
+      .project({ segmento: 1 });
   }
   async search(limit: number, offset: number, text: string) {
     offset = offset * limit;
@@ -62,11 +49,11 @@ export class TypeProcedureService {
     );
   }
 
-  async getTypeProceduresBySegments(segment: string) {
+  async getEnabledTypesBySegment(segment: string) {
     return await this.typeProcedureModel.find({ segmento: segment.toUpperCase(), activo: true });
   }
 
-  async getTypesProceduresByGroup(group: 'INTERNO' | 'EXTERNO') {
+  async getEnabledTypesByGroup(group: 'INTERNO' | 'EXTERNO') {
     return await this.typeProcedureModel.find({ activo: true, tipo: group });
   }
 

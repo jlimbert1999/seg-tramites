@@ -21,7 +21,7 @@ export class ExternalController {
   }
   @Get('segments/:segment')
   async getTypesProceduresBySegment(@Param('segment') segment: string) {
-    return await this.typeProcedure.getTypeProceduresBySegments(segment);
+    return await this.typeProcedure.getEnabledTypesBySegment(segment);
   }
 
   @Get('search/:text')
