@@ -12,12 +12,13 @@ import { Account } from 'src/auth/schemas/account.schema';
 import { stateProcedure } from '../interfaces';
 import { ConfigService } from '@nestjs/config';
 
-interface procedure {
-  procedure: CreateProcedureDto;
-  group: groupProcedure;
-  account: Account;
+interface ProcedureProps {
   id_detail: string;
+  group: groupProcedure;
+  dto: CreateProcedureDto;
+  account: Account;
 }
+
 @Injectable()
 export class ProcedureService {
   constructor(
@@ -98,11 +99,15 @@ export class ProcedureService {
     // }
     // return { ok: true };
   }
-  async create({ procedure, account, group, id_detail }: procedure, session: mongoose.mongo.ClientSession) {
-    const { segment, ...procedureProperties } = procedure;
+  async create(
+    { account, group, id_detail, dto }: ProcedureProps,
+    session: mongoose.mongo.ClientSession,
+  ): Promise<Procedure> {
+    const { segment, ...procedureProperties } = dto;
     const code = await this.generateCode(account, segment, group);
     const createdProcedure = new this.procedureModel({
       code,
+      group,
       account: account._id,
       details: id_detail,
       ...procedureProperties,
@@ -110,6 +115,21 @@ export class ProcedureService {
     await createdProcedure.save({ session });
     await createdProcedure.populate('details');
     return createdProcedure;
+  }
+
+  private async generateCode(account: Account, segment: string, group: groupProcedure): Promise<string> {
+    const { dependencia } = await account.populate({
+      path: 'dependencia',
+      select: 'institucion',
+      populate: {
+        path: 'institucion',
+        select: 'sigla',
+      },
+    });
+    if (!dependencia) throw new InternalServerErrorException('Error al generar el codigo alterno');
+    const code = `${segment}-${dependencia.institucion.sigla}-${this.configService.get('YEAR')}`.toUpperCase();
+    const correlative = await this.procedureModel.count({ group: group, code: new RegExp(code) });
+    return `${code}-${String(correlative + 1).padStart(group === groupProcedure.EXTERNAL ? 6 : 5, '0')}`;
   }
 
   async update(id_procedure: string, procedure: UpdateProcedureDto, session: mongoose.mongo.ClientSession) {
@@ -150,24 +170,5 @@ export class ProcedureService {
     if (procedureDB.state !== stateProcedure.INSCRITO)
       throw new BadRequestException('El tramite ya esta en proceso de evaluacion');
     return procedureDB;
-  }
-
-  async generateCode(account: Account, segmentProcedure: string, group: groupProcedure) {
-    const { dependencia } = await account.populate({
-      path: 'dependencia',
-      select: 'institucion',
-      populate: {
-        path: 'institucion',
-        select: 'sigla',
-      },
-    });
-    if (!dependencia) throw new InternalServerErrorException('Error al generar el codigo alterno');
-    const code = `${segmentProcedure}-${dependencia.institucion.sigla}-${this.configService.get('YEAR')}`.toUpperCase();
-    const correlative = await this.procedureModel.count({
-      group: group,
-      code: new RegExp(code, 'i'),
-    });
-    const zeros = group === groupProcedure.EXTERNAL ? 6 : 5;
-    return `${code}-${String(correlative + 1).padStart(zeros, '0')}`;
   }
 }

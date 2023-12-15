@@ -1,19 +1,19 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
 import { ValidProcedureService, groupProcedure, stateProcedure } from '../interfaces';
 import { ExternalDetail, Procedure } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/auth/schemas/account.schema';
+import { ProcedureService } from './procedure.service';
 
 @Injectable()
 export class ExternalService implements ValidProcedureService {
   constructor(
-    private readonly configService: ConfigService,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name) private externalDetailModel: Model<ExternalDetail>,
+    private procedureService: ProcedureService,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
   async search({ limit, offset }: PaginationParamsDto, id_account: string, text: string) {
@@ -98,23 +98,22 @@ export class ExternalService implements ValidProcedureService {
     ]);
     return { procedures, length };
   }
+
   async create(procedure: CreateProcedureDto, details: CreateExternalDetailDto, account: Account) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       const createdDetail = new this.externalDetailModel(details);
-      await createdDetail.save({ session });
-      const { segment, ...procedureProperties } = procedure;
-      const code = await this.generateExternalCode(account, segment);
-      const createdProcedure = new this.procedureModel({
-        code,
-        group: groupProcedure.EXTERNAL,
-        account: account._id,
-        details: createdDetail._id,
-        ...procedureProperties,
-      });
-      await createdProcedure.save({ session });
-      await createdProcedure.populate('details');
+      const { _id } = await createdDetail.save({ session });
+      const createdProcedure = await this.procedureService.create(
+        {
+          group: groupProcedure.EXTERNAL,
+          id_detail: _id,
+          dto: procedure,
+          account,
+        },
+        session,
+      );
       await session.commitTransaction();
       return createdProcedure;
     } catch (error) {
@@ -170,23 +169,6 @@ export class ExternalService implements ValidProcedureService {
       });
     if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
     return procedureDB;
-  }
-  async generateExternalCode(account: Account, segmentProcedure: string) {
-    const { dependencia } = await account.populate({
-      path: 'dependencia',
-      select: 'institucion',
-      populate: {
-        path: 'institucion',
-        select: 'sigla',
-      },
-    });
-    if (!dependencia) throw new InternalServerErrorException('Error al generar el codigo alterno');
-    const code = `${segmentProcedure}-${dependencia.institucion.sigla}-${this.configService.get('YEAR')}`.toUpperCase();
-    const correlative = await this.procedureModel.count({
-      group: groupProcedure.EXTERNAL,
-      code: new RegExp(code, 'i'),
-    });
-    return `${code}-${String(correlative + 1).padStart(6, '0')}`;
   }
   async checkIfProcedureIsEditable(id_procedure: string) {
     const procedureDB = await this.procedureModel.findById(id_procedure);
