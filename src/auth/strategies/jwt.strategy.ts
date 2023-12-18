@@ -27,7 +27,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Esta cuenta no tiene ningun permiso asignado');
     if (String(account._id) === this.configService.get('id_root')) return account;
     if (!account.activo || !account.funcionario) throw new UnauthorizedException('Esta cuenta ha sido deshablitada');
-    console.log('pass jwt strategy');
     return account;
   }
 }

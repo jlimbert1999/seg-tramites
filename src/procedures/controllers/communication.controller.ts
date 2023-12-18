@@ -47,7 +47,7 @@ export class CommunicationController {
     return await this.dependencieService.getActiveDependenciesOfInstitution(id_institution);
   }
   @Get('accounts/:id_dependency')
-  async getAcccount(@GetUserRequest('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
+  async getAccountsForSend(@GetUserRequest('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
     return await this.accountService.getAccountsForSend(id_dependency, id_account);
   }
 
