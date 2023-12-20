@@ -452,27 +452,14 @@ export class CommunicationService {
     return canceledMails;
   }
   async getWorkflowOfProcedure(id_procedure: string) {
-    const workflow = await this.communicationModel.aggregate([
-      {
-        $match: {
-          procedure: new mongoose.Types.ObjectId(id_procedure),
-        },
-      },
-      {
-        $group: {
-          _id: {
-            emitterAccount: '$emitter.cuenta',
-            outboundDate: '$outboundDate',
-          },
-          sendings: { $push: '$$ROOT' },
-        },
-      },
-      {
-        $sort: {
-          '_id.outboundDate': 1,
-        },
-      },
-    ]);
+    const workflow = await this.communicationModel
+      .aggregate()
+      .match({ procedure: new mongoose.Types.ObjectId(id_procedure) })
+      .group({
+        _id: { emitterAccount: '$emitter.cuenta', outboundDate: '$outboundDate' },
+        sendings: { $push: '$$ROOT' },
+      })
+      .sort({ '_id.outboundDate': 1 });
     for (const item of workflow) {
       await this.communicationModel.populate(item['sendings'], [
         {

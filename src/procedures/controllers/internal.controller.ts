@@ -11,8 +11,8 @@ import { OfficerService, TypeProcedureService } from 'src/administration/service
 @Auth(validResources.internal)
 export class InternalController {
   constructor(
-    private readonly internalService: InternalService,
     private readonly officerService: OfficerService,
+    private readonly internalService: InternalService,
     private readonly typeProcedureService: TypeProcedureService,
   ) {}
   @Get('types-procedures')
