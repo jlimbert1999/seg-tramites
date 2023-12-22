@@ -1,8 +1,8 @@
+import { ConfigController } from './administration/controllers/config.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
-import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -28,7 +28,7 @@ import { ReportsModule } from './reports/reports.module';
     ProceduresModule,
     ReportsModule,
   ],
-  controllers: [AppController],
+  controllers: [ConfigController, AppController],
   providers: [AppService],
 })
 export class AppModule {}
