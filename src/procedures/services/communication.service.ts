@@ -3,12 +3,13 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 
 import { Outbox, Inbox, Procedure, Communication } from '../schemas';
-import { stateProcedure, statusMail } from '../interfaces';
+import { stateProcedure, statusMail, workflow } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
 import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Officer } from 'src/administration/schemas';
+import { HumanizeTime } from 'src/shared/helpers';
 
 @Injectable()
 export class CommunicationService {
@@ -451,45 +452,35 @@ export class CommunicationService {
     }
     return canceledMails;
   }
+
   async getWorkflowOfProcedure(id_procedure: string) {
-    const workflow = await this.communicationModel
+    const workflow: workflow[] = await this.communicationModel
       .aggregate()
       .match({ procedure: new mongoose.Types.ObjectId(id_procedure) })
       .group({
         _id: { emitterAccount: '$emitter.cuenta', outboundDate: '$outboundDate' },
-        sendings: { $push: '$$ROOT' },
+        detail: { $push: '$$ROOT' },
       })
       .sort({ '_id.outboundDate': 1 });
-    for (const item of workflow) {
-      await this.communicationModel.populate(item['sendings'], [
-        {
-          path: 'emitter.cuenta',
-          select: '_id',
-          populate: {
-            path: 'dependencia',
-            select: 'nombre',
-            populate: {
-              path: 'institucion',
-              select: 'nombre sigla',
-            },
-          },
-        },
-        {
-          path: 'receiver.cuenta',
-          select: '_id',
-          populate: {
-            path: 'dependencia',
-            select: 'nombre',
-            populate: {
-              path: 'institucion',
-              select: 'nombre sigla',
-            },
-          },
-        },
-      ]);
-    }
+    if (workflow.length === 0) return [];
+    const { startDate } = await this.procedureModel.findById(id_procedure, 'startDate');
+    workflow.map((stage, index) => {
+      let start: Date | undefined = index === 0 ? startDate : undefined;
+      for (let i = workflow.length - 1; i >= 0; i--) {
+        const lastStep = workflow[i].detail.find(
+          (send) => send.receiver.cuenta.toString() === stage._id.emitterAccount.toString(),
+        );
+        if (lastStep) {
+          start = new Date(lastStep.inboundDate);
+          break;
+        }
+      }
+      stage._id.duration = HumanizeTime(new Date(stage._id.outboundDate).getTime() - start.getTime());
+      return stage;
+    });
     return workflow;
   }
+
   async getMailDetails(id_mail: string) {
     const mailDB = await this.communicationModel.findById(id_mail).populate('procedure');
     if (!mailDB) throw new BadRequestException('El envio de este tramite ha sido cancelado');
