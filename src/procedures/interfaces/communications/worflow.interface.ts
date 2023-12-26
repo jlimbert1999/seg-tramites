@@ -7,25 +7,33 @@ export interface workflow {
 
 export interface ID {
   emitterAccount: string;
-  duration?: string;
-  outboundDate: string;
+  outboundDate: Date;
+  duration: string;
 }
 
 export interface Detail {
   _id: string;
   emitter: Emitter;
-  receiver: Emitter;
+  receiver: Receiver;
   procedure: string;
   reference: string;
   attachmentQuantity: string;
   internalNumber: string;
-  outboundDate: string;
-  inboundDate?: string;
+  outboundDate: Date;
+  inboundDate?: Date;
   status: statusMail;
+  rejectionReason?: string;
 }
 
 export interface Emitter {
   cuenta: string;
   fullname: string;
   jobtitle?: string;
+}
+
+export interface Receiver {
+  cuenta: string;
+  fullname: string;
+  jobtitle?: string;
+  duration: string;
 }

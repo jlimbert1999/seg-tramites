@@ -463,22 +463,38 @@ export class CommunicationService {
       })
       .sort({ '_id.outboundDate': 1 });
     if (workflow.length === 0) return [];
+    return await this.timedWorkflow(workflow, id_procedure);
+  }
+
+  private async timedWorkflow(workflow: workflow[], id_procedure: string) {
     const { startDate } = await this.procedureModel.findById(id_procedure, 'startDate');
-    workflow.map((stage, index) => {
+    const stages = workflow.map((stage, index) => {
       let start: Date | undefined = index === 0 ? startDate : undefined;
       for (let i = workflow.length - 1; i >= 0; i--) {
         const lastStep = workflow[i].detail.find(
           (send) => send.receiver.cuenta.toString() === stage._id.emitterAccount.toString(),
         );
         if (lastStep) {
-          start = new Date(lastStep.inboundDate);
+          start = lastStep.inboundDate;
           break;
         }
       }
-      stage._id.duration = HumanizeTime(new Date(stage._id.outboundDate).getTime() - start.getTime());
-      return stage;
+      console.log(start);
+      return {
+        emitter: {
+          ...stage.detail[0].emitter,
+          duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : 's',
+        },
+        outboundDate: stage._id.outboundDate,
+        detail: stage.detail.map(({ emitter, outboundDate, ...values }) => {
+          values.receiver.duration = values.inboundDate
+            ? HumanizeTime(values.inboundDate.getTime() - outboundDate.getTime())
+            : 'Pendiente';
+          return values;
+        }),
+      };
     });
-    return workflow;
+    return stages;
   }
 
   async getMailDetails(id_mail: string) {
