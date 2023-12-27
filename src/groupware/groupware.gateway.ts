@@ -32,6 +32,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
   sendMails(data: Communication[]) {
     data.forEach((mail) => {
       const user = this.groupwareService.getUser(String(mail.receiver.cuenta._id));
+      console.log('enviado a:', user.officer.fullname);
       if (user) {
         user.socketIds.forEach((socketId) => {
           this.server.to(socketId).emit('new-mail', mail);

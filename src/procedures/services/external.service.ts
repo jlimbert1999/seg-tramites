@@ -16,64 +16,49 @@ export class ExternalService implements ValidProcedureService {
     private procedureService: ProcedureService,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
+
   async search({ limit, offset }: PaginationParamsDto, id_account: string, text: string) {
     const regex = new RegExp(text, 'i');
-    const data = await this.procedureModel.aggregate([
-      {
-        $match: {
-          group: groupProcedure.EXTERNAL,
-          account: new mongoose.Types.ObjectId(id_account),
-          state: { $ne: stateProcedure.ANULADO },
-        },
-      },
-      {
-        $lookup: {
-          from: 'externaldetails',
-          localField: 'details',
-          foreignField: '_id',
-          as: 'details',
-        },
-      },
-      {
-        $unwind: {
-          path: '$details',
-        },
-      },
-      {
-        $addFields: {
-          'details.solicitante.fullname': {
-            $concat: [
-              '$details.solicitante.nombre',
-              ' ',
-              { $ifNull: ['$details.solicitante.paterno', ''] },
-              ' ',
-              { $ifNull: ['$details.solicitante.materno', ''] },
-            ],
-          },
-        },
-      },
-      {
-        $match: {
-          $or: [{ 'details.solicitante.fullname': regex }, { code: regex }, { reference: regex }],
-        },
-      },
-      {
-        $project: {
-          'details.solicitante.fullname': 0,
-          'details.requerimientos': 0,
-        },
-      },
-      {
-        $facet: {
-          paginatedResults: [{ $skip: offset }, { $limit: limit }],
-          totalCount: [
-            {
-              $count: 'count',
-            },
+    const data = await this.procedureModel
+      .aggregate()
+      .match({
+        group: groupProcedure.EXTERNAL,
+        account: new mongoose.Types.ObjectId(id_account),
+        state: { $ne: stateProcedure.ANULADO },
+      })
+      .lookup({
+        from: 'externaldetails',
+        localField: 'details',
+        foreignField: '_id',
+        as: 'details',
+      })
+      .unwind('$details')
+      .addFields({
+        'details.solicitante.fullname': {
+          $concat: [
+            '$details.solicitante.nombre',
+            ' ',
+            { $ifNull: ['$details.solicitante.paterno', ''] },
+            ' ',
+            { $ifNull: ['$details.solicitante.materno', ''] },
           ],
         },
-      },
-    ]);
+      })
+      .match({
+        $or: [{ 'details.solicitante.fullname': regex }, { code: regex }, { reference: regex }],
+      })
+      .project({
+        'details.solicitante.fullname': 0,
+        'details.requerimientos': 0,
+      })
+      .facet({
+        paginatedResults: [{ $skip: offset }, { $limit: limit }],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      });
     const procedures = data[0].paginatedResults;
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { procedures, length };
