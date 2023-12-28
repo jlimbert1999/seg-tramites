@@ -69,35 +69,35 @@ export class ProcedureService {
     //   await this.outboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
     // }
     // console.log('end');
-    // const procedures = await this.internalProcedureModel.find({});
-    // for (const procedure of procedures) {
-    //   const newProcedure: any = {
-    //     code: procedure.alterno,
-    //     cite: procedure.cite,
-    //     type: procedure.tipo_tramite._id,
-    //     account: procedure.cuenta._id,
-    //     state: procedure.estado,
-    //     reference: procedure.detalle,
-    //     amount: procedure.cantidad,
-    //     send: procedure.enviado,
-    //     startDate: procedure.fecha_registro,
-    //     tramite: procedure._id,
-    //   };
-    //   if (procedure.fecha_finalizacion) newProcedure['endDate'] = procedure.fecha_finalizacion;
-    //   const internalDetail = {
-    //     remitente: procedure.remitente,
-    //     destinatario: procedure.destinatario,
-    //   };
-    //   const createdDetails = new this.internalDetailModel(internalDetail);
-    //   await createdDetails.save();
-    //   newProcedure.group = 'InternalDetail';
-    //   newProcedure.details = createdDetails._id;
-    //   const createProcedure = new this.procedureModel(newProcedure);
-    //   await createProcedure.save();
-    //   await this.imboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
-    //   await this.outboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
-    // }
-    // return { ok: true };
+    const procedures = await this.internalProcedureModel.find({});
+    for (const procedure of procedures) {
+      const newProcedure: any = {
+        code: procedure.alterno,
+        cite: procedure.cite,
+        type: procedure.tipo_tramite._id,
+        account: procedure.cuenta._id,
+        state: procedure.estado,
+        reference: procedure.detalle,
+        amount: procedure.cantidad,
+        send: procedure.enviado,
+        startDate: procedure.fecha_registro,
+        tramite: procedure._id,
+      };
+      if (procedure.fecha_finalizacion) newProcedure['endDate'] = procedure.fecha_finalizacion;
+      const internalDetail = {
+        remitente: procedure.remitente,
+        destinatario: procedure.destinatario,
+      };
+      const createdDetails = new this.internalDetailModel(internalDetail);
+      await createdDetails.save();
+      newProcedure.group = 'InternalDetail';
+      newProcedure.details = createdDetails._id;
+      const createProcedure = new this.procedureModel(newProcedure);
+      await createProcedure.save();
+      await this.imboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
+      await this.outboxModel.updateMany({ tramite: procedure._id }, { $set: { tramite: createProcedure._id } });
+    }
+    return { ok: true };
   }
   async create(
     { account, group, id_detail, dto }: ProcedureProps,

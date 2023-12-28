@@ -10,7 +10,7 @@ export class JobController {
   @Get('/generate/collection')
   async generateNewCollection() {
     // ! REMOVE AFTER UPDATE
-    // return await this.jobService.createNewJobsCollection();
+    return await this.jobService.createNewJobsCollection();
   }
   @Get('/search/job/officer/:text')
   async searchJobForOfficer(@Param('text') text: string) {

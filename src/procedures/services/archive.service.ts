@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Archivos } from '../schemas/archivos.schema';
-import { Communication, ProcedureEvents, Procedure } from '../schemas';
+import { Communication, ProcedureEvents, Procedure, ExternalProcedure, InternalProcedure } from '../schemas';
 import { EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
@@ -21,15 +21,40 @@ export class ArchiveService {
     @InjectModel(Communication.name)
     private communicationModel: Model<Communication>,
     @InjectModel(Eventos.name) private eventoModel: Model<Eventos>,
+    @InjectModel(ExternalProcedure.name)
+    private externalProcedureModel: Model<ExternalProcedure>,
+    @InjectModel(InternalProcedure.name)
+    private internalProcedureModel: Model<InternalProcedure>,
   ) {}
 
   async repiarOldArchives() {
+    // FIRST STEP
     // const oldArchives = await this.oldArchiveModel.find({ location: { $ne: null } });
     // for (const archive of oldArchives) {
     //   await this.communicationModel.updateOne({ id_old: archive.location }, { status: statusMail.Archived });
     // }
     // console.log('ok');
     // return { message: 'ok' };
+
+    // SECOND STEP
+    const oldArchives = await this.oldArchiveModel.find({ location: null });
+    for (const archive of oldArchives) {
+      const { _id } = await this.procedureModel.findOne({ tramite: archive.procedure._id });
+      if (_id) {
+        const lost = await this.communicationModel.findOne({
+          'receiver.cuenta': archive.account._id,
+          procedure: String(_id),
+        });
+        if (lost) {
+          console.log(lost.receiver.fullname, lost.status);
+        } else {
+          console.log('communication not found');
+        }
+      } else {
+        console.log('not found ', _id);
+      }
+    }
+    return { message: 'ok' };
   }
   async createEvents() {
     // const eventos = await this.eventoModel.find({});

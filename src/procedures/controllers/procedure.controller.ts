@@ -13,7 +13,7 @@ import { validResources } from 'src/auth/interfaces/valid-resources.interface';
 import { Account } from 'src/auth/schemas/account.schema';
 
 @Controller('procedure')
-@Auth()
+// @Auth()
 export class ProcedureController {
   constructor(
     private readonly procedureService: ProcedureService,

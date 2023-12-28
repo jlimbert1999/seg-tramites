@@ -64,11 +64,11 @@ export class CommunicationService {
   }
   async repairOldSchemas() {
     // FOR EMITTER
-    // const mails = await this.outboxModel.find({});
+    // const mails = await this.inboxModel.find({});
     // for (const mail of mails) {
     //   const participant = {};
     //   if (!mail.emisor.funcionario) {
-    //     await this.outboxModel.populate(mail, { path: 'emisor.cuenta' });
+    //     await this.inboxModel.populate(mail, { path: 'emisor.cuenta' });
     //     if (!mail.emisor.cuenta.funcionario) {
     //       participant['fullname'] = 'NO DESIGNADO';
     //     } else {
@@ -87,18 +87,18 @@ export class CommunicationService {
     //       participant['jobtitle'] = officer.cargo.nombre;
     //     }
     //   }
-    //   await this.outboxModel.findByIdAndUpdate(mail._id, {
+    //   await this.inboxModel.findByIdAndUpdate(mail._id, {
     //     emisor: { cuenta: mail.emisor.cuenta._id, ...participant },
     //   });
     //   console.log('ok');
     // }
     // console.log('end');
     // FOR RECEIVER
-    // const mails = await this.outboxModel.find({});
+    // const mails = await this.inboxModel.find({});
     // for (const mail of mails) {
     //   const participant = {};
     //   if (!mail.receptor.funcionario) {
-    //     await this.outboxModel.populate(mail, { path: 'receptor.cuenta' });
+    //     await this.inboxModel.populate(mail, { path: 'receptor.cuenta' });
     //     if (!mail.receptor.cuenta.funcionario) {
     //       participant['fullname'] = 'NO DESIGNADO';
     //     } else {
@@ -117,7 +117,7 @@ export class CommunicationService {
     //       participant['jobtitle'] = officer.cargo.nombre;
     //     }
     //   }
-    //   await this.outboxModel.findByIdAndUpdate(mail._id, {
+    //   await this.inboxModel.findByIdAndUpdate(mail._id, {
     //     receptor: { cuenta: mail.receptor.cuenta._id, ...participant },
     //   });
     //   console.log('ok');

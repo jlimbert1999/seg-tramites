@@ -188,6 +188,7 @@ export class ReportsService {
       participant === 'receiver'
         ? { 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } }
         : { 'emitter.cuenta': { $in: accounts.map((acc) => acc._id) } };
+        console.log(participant);
     const data = await this.communicationModel
       .aggregate()
       .match(query)

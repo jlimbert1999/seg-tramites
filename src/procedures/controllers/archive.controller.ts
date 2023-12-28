@@ -7,13 +7,13 @@ import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('archive')
-@Auth()
+// @Auth()
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}
 
   @Get('repair')
   async repailCollectionArchives() {
-    // return this.archiveService.repiarOldArchives();
+    return this.archiveService.repiarOldArchives();
   }
   @Get('generate/events')
   async generateObservatons() {
