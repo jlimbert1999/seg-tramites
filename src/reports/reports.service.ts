@@ -188,7 +188,7 @@ export class ReportsService {
       participant === 'receiver'
         ? { 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } }
         : { 'emitter.cuenta': { $in: accounts.map((acc) => acc._id) } };
-        console.log(participant);
+    console.log(participant);
     const data = await this.communicationModel
       .aggregate()
       .match(query)
@@ -268,5 +268,53 @@ export class ReportsService {
       return element;
     });
     return data;
+  }
+  async getTotalInboxByUser() {
+    return await this.communicationModel
+      .aggregate()
+      .match({ status: { $in: [statusMail.Received, statusMail.Pending] } })
+      .group({
+        _id: {
+          account: `$receiver.cuenta`,
+          status: '$status',
+        },
+        count: { $sum: 1 },
+      })
+      .group({
+        _id: '$_id.account',
+        details: {
+          $push: {
+            status: '$_id.status',
+            count: '$count',
+          },
+        },
+        total: { $sum: '$count' },
+      })
+      .sort({ total: -1 })
+      .lookup({
+        from: 'cuentas',
+        localField: '_id',
+        foreignField: '_id',
+        as: '_id',
+        pipeline: [{ $project: { funcionario: 1 } }],
+      })
+      .unwind('_id')
+      .lookup({
+        from: 'funcionarios',
+        localField: '_id.funcionario',
+        foreignField: '_id',
+        as: '_id.funcionario',
+        pipeline: [{ $project: { nombre: 1, paterno: 1, materno: 1, cargo: 1 } }],
+      })
+      .unwind({ path: '$_id.funcionario', preserveNullAndEmptyArrays: true })
+      .lookup({
+        from: 'cargos',
+        localField: '_id.funcionario.cargo',
+        foreignField: '_id',
+        as: '_id.funcionario.cargo',
+        pipeline: [{ $project: { nombre: 1 } }],
+      })
+      .unwind({ path: '$_id.funcionario.cargo', preserveNullAndEmptyArrays: true })
+      .limit(100000);
   }
 }

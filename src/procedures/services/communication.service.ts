@@ -472,24 +472,26 @@ export class CommunicationService {
       let start: Date | undefined = index === 0 ? startDate : undefined;
       for (let i = workflow.length - 1; i >= 0; i--) {
         const lastStep = workflow[i].detail.find(
-          (send) => send.receiver.cuenta.toString() === stage._id.emitterAccount.toString(),
+          (send) =>
+            send.receiver.cuenta.toString() === stage._id.emitterAccount.toString() &&
+            send.status === statusMail.Completed,
         );
         if (lastStep) {
           start = lastStep.inboundDate;
           break;
         }
       }
-      console.log(start);
       return {
         emitter: {
           ...stage.detail[0].emitter,
-          duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : 's',
+          duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : '- No calculado -',
         },
         outboundDate: stage._id.outboundDate,
-        detail: stage.detail.map(({ emitter, outboundDate, ...values }) => {
+        detail: stage.detail.map(({ outboundDate, ...values }) => {
           values.receiver.duration = values.inboundDate
             ? HumanizeTime(values.inboundDate.getTime() - outboundDate.getTime())
             : 'Pendiente';
+          delete values.emitter;
           return values;
         }),
       };

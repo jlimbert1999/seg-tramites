@@ -172,4 +172,14 @@ export const SystemMenu = [
       icon: 'analytics',
     },
   },
+  {
+    resource: validResources.communication,
+    text: 'Ranking usuarios',
+    icon: 'manage_search',
+    routerLink: 'reportes/ranking',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
 ];

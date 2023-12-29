@@ -37,40 +37,41 @@ export class ArchiveService {
     // return { message: 'ok' };
 
     // SECOND STEP
-    const oldArchives = await this.oldArchiveModel.find({ location: null });
-    for (const archive of oldArchives) {
-      const { _id } = await this.procedureModel.findOne({ tramite: archive.procedure._id });
-      if (_id) {
-        const lost = await this.communicationModel.findOne({
-          'receiver.cuenta': archive.account._id,
-          procedure: String(_id),
-        });
-        if (lost) {
-          console.log(lost.receiver.fullname, lost.status);
-        } else {
-          console.log('communication not found');
-        }
-      } else {
-        console.log('not found ', _id);
-      }
-    }
-    return { message: 'ok' };
-  }
-  async createEvents() {
-    // const eventos = await this.eventoModel.find({});
-    // for (const evento of eventos) {
-    //   const { officer } = await evento.populate({ path: 'officer' });
-    //   const fullname = createFullName(officer);
-    //   const procedureDB = await this.procedureModel.findOne({ tramite: evento.procedure });
-    //   const newEvent = new this.procedureEventModel({
-    //     procedure: procedureDB._id,
-    //     fullNameOfficer: fullname,
-    //     description: evento.description,
-    //     date: evento.date,
-    //   });
-    //   await newEvent.save();
+    // const oldArchives = await this.oldArchiveModel.find({ location: null });
+    // for (const archive of oldArchives) {
+    //   const { _id } = await this.procedureModel.findOne({ tramite: archive.procedure._id });
+    //   if (_id) {
+    //     await this.communicationModel
+    //       .updateOne(
+    //         {
+    //           'receiver.cuenta': archive.account._id,
+    //           procedure: String(_id),
+    //           status: statusMail.Completed,
+    //         },
+    //         {
+    //           status: statusMail.Archived,
+    //         },
+    //       )
+    //       .sort({ _id: -1 });
+    //   }
     // }
     // return { message: 'ok' };
+  }
+  async createEvents() {
+    const eventos = await this.eventoModel.find({});
+    for (const evento of eventos) {
+      const { officer } = await evento.populate({ path: 'officer' });
+      const fullname = createFullName(officer);
+      const procedureDB = await this.procedureModel.findOne({ tramite: evento.procedure });
+      const newEvent = new this.procedureEventModel({
+        procedure: procedureDB._id,
+        fullNameOfficer: fullname,
+        description: evento.description,
+        date: evento.date,
+      });
+      await newEvent.save();
+    }
+    return { message: 'ok' };
   }
 
   async archiveProcedure(eventProcedureDto: EventProcedureDto, account: Account) {

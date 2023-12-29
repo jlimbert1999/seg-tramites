@@ -10,6 +10,7 @@ export class Participant extends Document {
     type: mongoose.Schema.Types.ObjectId,
     ref: Account.name,
     required: true,
+    index: true,
   })
   cuenta: Account;
 

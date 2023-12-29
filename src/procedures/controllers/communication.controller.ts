@@ -15,7 +15,7 @@ import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('communication')
-// @Auth(validResources.communication)
+@Auth(validResources.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,
