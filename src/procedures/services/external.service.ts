@@ -1,20 +1,23 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
-import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
-import { ValidProcedureService, groupProcedure, stateProcedure } from '../interfaces';
-import { ExternalDetail, Procedure } from '../schemas';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+
 import { Account } from 'src/auth/schemas/account.schema';
-import { ProcedureService } from './procedure.service';
+import { ExternalDetail, Procedure } from '../schemas';
+
+import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+
+import { groupProcedure, stateProcedure } from '../interfaces';
 
 @Injectable()
-export class ExternalService implements ValidProcedureService {
+export class ExternalService {
   constructor(
+    @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name) private externalDetailModel: Model<ExternalDetail>,
-    private procedureService: ProcedureService,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    private configService: ConfigService,
   ) {}
 
   async search({ limit, offset }: PaginationParamsDto, id_account: string, text: string) {
@@ -84,21 +87,22 @@ export class ExternalService implements ValidProcedureService {
     return { procedures, length };
   }
 
-  async create(procedure: CreateProcedureDto, details: CreateExternalDetailDto, account: Account) {
+  async create({ segment, ...procedureProps }: CreateProcedureDto, details: CreateExternalDetailDto, account: Account) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       const createdDetail = new this.externalDetailModel(details);
       const { _id } = await createdDetail.save({ session });
-      const createdProcedure = await this.procedureService.create(
-        {
-          group: groupProcedure.EXTERNAL,
-          id_detail: _id,
-          dto: procedure,
-          account,
-        },
-        session,
-      );
+      const alterno = await this.generateCode(account, segment);
+      const createdProcedure = new this.procedureModel({
+        group: groupProcedure.EXTERNAL,
+        account: account._id,
+        code: alterno,
+        details: _id,
+        ...procedureProps,
+      });
+      await createdProcedure.save({ session });
+      await createdProcedure.populate('details');
       await session.commitTransaction();
       return createdProcedure;
     } catch (error) {
@@ -109,13 +113,15 @@ export class ExternalService implements ValidProcedureService {
     }
   }
   async update(id_procedure: string, procedure: UpdateProcedureDto, details: UpdateExternalDto) {
-    const procedureDB = await this.checkIfProcedureIsEditable(id_procedure);
+    const {
+      details: { _id: id_detail },
+    } = await this.isEditable(id_procedure);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       await this.externalDetailModel.updateOne(
         {
-          _id: procedureDB.details._id,
+          _id: id_detail,
         },
         details,
         { session },
@@ -155,11 +161,28 @@ export class ExternalService implements ValidProcedureService {
     if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
     return procedureDB;
   }
-  async checkIfProcedureIsEditable(id_procedure: string) {
+
+  private async isEditable(id_procedure: string): Promise<Procedure> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
-    if (procedureDB.state !== stateProcedure.INSCRITO)
+    if (procedureDB.state !== stateProcedure.INSCRITO) {
       throw new BadRequestException('El tramite ya esta en proceso de evaluacion');
+    }
     return procedureDB;
+  }
+
+  private async generateCode(account: Account, segment: string): Promise<string> {
+    const { dependencia } = await account.populate({
+      path: 'dependencia',
+      select: 'institucion',
+      populate: {
+        path: 'institucion',
+        select: 'sigla',
+      },
+    });
+    if (!dependencia) throw new InternalServerErrorException('Error al generar el codigo alterno');
+    const code = `${segment}-${dependencia.institucion.sigla}-${this.configService.get('YEAR')}`.toUpperCase();
+    const correlative = await this.procedureModel.count({ group: groupProcedure.EXTERNAL, code: new RegExp(code) });
+    return `${code}-${String(correlative + 1).padStart(6, '0')}`;
   }
 }

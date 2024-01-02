@@ -2,36 +2,38 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
-import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
-import { groupProcedure } from '../interfaces/group.interface';
+
 import { Account } from 'src/auth/schemas/account.schema';
 import { InternalDetail, Procedure } from '../schemas';
+
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { ValidProcedureService, stateProcedure } from '../interfaces';
+import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
+
+import { ValidProcedureService, stateProcedure, groupProcedure } from '../interfaces';
 
 @Injectable()
 export class InternalService implements ValidProcedureService {
   constructor(
-    private readonly configService: ConfigService,
-    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
-    @InjectModel(InternalDetail.name) private internalDetailModel: Model<InternalDetail>,
     @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
+    @InjectModel(InternalDetail.name) private internalModel: Model<InternalDetail>,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(procedure: CreateProcedureDto, details: CreateInternalDetailDto, account: Account) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      const createdDetail = new this.internalDetailModel(details);
+      const createdDetail = new this.internalModel(details);
       await createdDetail.save({ session });
-      const { segment, ...procedureProperties } = procedure;
-      const code = await this.generateInternalCode(account, segment);
+      const { segment, ...procedureProps } = procedure;
+      const alterno = await this.generateCode(account, segment);
       const createdProcedure = new this.procedureModel({
-        code,
         group: groupProcedure.INTERNAL,
-        account: account._id,
         details: createdDetail._id,
-        ...procedureProperties,
+        account: account._id,
+        code: alterno,
+        ...procedureProps,
       });
       await createdProcedure.save({ session });
       await createdProcedure.populate('details');
@@ -45,13 +47,15 @@ export class InternalService implements ValidProcedureService {
     }
   }
   async update(id_procedure: string, procedure: UpdateProcedureDto, details: UpdateInternalDetailDto) {
-    const procedureDB = await this.checkIfProcedureIsEditable(id_procedure);
+    const {
+      details: { _id: id_detail },
+    } = await this.isEditable(id_procedure);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.internalDetailModel.updateOne(
+      await this.internalModel.updateOne(
         {
-          _id: procedureDB.details._id,
+          _id: id_detail,
         },
         details,
         { session },
@@ -155,7 +159,7 @@ export class InternalService implements ValidProcedureService {
     if (!procedureDB) throw new BadRequestException('El tramite interno solicitado no existe');
     return procedureDB;
   }
-  async generateInternalCode(account: Account, segmentProcedure: string) {
+  private async generateCode(account: Account, segmentProcedure: string) {
     const { dependencia } = await account.populate({
       path: 'dependencia',
       select: 'institucion',
@@ -172,7 +176,7 @@ export class InternalService implements ValidProcedureService {
     });
     return `${code}-${String(correlative + 1).padStart(5, '0')}`;
   }
-  async checkIfProcedureIsEditable(id_procedure: string) {
+  private async isEditable(id_procedure: string): Promise<Procedure> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
     if (procedureDB.state !== stateProcedure.INSCRITO)

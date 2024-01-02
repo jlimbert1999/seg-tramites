@@ -59,12 +59,12 @@ export class CommunicationController {
   }
 
   @Get('inbox')
-  async getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: GetInboxParamsDto) {
-    return await this.communicationService.getInboxOfAccount(id_account, paginationParams);
+  getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: GetInboxParamsDto) {
+    return this.communicationService.getInbox(id_account, paginationParams);
   }
   @Get('outbox')
-  async getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
-    return await this.communicationService.getOutboxOfAccount(id_account, paginationParams);
+  getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
+    return this.communicationService.getOutbox(id_account, paginationParams);
   }
 
   @Put('inbox/accept/:id_mail')

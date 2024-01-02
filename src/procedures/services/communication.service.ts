@@ -2,14 +2,17 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 
-import { Outbox, Inbox, Procedure, Communication } from '../schemas';
-import { stateProcedure, statusMail, workflow } from '../interfaces';
-import { createFullName } from 'src/administration/helpers/fullname';
-import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
-import { Account } from 'src/auth/schemas/account.schema';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Officer } from 'src/administration/schemas';
+import { Account } from 'src/auth/schemas/account.schema';
+import { Outbox, Inbox, Procedure, Communication } from '../schemas';
+
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
+
+import { createFullName } from 'src/administration/helpers/fullname';
 import { HumanizeTime } from 'src/shared/helpers';
+
+import { stateProcedure, statusMail, workflow } from '../interfaces';
 
 @Injectable()
 export class CommunicationService {
@@ -124,7 +127,7 @@ export class CommunicationService {
     // }
     // console.log('end');
   }
-  async getInboxOfAccount(id_account: string, { limit, offset, status }: GetInboxParamsDto) {
+  async getInbox(id_account: string, { limit, offset, status }: GetInboxParamsDto) {
     const query: mongoose.FilterQuery<Communication> = {
       'receiver.cuenta': id_account,
     };
@@ -135,48 +138,34 @@ export class CommunicationService {
     ]);
     return { mails, length };
   }
-  async getOutboxOfAccount(id_account: string, { limit, offset }: PaginationParamsDto) {
-    const dataPaginated = await this.communicationModel.aggregate([
-      {
-        $match: {
-          'emitter.cuenta': id_account,
+  async getOutbox(id_account: string, { limit, offset }: PaginationParamsDto) {
+    const dataPaginated = await this.communicationModel
+      .aggregate()
+      .match({ 'emitter.cuenta': id_account })
+      .group({
+        _id: {
+          account: '$emitter.cuenta',
+          procedure: '$procedure',
+          outboundDate: '$outboundDate',
         },
-      },
-      {
-        $group: {
-          _id: {
-            account: '$emitter.cuenta',
-            procedure: '$procedure',
-            outboundDate: '$outboundDate',
+        sendings: { $push: '$$ROOT' },
+      })
+      .lookup({
+        from: 'procedures',
+        localField: '_id.procedure',
+        foreignField: '_id',
+        as: '_id.procedure',
+      })
+      .unwind('_id.procedure')
+      .sort({ '_id.outboundDate': -1 })
+      .facet({
+        paginatedResults: [{ $skip: offset }, { $limit: limit }],
+        totalCount: [
+          {
+            $count: 'count',
           },
-          sendings: { $push: '$$ROOT' },
-        },
-      },
-      {
-        $lookup: {
-          from: 'procedures',
-          localField: '_id.procedure',
-          foreignField: '_id',
-          as: '_id.procedure',
-        },
-      },
-      {
-        $unwind: {
-          path: '$_id.procedure',
-        },
-      },
-      { $sort: { '_id.outboundDate': -1 } },
-      {
-        $facet: {
-          paginatedResults: [{ $skip: offset }, { $limit: limit }],
-          totalCount: [
-            {
-              $count: 'count',
-            },
-          ],
-        },
-      },
-    ]);
+        ],
+      });
     const mails = dataPaginated[0].paginatedResults;
     const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
     return { mails, length };
@@ -274,7 +263,8 @@ export class CommunicationService {
     const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
     return { mails, length };
   }
-  async create(communication: CreateCommunicationDto, account: Account) {
+
+  async create(communication: CreateCommunicationDto, account: Account): Promise<Communication[]> {
     const { id_mail, id_procedure, receivers } = communication;
     await this.verifyDuplicateSend(id_procedure, receivers);
     const session = await this.connection.startSession();
@@ -285,7 +275,7 @@ export class CommunicationService {
       } else {
         await this.procedureModel.updateOne({ _id: id_procedure }, { send: true }, { session });
       }
-      const mails = await this.createMailData(account, communication);
+      const mails = await this.createCommunicationModel(account, communication);
       const createdMails = await this.communicationModel.insertMany(mails, {
         session,
       });
@@ -299,6 +289,53 @@ export class CommunicationService {
       session.endSession();
     }
   }
+
+  async verifyDuplicateSend(id_procedure: string, receivers: ReceiverDto[]): Promise<void> {
+    // ! change query for receive procedures distinc emitter
+    const existingMails = await this.communicationModel.find({
+      procedure: id_procedure,
+      $or: [{ status: statusMail.Pending }, { status: statusMail.Received }],
+      'receiver.cuenta': { $in: receivers.map((receiver) => receiver.cuenta) },
+    });
+    if (existingMails.length > 0) {
+      const names = existingMails.map((mail) => mail.receiver.fullname);
+      throw new BadRequestException(
+        `El tramite ya se encuentra en la bandeja de los funcionarios: ${names.join(' - ')}`,
+      );
+    }
+  }
+
+  async createCommunicationModel(
+    emitterAccount: Account,
+    communication: CreateCommunicationDto,
+  ): Promise<Communication[]> {
+    const { receivers, id_procedure, ...values } = communication;
+    const { _id, funcionario } = await emitterAccount.populate({
+      path: 'funcionario',
+      select: 'nombre paterno materno cargo',
+      populate: {
+        path: 'cargo',
+        select: 'nombre',
+      },
+    });
+    const emitter = {
+      cuenta: _id,
+      fullname: createFullName(funcionario),
+      ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
+    };
+    const outboundDate = new Date();
+    const mails = receivers.map((receiver) => {
+      return new this.communicationModel({
+        procedure: id_procedure,
+        outboundDate,
+        emitter,
+        receiver,
+        ...values,
+      });
+    });
+    return mails;
+  }
+
   async acceptMail(id_mail: string) {
     const mailDB = await this.communicationModel.findById(id_mail).populate('procedure', 'state');
     if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
@@ -330,6 +367,7 @@ export class CommunicationService {
       await session.endSession();
     }
   }
+
   async rejectMail(id_mail: string, rejectionReason: string) {
     const mailDB = await this.communicationModel.findById(id_mail);
     if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
@@ -357,48 +395,7 @@ export class CommunicationService {
       await session.endSession();
     }
   }
-  async createMailData(emitterAccount: Account, communication: CreateCommunicationDto): Promise<Communication[]> {
-    const { receivers, id_procedure, ...values } = communication;
-    const { _id, funcionario } = await emitterAccount.populate({
-      path: 'funcionario',
-      select: 'nombre paterno materno cargo',
-      populate: {
-        path: 'cargo',
-        select: 'nombre',
-      },
-    });
-    const emitter = {
-      cuenta: _id,
-      fullname: createFullName(funcionario),
-      ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
-    };
-    const outboundDate = new Date();
-    const mails = receivers.map((receiver) => {
-      return new this.communicationModel({
-        procedure: id_procedure,
-        outboundDate,
-        emitter,
-        receiver,
-        ...values,
-      });
-    });
-    return mails;
-  }
-  async verifyDuplicateSend(id_procedure: string, receivers: ReceiverDto[]) {
-    // ! change query for receive procedures distinc emitter
-    for (const receiver of receivers) {
-      const mail = await this.communicationModel.findOne({
-        'receiver.cuenta': receiver.cuenta,
-        procedure: id_procedure,
-        $or: [{ status: statusMail.Pending }, { status: statusMail.Received }],
-      });
-      if (mail) {
-        throw new BadRequestException(
-          `El funcionario ${receiver.fullname} ya tiene el tramite en su bandeja de entrada`,
-        );
-      }
-    }
-  }
+
   async cancelMails(ids_mails: string[], id_procedure: string, id_currentEmitter: string) {
     const canceledMails = await this.checkIfMailsHaveBeenReceived(ids_mails);
     const session = await this.connection.startSession();
