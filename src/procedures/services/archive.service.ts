@@ -35,7 +35,6 @@ export class ArchiveService {
     // }
     // console.log('ok');
     // return { message: 'ok' };
-
     // SECOND STEP
     // const oldArchives = await this.oldArchiveModel.find({ location: null });
     // for (const archive of oldArchives) {
@@ -57,25 +56,9 @@ export class ArchiveService {
     // }
     // return { message: 'ok' };
   }
-  async createEvents() {
-    const eventos = await this.eventoModel.find({});
-    for (const evento of eventos) {
-      const { officer } = await evento.populate({ path: 'officer' });
-      const fullname = createFullName(officer);
-      const procedureDB = await this.procedureModel.findOne({ tramite: evento.procedure });
-      const newEvent = new this.procedureEventModel({
-        procedure: procedureDB._id,
-        fullNameOfficer: fullname,
-        description: evento.description,
-        date: evento.date,
-      });
-      await newEvent.save();
-    }
-    return { message: 'ok' };
-  }
 
-  async archiveProcedure(eventProcedureDto: EventProcedureDto, account: Account) {
-    const { procedure } = eventProcedureDto;
+  async archiveProcedure(eventDto: EventProcedureDto, account: Account) {
+    const { procedure } = eventDto;
     await this.checkIfProcedureCanBeCompleted(procedure);
     const session = await this.connection.startSession();
     try {
@@ -88,7 +71,7 @@ export class ArchiveService {
         },
         { session },
       );
-      await this.createProcedureEvent(eventProcedureDto, account, session);
+      await this.createProcedureEvent(eventDto, account, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado' };
     } catch (error) {
@@ -100,6 +83,7 @@ export class ArchiveService {
       session.endSession();
     }
   }
+
   async archiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
     const { status, procedure } = await this.communicationModel.findById(id_mail);
     if (status !== statusMail.Received) throw new BadRequestException('El envio no puede archivarse.');
@@ -114,7 +98,7 @@ export class ArchiveService {
         { session },
       );
       await this.createProcedureEvent(eventDto, account, session);
-      await this.checkIfProcedureIsCompleted(procedure._id, eventDto.stateProcedure, session);
+      await this.concludeProcedureIfAppropriate(procedure._id, eventDto.stateProcedure, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado.' };
     } catch (error) {
@@ -126,6 +110,7 @@ export class ArchiveService {
       session.endSession();
     }
   }
+
   async unarchiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
     const mailDB = await this.communicationModel.findById(id_mail);
     if (mailDB.status !== statusMail.Archived) throw new BadRequestException('El tramite ya fue desarchivado');
@@ -154,13 +139,13 @@ export class ArchiveService {
       session.endSession();
     }
   }
+
   async findAll({ limit, offset }: PaginationParamsDto, account: Account) {
     const officersInDependency = await this.accountModel
       .find({
         dependencia: account.dependencia._id,
       })
       .select('_id');
-
     const [archives, length] = await Promise.all([
       this.communicationModel
         .find({
@@ -170,7 +155,6 @@ export class ArchiveService {
         .limit(limit)
         .skip(offset)
         .sort({ _id: -1 })
-        .select('procedure receiver')
         .populate('procedure'),
       this.communicationModel.count({
         status: statusMail.Archived,
@@ -179,6 +163,7 @@ export class ArchiveService {
     ]);
     return { archives, length };
   }
+
   async search(text: string, { limit, offset }: PaginationParamsDto, account: Account) {
     const officersInDependency = await this.accountModel
       .find({
@@ -225,6 +210,7 @@ export class ArchiveService {
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { archives, length };
   }
+
   async createProcedureEvent(
     { description, procedure }: EventProcedureDto,
     account: Account,
@@ -238,6 +224,7 @@ export class ArchiveService {
     });
     await createdEvent.save({ session });
   }
+
   async checkIfProcedureCanBeCompleted(id_procedure: string) {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (procedureDB.state === stateProcedure.CONCLUIDO)
@@ -247,7 +234,8 @@ export class ArchiveService {
     });
     if (isProcessStarted) throw new BadRequestException('Solo puede concluir tramites que no hayan sido remitidos');
   }
-  async checkIfProcedureIsCompleted(
+
+  async concludeProcedureIfAppropriate(
     id_procedure: string,
     stateCompleted: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
     session: mongoose.mongo.ClientSession,
@@ -271,6 +259,7 @@ export class ArchiveService {
       );
     }
   }
+
   async insertPartipantInWokflow(
     currentMail: Communication,
     participant: Account,
@@ -301,6 +290,23 @@ export class ArchiveService {
     const createdMail = new this.communicationModel(newMail);
     await createdMail.save({ session });
   }
+  async createEvents() {
+    const eventos = await this.eventoModel.find({});
+    for (const evento of eventos) {
+      const { officer } = await evento.populate({ path: 'officer' });
+      const fullname = createFullName(officer);
+      const procedureDB = await this.procedureModel.findOne({ tramite: evento.procedure });
+      const newEvent = new this.procedureEventModel({
+        procedure: procedureDB._id,
+        fullNameOfficer: fullname,
+        description: evento.description,
+        date: evento.date,
+      });
+      await newEvent.save();
+    }
+    return { message: 'ok' };
+  }
+
   async getProcedureEvents(id_procedure: string) {
     return await this.procedureEventModel.find({ procedure: id_procedure }).sort({ date: -1 });
   }

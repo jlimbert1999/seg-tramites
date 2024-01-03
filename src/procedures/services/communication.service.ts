@@ -127,6 +127,7 @@ export class CommunicationService {
     // }
     // console.log('end');
   }
+
   async getInbox(id_account: string, { limit, offset, status }: GetInboxParamsDto) {
     const query: mongoose.FilterQuery<Communication> = {
       'receiver.cuenta': id_account,
@@ -138,38 +139,7 @@ export class CommunicationService {
     ]);
     return { mails, length };
   }
-  async getOutbox(id_account: string, { limit, offset }: PaginationParamsDto) {
-    const dataPaginated = await this.communicationModel
-      .aggregate()
-      .match({ 'emitter.cuenta': id_account })
-      .group({
-        _id: {
-          account: '$emitter.cuenta',
-          procedure: '$procedure',
-          outboundDate: '$outboundDate',
-        },
-        sendings: { $push: '$$ROOT' },
-      })
-      .lookup({
-        from: 'procedures',
-        localField: '_id.procedure',
-        foreignField: '_id',
-        as: '_id.procedure',
-      })
-      .unwind('_id.procedure')
-      .sort({ '_id.outboundDate': -1 })
-      .facet({
-        paginatedResults: [{ $skip: offset }, { $limit: limit }],
-        totalCount: [
-          {
-            $count: 'count',
-          },
-        ],
-      });
-    const mails = dataPaginated[0].paginatedResults;
-    const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
-    return { mails, length };
-  }
+
   async searchInbox(id_account: string, text: string, { limit, offset, status }: GetInboxParamsDto) {
     const regex = new RegExp(text, 'i');
     const query: mongoose.FilterQuery<Communication> = {
@@ -211,54 +181,71 @@ export class CommunicationService {
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { mails, length };
   }
-  async searchOutbox(id_account: string, text: string, { limit, offset }: PaginationParamsDto) {
-    offset = offset * limit;
-    const regex = new RegExp(text);
-    const dataPaginated = await this.communicationModel.aggregate([
-      {
-        $match: {
-          'emitter.cuenta': id_account,
+
+  async getOutbox(id_account: string, { limit, offset }: PaginationParamsDto) {
+    const dataPaginated = await this.communicationModel
+      .aggregate()
+      .match({ 'emitter.cuenta': id_account })
+      .group({
+        _id: {
+          account: '$emitter.cuenta',
+          procedure: '$procedure',
+          outboundDate: '$outboundDate',
         },
-      },
-      {
-        $group: {
-          _id: {
-            account: '$emitter.cuenta',
-            procedure: '$procedure',
-            outboundDate: '$outboundDate',
+        sendings: { $push: '$$ROOT' },
+      })
+      .lookup({
+        from: 'procedures',
+        localField: '_id.procedure',
+        foreignField: '_id',
+        as: '_id.procedure',
+      })
+      .unwind('_id.procedure')
+      .sort({ '_id.outboundDate': -1 })
+      .facet({
+        paginatedResults: [{ $skip: offset }, { $limit: limit }],
+        totalCount: [
+          {
+            $count: 'count',
           },
-          sendings: { $push: '$$ROOT' },
+        ],
+      });
+    const mails = dataPaginated[0].paginatedResults;
+    const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
+    return { mails, length };
+  }
+
+  async searchOutbox(id_account: string, text: string, { limit, offset }: PaginationParamsDto) {
+    const regex = new RegExp(text, 'i');
+    const dataPaginated = await this.communicationModel
+      .aggregate()
+      .match({
+        'emitter.cuenta': id_account,
+      })
+      .group({
+        _id: {
+          account: '$emitter.cuenta',
+          procedure: '$procedure',
+          outboundDate: '$outboundDate',
         },
-      },
-      {
-        $lookup: {
-          from: 'procedures',
-          localField: '_id.procedure',
-          foreignField: '_id',
-          as: '_id.procedure',
-        },
-      },
-      {
-        $unwind: {
-          path: '$_id.procedure',
-        },
-      },
-      {
-        $match: {
-          $or: [{ '_id.procedure.code': regex }, { '_id.procedure.reference': regex }],
-        },
-      },
-      {
-        $facet: {
-          paginatedResults: [{ $skip: offset }, { $limit: limit }],
-          totalCount: [
-            {
-              $count: 'count',
-            },
-          ],
-        },
-      },
-    ]);
+        sendings: { $push: '$$ROOT' },
+      })
+      .lookup({
+        from: 'procedures',
+        localField: '_id.procedure',
+        foreignField: '_id',
+        as: '_id.procedure',
+      })
+      .unwind('_id.procedure')
+      .match({ $or: [{ '_id.procedure.code': regex }, { '_id.procedure.reference': regex }] })
+      .facet({
+        paginatedResults: [{ $skip: offset }, { $limit: limit }],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      });
     const mails = dataPaginated[0].paginatedResults;
     const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
     return { mails, length };
@@ -396,19 +383,19 @@ export class CommunicationService {
     }
   }
 
-  async cancelMails(ids_mails: string[], id_procedure: string, id_currentEmitter: string) {
+  async cancelMails(ids_mails: string[], id_procedure: string, id_emitter: string) {
     const canceledMails = await this.checkIfMailsHaveBeenReceived(ids_mails);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       await this.communicationModel.deleteMany({ _id: { $in: ids_mails } }, { session });
-      const recoveredMail = await this.recoverLastMailSend(id_procedure, id_currentEmitter, session);
+      const recoveredMail = await this.recoverLastMailSend(id_procedure, id_emitter, session);
       await session.commitTransaction();
       return {
         message: `El tramite ahora se encuentra en su ${
           recoveredMail ? 'bandeja de entrada' : 'administracion de tramites'
         } para su reenvio.`,
-        canceledMails,
+        mails: canceledMails,
       };
     } catch (error) {
       await session.abortTransaction();
@@ -417,37 +404,39 @@ export class CommunicationService {
       await session.endSession();
     }
   }
-  async recoverLastMailSend(id_procedure: string, id_currentEmitter: string, session: mongoose.mongo.ClientSession) {
-    const lastMailSend = await this.communicationModel
-      .findOneAndUpdate(
-        {
-          procedure: id_procedure,
-          'receiver.cuenta': id_currentEmitter,
-          status: statusMail.Completed,
-        },
-        { status: statusMail.Received },
-        { session, sort: { _id: -1 }, new: true },
-      )
-      .populate('procedure');
+
+  private async checkIfMailsHaveBeenReceived(ids_mails: string[]): Promise<Communication[]> {
+    const mails = await this.communicationModel.find({ _id: { $in: ids_mails } });
+    if (mails.length === 0) throw new BadRequestException('Los envios a cancelar no existen.');
+    const receivedMail = mails.find((mail) => mail.status !== statusMail.Pending);
+    if (receivedMail) {
+      throw new BadRequestException(
+        `El tramite ya ha sido ${
+          receivedMail.status === statusMail.Rejected ? 'rechazado' : 'recibido'
+        } por el funcionario ${receivedMail.receiver.fullname}`,
+      );
+    }
+    return mails;
+  }
+
+  private async recoverLastMailSend(
+    id_procedure: string,
+    id_currentEmitter: string,
+    session: mongoose.mongo.ClientSession,
+  ): Promise<Communication | undefined> {
+    const lastMailSend = await this.communicationModel.findOneAndUpdate(
+      {
+        procedure: id_procedure,
+        'receiver.cuenta': id_currentEmitter,
+        $or: [{ status: statusMail.Completed }, { status: statusMail.Received }],
+      },
+      { status: statusMail.Received },
+      { session, sort: { _id: -1 }, new: true },
+    );
     if (!lastMailSend) {
       await this.procedureModel.updateOne({ _id: id_procedure }, { send: false }, { session });
     }
     return lastMailSend;
-  }
-  async checkIfMailsHaveBeenReceived(ids_mails: string[]) {
-    const canceledMails: Communication[] = [];
-    for (const id_mail of ids_mails) {
-      const mail = await this.communicationModel.findById(id_mail);
-      if (mail.status !== statusMail.Pending) {
-        throw new BadRequestException(
-          `El tramite ya ha sido ${
-            mail.status === statusMail.Rejected ? 'rechazado' : ' recibido'
-          } por el funcionario ${mail.receiver.fullname}`,
-        );
-      }
-      canceledMails.push(mail);
-    }
-    return canceledMails;
   }
 
   async getWorkflowOfProcedure(id_procedure: string) {

@@ -31,6 +31,7 @@ export class CommunicationController {
     await this.communicationService.repairOldSchemas();
     return { ok: true };
   }
+
   @Get('generate')
   async generateCollection() {
     await this.communicationService.generateCollection();
@@ -46,6 +47,7 @@ export class CommunicationController {
   async getDependencies(@Param('id_institution') id_institution: string) {
     return await this.dependencieService.getActiveDependenciesOfInstitution(id_institution);
   }
+
   @Get('accounts/:id_dependency')
   async getAccountsForSend(@GetUserRequest('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
     return await this.accountService.getAccountsForSend(id_dependency, id_account);
@@ -62,16 +64,18 @@ export class CommunicationController {
   getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: GetInboxParamsDto) {
     return this.communicationService.getInbox(id_account, paginationParams);
   }
+
   @Get('outbox')
   getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
     return this.communicationService.getOutbox(id_account, paginationParams);
   }
 
-  @Put('inbox/accept/:id_mail')
+  @Put('accept/:id_mail')
   acceptMail(@Param('id_mail') id_mail: string) {
     return this.communicationService.acceptMail(id_mail);
   }
-  @Put('inbox/reject/:id_mail')
+
+  @Put('reject/:id_mail')
   rejectMail(@Param('id_mail') id_mail: string, @Body() body: RejectionDetail) {
     return this.communicationService.rejectMail(id_mail, body.rejectionReason);
   }
@@ -79,15 +83,11 @@ export class CommunicationController {
   @Delete('outbox/:id_procedure')
   async cancelMails(
     @GetUserRequest('_id') id_account: string,
-    @Body() body: CancelMailsDto,
     @Param('id_procedure') id_procedure: string,
+    @Body() body: CancelMailsDto,
   ) {
-    const { message, canceledMails } = await this.communicationService.cancelMails(
-      body.ids_mails,
-      id_procedure,
-      id_account,
-    );
-    this.groupwareGateway.cancelMails(canceledMails);
+    const { message, mails } = await this.communicationService.cancelMails(body.ids_mails, id_procedure, id_account);
+    this.groupwareGateway.cancelMails(mails);
     return { message };
   }
 
@@ -95,6 +95,7 @@ export class CommunicationController {
   async getMailDetails(@Param('id_mail') id_mail: string) {
     return await this.communicationService.getMailDetails(id_mail);
   }
+
   @Get('inbox/search/:text')
   searchInbox(
     @GetUserRequest('_id') id_account: string,
@@ -103,6 +104,7 @@ export class CommunicationController {
   ) {
     return this.communicationService.searchInbox(id_account, text, paginationParamsDto);
   }
+
   @Get('outbox/search/:text')
   searchOutbox(
     @GetUserRequest('_id') id_account: string,

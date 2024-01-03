@@ -100,6 +100,7 @@ export class ReportsService {
       result['_id'] = accounts.find((account) => String(account._id) == result._id);
       return result;
     });
+    console.log(dependents);
     return dependents;
   }
   async searchProcedureByUnit(
@@ -188,7 +189,6 @@ export class ReportsService {
       participant === 'receiver'
         ? { 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } }
         : { 'emitter.cuenta': { $in: accounts.map((acc) => acc._id) } };
-    console.log(participant);
     const data = await this.communicationModel
       .aggregate()
       .match(query)

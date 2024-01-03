@@ -5,6 +5,7 @@ export class RejectionDetail {
   @IsNotEmpty()
   rejectionReason: string;
 }
+
 export class CancelMailsDto {
   @IsMongoId({ each: true })
   @ArrayMinSize(1)

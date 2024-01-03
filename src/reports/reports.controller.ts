@@ -14,7 +14,7 @@ import { InstitutionService, TypeProcedureService } from 'src/administration/ser
 import { Account } from 'src/auth/schemas/account.schema';
 
 @Controller('reports')
-// @Auth()
+@Auth()
 export class ReportsController {
   constructor(
     private reportsService: ReportsService,
