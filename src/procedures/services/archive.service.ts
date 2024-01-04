@@ -71,7 +71,7 @@ export class ArchiveService {
         },
         { session },
       );
-      await this.createProcedureEvent(eventDto, account, session);
+      await this.createArchiveEvent(eventDto, account, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado' };
     } catch (error) {
@@ -86,19 +86,13 @@ export class ArchiveService {
 
   async archiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
     const { status, procedure } = await this.communicationModel.findById(id_mail);
-    if (status !== statusMail.Received) throw new BadRequestException('El envio no puede archivarse.');
+    if (status !== statusMail.Received) throw new BadRequestException(`El tramite ya ha sido desarchivado.`);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.communicationModel.updateOne(
-        { _id: id_mail },
-        {
-          status: statusMail.Archived,
-        },
-        { session },
-      );
-      await this.createProcedureEvent(eventDto, account, session);
+      await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Archived }, { session });
       await this.concludeProcedureIfAppropriate(procedure._id, eventDto.stateProcedure, session);
+      await this.createArchiveEvent(eventDto, account, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado.' };
     } catch (error) {
@@ -111,24 +105,25 @@ export class ArchiveService {
     }
   }
 
-  async unarchiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
+  async unarchiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account): Promise<{ message: string }> {
     const mailDB = await this.communicationModel.findById(id_mail);
     if (mailDB.status !== statusMail.Archived) throw new BadRequestException('El tramite ya fue desarchivado');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      if (String(mailDB.receiver.cuenta._id) === String(account._id)) {
-        await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Received });
-      } else {
-        await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Completed });
+      let newStatus = statusMail.Received;
+      if (String(mailDB.receiver.cuenta._id) !== String(account._id)) {
         await this.insertPartipantInWokflow(mailDB, account, session);
+        newStatus = statusMail.Completed;
       }
+      await this.communicationModel.updateOne({ _id: id_mail }, { status: newStatus });
       await this.procedureModel.updateOne(
         { _id: mailDB.procedure._id },
         { state: stateProcedure.EN_REVISION, $unset: { endDate: 1 } },
       );
-      await this.createProcedureEvent(eventDto, account, session);
+      await this.createArchiveEvent(eventDto, account, session);
       await session.commitTransaction();
+      console.log(newStatus === statusMail.Received ? 'desarchivo el encargado' : 'desarchivo alguien de su unidad');
       return { message: 'Tramite desarchivado.' };
     } catch (error) {
       await session.abortTransaction();
@@ -150,11 +145,11 @@ export class ArchiveService {
       this.communicationModel
         .find({
           status: statusMail.Archived,
-          'receiver.cuenta': { $in: officersInDependency },
+          'receiver.cuenta': { $in: officersInDependency.map((officer) => officer._id) },
         })
         .limit(limit)
         .skip(offset)
-        .sort({ _id: -1 })
+        .sort({ inboundDate: -1 })
         .populate('procedure'),
       this.communicationModel.count({
         status: statusMail.Archived,
@@ -211,7 +206,7 @@ export class ArchiveService {
     return { archives, length };
   }
 
-  async createProcedureEvent(
+  private async createArchiveEvent(
     { description, procedure }: EventProcedureDto,
     account: Account,
     session: mongoose.mongo.ClientSession,
@@ -225,10 +220,11 @@ export class ArchiveService {
     await createdEvent.save({ session });
   }
 
-  async checkIfProcedureCanBeCompleted(id_procedure: string) {
+  async checkIfProcedureCanBeCompleted(id_procedure: string): Promise<void> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
-    if (procedureDB.state === stateProcedure.CONCLUIDO)
+    if (procedureDB.state === stateProcedure.CONCLUIDO) {
       throw new BadRequestException(`El tramite ${procedureDB.code} ya fue concluido.`);
+    }
     const isProcessStarted = await this.communicationModel.findOne({
       procedure: id_procedure,
     });
@@ -239,7 +235,7 @@ export class ArchiveService {
     id_procedure: string,
     stateCompleted: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
     session: mongoose.mongo.ClientSession,
-  ) {
+  ): Promise<void> {
     const isProcessActive = await this.communicationModel.findOne(
       {
         procedure: id_procedure,
@@ -248,23 +244,22 @@ export class ArchiveService {
       undefined,
       { session },
     );
-    if (!isProcessActive) {
-      await this.procedureModel.updateOne(
-        { _id: id_procedure },
-        {
-          state: stateCompleted,
-          endDate: new Date(),
-        },
-        { session },
-      );
-    }
+    if (isProcessActive) return;
+    await this.procedureModel.updateOne(
+      { _id: id_procedure },
+      {
+        state: stateCompleted,
+        endDate: new Date(),
+      },
+      { session },
+    );
   }
 
   async insertPartipantInWokflow(
     currentMail: Communication,
     participant: Account,
     session: mongoose.mongo.ClientSession,
-  ) {
+  ): Promise<void> {
     const inboundDate = new Date();
     const outboundDate = new Date(inboundDate.getTime() + 1000);
     const { receiver, attachmentQuantity, internalNumber } = currentMail;

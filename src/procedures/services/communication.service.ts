@@ -374,7 +374,7 @@ export class CommunicationService {
       );
       await this.recoverLastMailSend(procedure._id, emitter.cuenta._id, session);
       await session.commitTransaction();
-      return { message: 'Tramite rechazado correctamente.' };
+      return { message: 'Tramite rechazado.' };
     } catch (error) {
       await session.abortTransaction();
       throw new InternalServerErrorException('No se pudo rechazar el tramite');
@@ -407,7 +407,7 @@ export class CommunicationService {
 
   private async checkIfMailsHaveBeenReceived(ids_mails: string[]): Promise<Communication[]> {
     const mails = await this.communicationModel.find({ _id: { $in: ids_mails } });
-    if (mails.length === 0) throw new BadRequestException('Los envios a cancelar no existen.');
+    if (mails.length === 0) throw new BadRequestException('Los envios ya han sido cancelados');
     const receivedMail = mails.find((mail) => mail.status !== statusMail.Pending);
     if (receivedMail) {
       throw new BadRequestException(

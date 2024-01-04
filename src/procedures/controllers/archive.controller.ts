@@ -34,7 +34,7 @@ export class ArchiveController {
     return this.archiveService.archiveMail(id_mail, eventDto, account);
   }
 
-  @Post('mail/restart/:id_mail')
+  @Post('mail/:id_mail')
   async unarchiveMail(
     @Param('id_mail') id_mail: string,
     @Body() archiveDto: EventProcedureDto,
