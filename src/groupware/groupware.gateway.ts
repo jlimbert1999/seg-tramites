@@ -39,6 +39,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
       }
     });
   }
+  
   cancelMails(data: Communication[]) {
     data.forEach(({ _id, receiver }) => {
       const user = this.groupwareService.getUser(String(receiver.cuenta._id));

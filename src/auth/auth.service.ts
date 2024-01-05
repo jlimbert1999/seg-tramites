@@ -8,8 +8,8 @@ import { Model } from 'mongoose';
 import { AuthDto } from './dto/auth.dto';
 import { UpdateMyAccountDto } from './dto/my-account.dto';
 import { SystemMenu } from './constants/system-menu';
-import { Account } from './schemas/account.schema';
 import { EnvConfig, JwtPayload } from './interfaces';
+import { Account } from './schemas/account.schema';
 
 @Injectable()
 export class AuthService {

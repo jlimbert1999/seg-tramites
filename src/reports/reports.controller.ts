@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import {
   SearchProcedureByApplicantDto,
@@ -39,16 +39,13 @@ export class ReportsController {
   searchProcedyreByCode(@Query() searchDto: SearchProcedureByCodeDto) {
     return this.reportsService.searchProcedureByCode(searchDto);
   }
-  @Post('procedure/:applicant')
-  async searchProcedureByApplicant(
-    @Param('applicant') applicant: 'solicitante' | 'representante',
+  @Post('applicant/:type')
+  searchProcedureByApplicant(
+    @Param('type') type: 'solicitante' | 'representante',
     @Body() searchDto: SearchProcedureByApplicantDto,
     @Query() paginationParams: PaginationParamsDto,
   ) {
-    if (!['solicitante', 'representante'].includes(applicant)) {
-      throw new BadRequestException('Tipo de solicitante no valido');
-    }
-    return await this.reportsService.searchProcedureByApplicant(applicant, searchDto, paginationParams);
+    return this.reportsService.searchProcedureByApplicant(type, searchDto, paginationParams);
   }
   @Post('procedure')
   searchProcedureByProperties(
@@ -92,5 +89,10 @@ export class ReportsController {
   @Get('ranking/accounts')
   getRankingAccounts() {
     return this.reportsService.getTotalInboxByUser();
+  }
+
+  @Get('pendings')
+  getAccountInbox(@GetUserRequest() account: Account) {
+    return this.reportsService.getAccountInbox(account);
   }
 }

@@ -113,9 +113,19 @@ export const SystemMenu = [
   },
   {
     resource: validResources.communication,
+    text: 'Busqueda simple',
+    icon: 'manage_search',
+    routerLink: 'reportes/busqueda-simple',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
+  {
+    resource: validResources.communication,
     text: 'Busqueda rapida',
     icon: 'manage_search',
-    routerLink: 'reportes/busqueda',
+    routerLink: 'reportes/busqueda-rapida',
     group: {
       text: 'Reportes',
       icon: 'analytics',

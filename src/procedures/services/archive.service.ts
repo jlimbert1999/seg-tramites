@@ -123,7 +123,6 @@ export class ArchiveService {
       );
       await this.createArchiveEvent(eventDto, account, session);
       await session.commitTransaction();
-      console.log(newStatus === statusMail.Received ? 'desarchivo el encargado' : 'desarchivo alguien de su unidad');
       return { message: 'Tramite desarchivado.' };
     } catch (error) {
       await session.abortTransaction();
@@ -150,7 +149,8 @@ export class ArchiveService {
         .limit(limit)
         .skip(offset)
         .sort({ inboundDate: -1 })
-        .populate('procedure'),
+        .populate('procedure')
+        .lean(),
       this.communicationModel.count({
         status: statusMail.Archived,
         'receiver.cuenta': { $in: officersInDependency },

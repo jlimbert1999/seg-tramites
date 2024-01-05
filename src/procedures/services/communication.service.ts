@@ -377,7 +377,7 @@ export class CommunicationService {
       return { message: 'Tramite rechazado.' };
     } catch (error) {
       await session.abortTransaction();
-      throw new InternalServerErrorException('No se pudo rechazar el tramite');
+      throw new InternalServerErrorException('Error en rechazo del tramite');
     } finally {
       await session.endSession();
     }

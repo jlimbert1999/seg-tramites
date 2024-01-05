@@ -20,35 +20,39 @@ import { Dependency } from 'src/administration/schemas';
 @Injectable()
 export class ReportsService {
   constructor(
-    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
-    @InjectModel(ExternalDetail.name) private externalProcedureModel: Model<ExternalDetail>,
-    @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
+    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
+    @InjectModel(Communication.name) private communicationModel: Model<Communication>,
+    @InjectModel(ExternalDetail.name) private externalProcedureModel: Model<ExternalDetail>,
   ) {}
+
   async searchProcedureByCode({ code }: SearchProcedureByCodeDto) {
     const procedureDB = await this.procedureModel.findOne({ code: code.toUpperCase() }).select('_id group');
     if (!procedureDB) throw new BadRequestException(`El alterno: ${code} no existe.`);
     return procedureDB;
   }
+
   async searchProcedureByApplicant(
-    applicant: 'solicitante' | 'representante',
+    type: 'solicitante' | 'representante',
     applicantDto: SearchProcedureByApplicantDto,
     { limit, offset }: PaginationParamsDto,
   ) {
     const query = Object.entries(applicantDto).reduce((acc, [key, value]) => {
-      acc[`${applicant}.${key}`] = value;
+      acc[`${type}.${key}`] = value;
       return acc;
     }, {});
     const [details, length] = await Promise.all([
-      this.externalProcedureModel.find(query).limit(limit).skip(offset).select('_id'),
+      this.externalProcedureModel.find(query).lean().limit(limit).skip(offset).select('_id'),
       this.externalProcedureModel.count(query),
     ]);
     const procedures = await this.procedureModel
       .find({ details: { $in: details.map((detail) => detail._id) } })
-      .populate('details');
+      .populate('details')
+      .lean();
     return { procedures, length };
   }
+
   async searchProcedureByProperties(
     { limit, offset }: PaginationParamsDto,
     properties: searchProcedureByPropertiesDto,
@@ -70,6 +74,7 @@ export class ReportsService {
     ]);
     return { procedures, length };
   }
+
   async getDetailsDependentsByUnit(id_dependency: string) {
     const accounts = await this.getOfficersInDependency(id_dependency);
     const results = await this.communicationModel
@@ -100,7 +105,6 @@ export class ReportsService {
       result['_id'] = accounts.find((account) => String(account._id) == result._id);
       return result;
     });
-    console.log(dependents);
     return dependents;
   }
   async searchProcedureByUnit(
@@ -172,6 +176,7 @@ export class ReportsService {
     }
     return workdetails;
   }
+  
   async getOfficersInDependency(id_dependency: string): Promise<Account[]> {
     return await this.accountModel
       .find({ dependencia: id_dependency })
@@ -182,6 +187,7 @@ export class ReportsService {
         populate: { path: 'cargo', select: 'nombre' },
       });
   }
+
   async getTotalMailsByInstitution(id_institution: string, { group, participant }: GetTotalMailsDto) {
     const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
     const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
@@ -316,5 +322,24 @@ export class ReportsService {
       })
       .unwind({ path: '$_id.funcionario.cargo', preserveNullAndEmptyArrays: true })
       .limit(100000);
+  }
+
+  async getAccountInbox(account: Account) {
+    await account.populate([
+      {
+        path: 'funcionario',
+        select: 'nombre paterno materno',
+        populate: { path: 'cargo', select: 'nombre' },
+      },
+      {
+        path: 'dependencia',
+        select: 'nombre',
+      },
+    ]);
+    const inbox = await this.communicationModel
+      .find({ 'receiver.cuenta': account._id, status: { $in: [statusMail.Received, statusMail.Pending] } })
+      .lean()
+      .populate('procedure');
+    return { account, inbox };
   }
 }
