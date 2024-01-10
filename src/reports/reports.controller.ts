@@ -35,10 +35,16 @@ export class ReportsController {
     return this.institutionService.getActiveInstitutions();
   }
 
-  @Get('procedure/code')
-  searchProcedyreByCode(@Query() searchDto: SearchProcedureByCodeDto) {
-    return this.reportsService.searchProcedureByCode(searchDto);
+  @Get('procedure/:code')
+  searchProcedyreByCode(@Param('code') code: string) {
+    return this.reportsService.searchProcedureIdByCode(code);
   }
+
+  @Get('procedures')
+  searchProceduresByCode(@Query() searchDto: SearchProcedureByCodeDto) {
+    return this.reportsService.searchProceduresByCode(searchDto);
+  }
+
   @Post('applicant/:type')
   searchProcedureByApplicant(
     @Param('type') type: 'solicitante' | 'representante',

@@ -77,7 +77,7 @@ export class InternalService implements ValidProcedureService {
   }
   async findAll({ limit, offset }: PaginationParamsDto, id_account: string) {
     const [procedures, length] = await Promise.all([
-      await this.procedureModel
+      this.procedureModel
         .find({
           account: id_account,
           group: groupProcedure.INTERNAL,
@@ -86,8 +86,9 @@ export class InternalService implements ValidProcedureService {
         .sort({ _id: -1 })
         .skip(offset)
         .limit(limit)
-        .populate('details'),
-      await this.procedureModel.count({
+        .populate('details')
+        .lean(),
+      this.procedureModel.count({
         account: id_account,
         group: groupProcedure.INTERNAL,
         state: { $ne: 'ANULADO' },

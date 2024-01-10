@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, Mongoose } from 'mongoose';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import {
@@ -27,29 +27,46 @@ export class ReportsService {
     @InjectModel(ExternalDetail.name) private externalProcedureModel: Model<ExternalDetail>,
   ) {}
 
-  async searchProcedureByCode({ code }: SearchProcedureByCodeDto) {
-    const procedureDB = await this.procedureModel.findOne({ code: code.toUpperCase() }).select('_id group');
-    if (!procedureDB) throw new BadRequestException(`El alterno: ${code} no existe.`);
-    return procedureDB;
-  }
-
   async searchProcedureByApplicant(
     type: 'solicitante' | 'representante',
     applicantDto: SearchProcedureByApplicantDto,
     { limit, offset }: PaginationParamsDto,
   ) {
     const query = Object.entries(applicantDto).reduce((acc, [key, value]) => {
+      if (key === 'nombre') value = new RegExp(value, 'i');
       acc[`${type}.${key}`] = value;
       return acc;
     }, {});
+    if (Object.keys(query).length === 0) {
+      throw new BadRequestException('Ingrese al menos un campo para generar el reporte');
+    }
     const [details, length] = await Promise.all([
       this.externalProcedureModel.find(query).lean().limit(limit).skip(offset).select('_id'),
       this.externalProcedureModel.count(query),
     ]);
     const procedures = await this.procedureModel
-      .find({ details: { $in: details.map((detail) => detail._id) } })
+      .find({ details: { $in: details.map((detail) => detail._id) }, group: groupProcedure.EXTERNAL })
+      .lean()
       .populate('details')
       .lean();
+    return { procedures, length };
+  }
+
+  async searchProcedureIdByCode(code: string) {
+    const procedurePropsDB = await this.procedureModel.findOne({ code: code.toUpperCase().trim() }).select('_id group');
+    if (!procedurePropsDB) throw new BadRequestException(`El alterno: ${code} no existe.`);
+    return procedurePropsDB;
+  }
+
+  async searchProceduresByCode({ code, group, limit, offset }: SearchProcedureByCodeDto) {
+    const query: mongoose.FilterQuery<Procedure> = {
+      code: new RegExp(code, 'i'),
+      ...(group && { group }),
+    };
+    const [procedures, length] = await Promise.all([
+      this.procedureModel.find(query).lean().skip(offset).limit(limit),
+      this.procedureModel.count(query),
+    ]);
     return { procedures, length };
   }
 
@@ -67,9 +84,9 @@ export class ReportsService {
       ...(end && { $lte: new Date(end) }),
     };
     if (Object.keys(interval).length > 0) query.push({ startDate: interval });
-    if (query.length === 0) throw new BadRequestException('Los parametros ingresados no son validos');
+    if (query.length === 0) throw new BadRequestException('Ingrese los parametros para generar el reporte');
     const [procedures, length] = await Promise.all([
-      this.procedureModel.find({ $and: query }).limit(limit).skip(offset),
+      this.procedureModel.find({ $and: query }).lean().limit(limit).skip(offset),
       this.procedureModel.count({ $and: query }),
     ]);
     return { procedures, length };
@@ -176,7 +193,7 @@ export class ReportsService {
     }
     return workdetails;
   }
-  
+
   async getOfficersInDependency(id_dependency: string): Promise<Account[]> {
     return await this.accountModel
       .find({ dependencia: id_dependency })
