@@ -98,44 +98,31 @@ export class InternalService implements ValidProcedureService {
   }
   async search({ limit, offset }: PaginationParamsDto, id_account: string, text: string) {
     const regex = new RegExp(text, 'i');
-    offset = offset * limit;
-    const data = await this.procedureModel.aggregate([
-      {
-        $match: {
-          group: groupProcedure.INTERNAL,
-          account: new mongoose.Types.ObjectId(id_account),
-          estado: { $ne: 'ANULADO' },
-        },
-      },
-      {
-        $lookup: {
-          from: 'internaldetails',
-          localField: 'details',
-          foreignField: '_id',
-          as: 'details',
-        },
-      },
-      {
-        $unwind: {
-          path: '$details',
-        },
-      },
-      {
-        $match: {
-          $or: [{ code: regex }, { reference: regex }, { cite: regex }, { 'details.destinatario.nombre': regex }],
-        },
-      },
-      {
-        $facet: {
-          paginatedResults: [{ $skip: offset }, { $limit: limit }],
-          totalCount: [
-            {
-              $count: 'count',
-            },
-          ],
-        },
-      },
-    ]);
+    const data = await this.procedureModel
+      .aggregate()
+      .match({
+        group: groupProcedure.INTERNAL,
+        account: new mongoose.Types.ObjectId(id_account),
+        state: { $ne: 'ANULADO' },
+      })
+      .lookup({
+        from: 'internaldetails',
+        localField: 'details',
+        foreignField: '_id',
+        as: 'details',
+      })
+      .unwind('details')
+      .match({
+        $or: [{ code: regex }, { reference: regex }, { cite: regex }, { 'details.destinatario.nombre': regex }],
+      })
+      .facet({
+        paginatedResults: [{ $skip: offset }, { $limit: limit }],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      });
     const procedures = data[0].paginatedResults;
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { procedures, length };
