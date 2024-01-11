@@ -143,16 +143,6 @@ export const SystemMenu = [
   },
   {
     resource: validResources.communication,
-    text: 'Dependientes',
-    icon: 'manage_search',
-    routerLink: 'reportes/dependientes',
-    group: {
-      text: 'Reportes',
-      icon: 'analytics',
-    },
-  },
-  {
-    resource: validResources.communication,
     text: 'Unidad',
     icon: 'manage_search',
     routerLink: 'reportes/unidad',
@@ -161,6 +151,17 @@ export const SystemMenu = [
       icon: 'analytics',
     },
   },
+  {
+    resource: validResources.communication,
+    text: 'Dependientes',
+    icon: 'manage_search',
+    routerLink: 'reportes/dependientes',
+    group: {
+      text: 'Reportes',
+      icon: 'analytics',
+    },
+  },
+  
   {
     resource: validResources.communication,
     text: 'Informe mas general',

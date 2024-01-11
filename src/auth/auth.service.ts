@@ -109,6 +109,7 @@ export class AuthService {
     };
     return this.jwtService.sign(payload);
   }
+  
   generateToken(account: Account): string {
     const { funcionario, dependencia } = account;
     const payload: JwtPayload = {
