@@ -9,7 +9,7 @@ class Permissions {
   })
   resource: string;
 
-  @Prop({ type: [String] })
+  @Prop({ type: [String], minlength: 1 })
   actions: string[];
 }
 
@@ -18,6 +18,7 @@ export class Role extends Document {
   @Prop({
     type: String,
     required: true,
+    unique: true,
     uppercase: true,
   })
   name: string;
