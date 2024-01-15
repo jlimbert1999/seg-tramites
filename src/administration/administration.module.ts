@@ -1,83 +1,21 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AuthModule } from 'src/auth/auth.module';
-
-import {
-  AccountController,
-  DependencyController,
-  InstitutionController,
-  OfficerController,
-  RoleController,
-  TypeProcedureController,
-} from './controllers/index';
-
-import {
-  Dependency,
-  DependencySchema,
-  Institution,
-  InstitutionSchema,
-  Officer,
-  OfficerSchema,
-  Role,
-  RoleSchema,
-} from './schemas/index';
-
-import {
-  AccountService,
-  OfficerService,
-  RoleService,
-  DependencieService,
-  InstitutionService,
-} from './services/index';
-import { Job, JobSchema } from './schemas/job.schema';
-import { JobService } from './services/job.service';
-import { JobController } from './controllers/job.controller';
+import { DependencyController, InstitutionController, TypeProcedureController } from './controllers/index';
+import { Dependency, DependencySchema, Institution, InstitutionSchema } from './schemas/index';
+import { DependencieService, InstitutionService } from './services/index';
 import { TypeProcedureService } from './services/type-procedure.service';
-import {
-  TypeProcedure,
-  TypeProcedureSchema,
-} from './schemas/type-procedure.schema';
-import { JobChanges, JobChangesSchema } from './schemas/jobChanges.schema';
+import { TypeProcedure, TypeProcedureSchema } from './schemas/type-procedure.schema';
 
 @Module({
-  controllers: [
-    AccountController,
-    DependencyController,
-    InstitutionController,
-    OfficerController,
-    TypeProcedureController,
-    RoleController,
-    JobController,
-  ],
-  providers: [
-    AccountService,
-    OfficerService,
-    RoleService,
-    DependencieService,
-    InstitutionService,
-    JobService,
-    TypeProcedureService,
-  ],
+  controllers: [DependencyController, InstitutionController, TypeProcedureController],
+  providers: [DependencieService, InstitutionService, TypeProcedureService],
   imports: [
     MongooseModule.forFeature([
-      { name: Job.name, schema: JobSchema },
-      { name: Role.name, schema: RoleSchema },
-      { name: Officer.name, schema: OfficerSchema },
       { name: Dependency.name, schema: DependencySchema },
       { name: Institution.name, schema: InstitutionSchema },
       { name: TypeProcedure.name, schema: TypeProcedureSchema },
-      { name: JobChanges.name, schema: JobChangesSchema },
     ]),
-    AuthModule,
   ],
-  exports: [
-    MongooseModule,
-    TypeProcedureService,
-    OfficerService,
-    TypeProcedureService,
-    InstitutionService,
-    DependencieService,
-    AccountService,
-  ],
+  exports: [MongooseModule, TypeProcedureService, InstitutionService, DependencieService],
 })
 export class AdministrationModule {}

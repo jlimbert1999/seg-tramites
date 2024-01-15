@@ -4,7 +4,7 @@ import { ExternalProcedure } from './external.schema';
 import { Officer } from 'src/administration/schemas';
 import { InternalProcedure } from './internal.schema';
 import { groupProcedure } from '../interfaces/group.interface';
-import { Account } from 'src/auth/schemas/account.schema';
+import { Account } from 'src/users/schemas';
 
 @Schema({ collection: 'observaciones' })
 export class Observaciones extends Document {

@@ -3,11 +3,11 @@ import { ArchiveService } from '../services/archive.service';
 import { Auth, GetUserRequest } from 'src/auth/decorators';
 import { EventProcedureDto } from '../dto';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { Account } from 'src/users/schemas';
 
 @Controller('archive')
-@Auth()
+// @Auth()
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}
 

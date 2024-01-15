@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from 'src/auth/auth.module';
 import { AdministrationModule } from 'src/administration/administration.module';
 
 import {
@@ -47,6 +46,7 @@ import {
 } from './schemas/index';
 import { GroupwareModule } from 'src/groupware/groupware.module';
 import { Eventos, EventosSchema } from './schemas/eventos.schema';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -58,7 +58,6 @@ import { Eventos, EventosSchema } from './schemas/eventos.schema';
       { name: ProcedureEvents.name, schema: ProcedureEventSchema },
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
-
       { name: ExternalProcedure.name, schema: ExternalProcedureSchema },
       { name: InternalProcedure.name, schema: InternalProcedureSchema },
       { name: Observaciones.name, schema: ObservacionSchema },
@@ -67,7 +66,8 @@ import { Eventos, EventosSchema } from './schemas/eventos.schema';
       { name: Archivos.name, schema: ArchivoSchema },
       { name: Eventos.name, schema: EventosSchema },
     ]),
-    AuthModule,
+    // AuthModule,
+    UsersModule,
     AdministrationModule,
     GroupwareModule,
   ],

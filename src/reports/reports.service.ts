@@ -1,21 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model, Mongoose } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import {
   GetTotalMailsDto,
   GetTotalProceduresDto,
   SearchProcedureByApplicantDto,
-  SearchProcedureByCodeDto,
-  searchProcedureByPropertiesDto,
+  SearchProcedureByPropertiesDto,
   searchProcedureByUnitDto,
 } from './dto';
-import { Account } from 'src/auth/schemas/account.schema';
 import { workDetailsAccount } from './interfaces';
-import { validResources } from 'src/auth/interfaces';
+import { validResource } from 'src/auth/interfaces';
 import { groupProcedure, statusMail } from 'src/procedures/interfaces';
 import { Dependency } from 'src/administration/schemas';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class ReportsService {
@@ -52,27 +51,9 @@ export class ReportsService {
     return { procedures, length };
   }
 
-  async searchProcedureIdByCode(code: string) {
-    const procedurePropsDB = await this.procedureModel.findOne({ code: code.toUpperCase().trim() }).select('_id group');
-    if (!procedurePropsDB) throw new BadRequestException(`El alterno: ${code} no existe.`);
-    return procedurePropsDB;
-  }
-
-  async searchProceduresByCode({ code, group, limit, offset }: SearchProcedureByCodeDto) {
-    const query: mongoose.FilterQuery<Procedure> = {
-      code: new RegExp(code, 'i'),
-      ...(group && { group }),
-    };
-    const [procedures, length] = await Promise.all([
-      this.procedureModel.find(query).lean().skip(offset).limit(limit),
-      this.procedureModel.count(query),
-    ]);
-    return { procedures, length };
-  }
-
   async searchProcedureByProperties(
     { limit, offset }: PaginationParamsDto,
-    properties: searchProcedureByPropertiesDto,
+    properties: SearchProcedureByPropertiesDto,
   ) {
     const { start, end, ...values } = properties;
     const query: mongoose.FilterQuery<Procedure>[] = Object.entries(values).map(([key, value]) => {
@@ -162,19 +143,19 @@ export class ReportsService {
       numberOfShipments: {},
     };
     const permissionNames = account.rol.permissions.map(({ resource }) => resource);
-    if (permissionNames.includes(validResources.external)) {
+    if (permissionNames.includes(validResource.external)) {
       workdetails.numberOfRecords.external = await this.procedureModel.count({
         account: id_account,
         group: groupProcedure.EXTERNAL,
       });
     }
-    if (permissionNames.includes(validResources.internal)) {
+    if (permissionNames.includes(validResource.internal)) {
       workdetails.numberOfRecords.internal = await this.procedureModel.count({
         account: id_account,
         group: groupProcedure.INTERNAL,
       });
     }
-    if (permissionNames.includes(validResources.communication)) {
+    if (permissionNames.includes(validResource.communication)) {
       const results: { _id: statusMail; count: number }[] = await this.communicationModel.aggregate([
         {
           $match: {

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Job } from '../schemas/job.schema';
-import { CreateJobDto } from '../dto/create-job.dto';
-import { UpdateJobDto } from '../dto/update-job.dto';
-import { Officer } from '../schemas';
+import { CreateJobDto } from '../dtos/create-job.dto';
+import { UpdateJobDto } from '../dtos/update-job.dto';
+import { Officer } from '../../users/schemas';
 
 export interface organizationData {
   _id: string;
@@ -49,28 +49,18 @@ export class JobService {
   }
   async searchJobForUser(text: string) {
     const regex = new RegExp(text, 'i');
-    return await this.jobModel.aggregate([
-      {
-        $lookup: {
-          from: 'funcionarios',
-          localField: '_id',
-          foreignField: 'cargo',
-          as: 'funcionario',
-        },
-      },
-      {
-        $match: {
-          funcionario: { $size: 0 },
-          nombre: regex,
-        },
-      },
-      { $limit: 5 },
-      {
-        $project: {
-          funcionario: 0,
-        },
-      },
-    ]);
+    return await this.jobModel
+      .aggregate()
+      .match({ nombre: regex })
+      .lookup({
+        from: 'funcionarios',
+        localField: '_id',
+        foreignField: 'cargo',
+        as: 'funcionario',
+      })
+      .match({ funcionario: { $size: 0 } })
+      .limit(5)
+      .project({ funcionario: 0 });
   }
   async searchDependents(text: string) {
     const regex = new RegExp(text, 'i');

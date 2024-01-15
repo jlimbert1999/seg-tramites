@@ -1,6 +1,6 @@
-import { validResources } from './valid-resources.interface';
+import { validResource } from './valid-resources.enum';
 
 export interface permission {
-  resource: validResources;
+  resource: validResource;
   actions?: string;
 }

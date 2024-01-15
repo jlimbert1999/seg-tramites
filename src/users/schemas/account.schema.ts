@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Dependency, Officer, Role } from 'src/administration/schemas';
+import { Dependency } from 'src/administration/schemas';
+import { Officer } from './officer.schema';
+import { Role } from './role.schema';
 
 @Schema({ collection: 'cuentas' })
 export class Account extends Document {

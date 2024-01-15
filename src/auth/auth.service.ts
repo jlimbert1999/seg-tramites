@@ -7,9 +7,9 @@ import { Model } from 'mongoose';
 
 import { AuthDto } from './dto/auth.dto';
 import { UpdateMyAccountDto } from './dto/my-account.dto';
-import { SystemMenu } from './constants/system-menu';
+import { SYSTEM_MENU } from '../administration/constants';
 import { EnvConfig, JwtPayload } from './interfaces';
-import { Account } from './schemas/account.schema';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class AuthService {
@@ -98,7 +98,7 @@ export class AuthService {
       .select('-password -rol');
   }
 
-  generateRootToken(account: Account): string {
+  private generateRootToken(account: Account): string {
     const payload: JwtPayload = {
       id_account: account._id,
       id_dependency: '',
@@ -109,8 +109,8 @@ export class AuthService {
     };
     return this.jwtService.sign(payload);
   }
-  
-  generateToken(account: Account): string {
+
+  private generateToken(account: Account): string {
     const { funcionario, dependencia } = account;
     const payload: JwtPayload = {
       id_account: account._id,
@@ -124,7 +124,7 @@ export class AuthService {
   }
 
   getSystemMenu(resources: string[]) {
-    const allowedResources = SystemMenu.filter((menuItem) => resources.includes(menuItem.resource));
+    const allowedResources = SYSTEM_MENU.filter((menuItem) => resources.includes(menuItem.resource));
     const groupedMenu = allowedResources.reduce((result, menuItem) => {
       if (!menuItem.group) {
         const category = menuItem.routerLink;

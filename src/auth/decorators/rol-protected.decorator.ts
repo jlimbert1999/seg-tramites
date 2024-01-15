@@ -1,7 +1,7 @@
 import { SetMetadata } from '@nestjs/common';
-import { validResources } from '../interfaces/valid-resources.interface';
-export const META_RESOURCE = 'resources';
+import { validResource } from '../interfaces/valid-resources.enum';
+export const META_RESOURCE = 'resource';
 // ! insert valid roles in metadata for access in guards with reflector
-export const RoleProtected = (resource: validResources) => {
+export const RoleProtected = (resource: validResource) => {
   return SetMetadata(META_RESOURCE, resource);
 };

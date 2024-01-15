@@ -2,14 +2,13 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
-
-import { Account } from 'src/auth/schemas/account.schema';
 import { ExternalDetail, Procedure } from '../schemas';
 
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 import { groupProcedure, stateProcedure } from '../interfaces';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class ExternalService {

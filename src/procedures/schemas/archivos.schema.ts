@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { Dependency, Officer } from 'src/administration/schemas';
 import { ExternalProcedure } from './external.schema';
 import { InternalProcedure } from './internal.schema';
-import { Account } from 'src/auth/schemas/account.schema';
+import { Account } from 'src/users/schemas';
 
 @Schema({ collection: 'archivos' })
 export class Archivos {

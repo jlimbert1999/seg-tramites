@@ -11,11 +11,13 @@ import { GroupwareModule } from './groupware/groupware.module';
 import { ProceduresModule } from './procedures/procedures.module';
 import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [EnvConfiguration],
+      isGlobal: true,
     }),
     MongooseModule.forRootAsync({
       useFactory: () => ({
@@ -23,9 +25,10 @@ import { ReportsModule } from './reports/reports.module';
       }),
     }),
     AuthModule,
+    UsersModule,
     AdministrationModule,
-    GroupwareModule,
     ProceduresModule,
+    GroupwareModule,
     ReportsModule,
   ],
   controllers: [ConfigController, AppController],

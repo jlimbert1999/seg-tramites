@@ -3,7 +3,6 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 
 import { Officer } from 'src/administration/schemas';
-import { Account } from 'src/auth/schemas/account.schema';
 import { Outbox, Inbox, Procedure, Communication } from '../schemas';
 
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
@@ -13,6 +12,7 @@ import { createFullName } from 'src/administration/helpers/fullname';
 import { HumanizeTime } from 'src/shared/helpers';
 
 import { stateProcedure, statusMail, workflow } from '../interfaces';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class CommunicationService {

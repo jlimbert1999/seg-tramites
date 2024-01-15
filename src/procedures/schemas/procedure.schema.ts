@@ -3,8 +3,8 @@ import mongoose, { Document } from 'mongoose';
 import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
 import { ExternalDetail } from './external-detail.schema';
 import { InternalDetail } from './internal-detail.schema';
-import { Account } from 'src/auth/schemas/account.schema';
 import { stateProcedure } from '../interfaces';
+import { Account } from 'src/users/schemas';
 
 @Schema()
 export class Procedure extends Document {

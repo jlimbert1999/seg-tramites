@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { Auth, GetUserRequest } from 'src/auth/decorators';
-import { validResources } from 'src/auth/interfaces/valid-resources.interface';
+import { GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { Account } from 'src/auth/schemas/account.schema';
 import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
 import { InternalService } from '../services';
-import { OfficerService, TypeProcedureService } from 'src/administration/services';
+import { TypeProcedureService } from 'src/administration/services';
+import { OfficerService } from 'src/users/services';
+import { Account } from 'src/users/schemas';
 
 @Controller('internal')
-@Auth(validResources.internal)
 export class InternalController {
   constructor(
     private readonly officerService: OfficerService,
@@ -21,7 +20,7 @@ export class InternalController {
   }
   @Get('participant/:text')
   async findParticipantForProcess(@Param('text') text: string) {
-    return await this.officerService.findOfficerForProcess(text);
+    // return await this.officerService.findOfficerForProcess(text);
   }
 
   @Get('search/:text')

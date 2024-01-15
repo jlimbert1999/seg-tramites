@@ -1,9 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { InstitutionService, DependencieService, AccountService } from 'src/administration/services';
+import { InstitutionService, DependencieService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService, ObservationService } from '../services';
-import { Auth, GetUserRequest } from 'src/auth/decorators';
-import { validResources } from 'src/auth/interfaces/valid-resources.interface';
+import { GetUserRequest } from 'src/auth/decorators';
 import {
   CancelMailsDto,
   CreateCommunicationDto,
@@ -11,11 +10,12 @@ import {
   GetInboxParamsDto,
   RejectionDetail,
 } from '../dto';
-import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { AccountService } from 'src/users/services/account.service';
+import { Account } from 'src/users/schemas';
 
 @Controller('communication')
-@Auth(validResources.communication)
+// @Auth(validResources.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,
@@ -40,7 +40,7 @@ export class CommunicationController {
 
   @Get('institutions')
   async getInstitutions() {
-    return await this.institutionService.getActiveInstitutions();
+    return await this.institutionService.searchActiveInstitutions();
   }
 
   @Get('dependencies/:id_institution')

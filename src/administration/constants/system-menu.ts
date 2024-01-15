@@ -1,8 +1,8 @@
-import { validResources } from '../interfaces/valid-resources.interface';
+import { validResource } from '../../auth/interfaces/valid-resources.enum';
 
-export const SystemMenu = [
+export const SYSTEM_MENU = [
   {
-    resource: validResources.typeProcedures,
+    resource: validResource.typeProcedures,
     text: 'Tipos de tramite',
     icon: 'folder_shared',
     routerLink: 'configuraciones/tipos',
@@ -12,7 +12,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.dependencies,
+    resource: validResource.dependencies,
     text: 'Dependencias',
     icon: 'folder_shared',
     routerLink: 'configuraciones/dependencias',
@@ -22,7 +22,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.institutions,
+    resource: validResource.institutions,
     text: 'Instituciones',
     icon: 'folder_shared',
     routerLink: 'configuraciones/instituciones',
@@ -32,7 +32,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.roles,
+    resource: validResource.roles,
     text: 'Roles',
     icon: 'folder_shared',
     routerLink: 'configuraciones/roles',
@@ -42,7 +42,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.accounts,
+    resource: validResource.accounts,
     text: 'Funcionarios',
     icon: 'folder_shared',
     routerLink: 'configuraciones/funcionarios',
@@ -52,7 +52,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.accounts,
+    resource: validResource.accounts,
     text: 'Cargos',
     icon: 'folder_shared',
     routerLink: 'configuraciones/cargos',
@@ -62,7 +62,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.accounts,
+    resource: validResource.accounts,
     text: 'Cuentas',
     icon: 'folder_shared',
     routerLink: 'configuraciones/cuentas',
@@ -72,37 +72,37 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.external,
+    resource: validResource.external,
     text: 'Tramites externos',
     icon: 'folder_shared',
     routerLink: 'tramites/externos',
   },
   {
-    resource: validResources.internal,
+    resource: validResource.internal,
     text: 'Tramites internos',
     icon: 'folder',
     routerLink: 'tramites/internos',
   },
   {
-    resource: validResources.archived,
+    resource: validResource.archived,
     text: 'Archivos',
     icon: 'folder_copy',
     routerLink: 'tramites/archivados',
   },
   {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Bandeja de entrada',
     icon: 'drafts',
     routerLink: 'bandejas/entrada',
   },
   {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Bandeja de salida',
     icon: 'mark_as_unread',
     routerLink: 'bandejas/salida',
   },
   {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Solicitante',
     icon: 'manage_search',
     routerLink: 'reportes/solicitante',
@@ -112,27 +112,17 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.communication,
-    text: 'Busqueda simple',
+    resource: validResource.communication,
+    text: 'Busquedas',
     icon: 'manage_search',
-    routerLink: 'reportes/busqueda-simple',
+    routerLink: 'reportes/busqueda-tramite',
     group: {
       text: 'Reportes',
       icon: 'analytics',
     },
   },
   {
-    resource: validResources.communication,
-    text: 'Busqueda rapida',
-    icon: 'manage_search',
-    routerLink: 'reportes/busqueda-rapida',
-    group: {
-      text: 'Reportes',
-      icon: 'analytics',
-    },
-  },
-  {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Busqueda avanzada',
     icon: 'manage_search',
     routerLink: 'reportes/busqueda-avanzada',
@@ -142,7 +132,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Unidad',
     icon: 'manage_search',
     routerLink: 'reportes/unidad',
@@ -152,7 +142,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Dependientes',
     icon: 'manage_search',
     routerLink: 'reportes/dependientes',
@@ -161,9 +151,9 @@ export const SystemMenu = [
       icon: 'analytics',
     },
   },
-  
+
   {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Informe mas general',
     icon: 'manage_search',
     routerLink: 'reportes/total',
@@ -173,7 +163,7 @@ export const SystemMenu = [
     },
   },
   {
-    resource: validResources.communication,
+    resource: validResource.communication,
     text: 'Ranking usuarios',
     icon: 'manage_search',
     routerLink: 'reportes/ranking',

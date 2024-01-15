@@ -5,7 +5,7 @@ import { Observaciones, Observation, Procedure } from '../schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
-import { Account } from 'src/auth/schemas/account.schema';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class ObservationService {

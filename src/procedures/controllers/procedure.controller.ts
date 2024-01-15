@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
-import { Auth, GetUserRequest, Permission } from 'src/auth/decorators';
+import { GetUserRequest } from 'src/auth/decorators';
 import {
   CommunicationService,
   ExternalService,
@@ -9,11 +9,9 @@ import {
 } from '../services';
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
-import { validResources } from 'src/auth/interfaces/valid-resources.interface';
-import { Account } from 'src/auth/schemas/account.schema';
+import { Account } from 'src/users/schemas';
 
 @Controller('procedure')
-// @Auth()
 export class ProcedureController {
   constructor(
     private readonly procedureService: ProcedureService,
@@ -52,7 +50,6 @@ export class ProcedureController {
     }
   }
   @Post('/:id_procedure/observation')
-  @Permission({ resource: validResources.communication })
   addObservation(
     @GetUserRequest() account: Account,
     @Param('id_procedure') id_procedure: string,
@@ -62,7 +59,6 @@ export class ProcedureController {
   }
 
   @Put('observation/:id_observation')
-  @Permission({ resource: validResources.communication })
   solveObservation(@Param('id_observation') id_observation: string) {
     return this.observationService.solveObservation(id_observation);
   }

@@ -7,11 +7,9 @@ import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 
 @WebSocketGateway({ cors: true })
 export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
+  @WebSocketServer() server: Server;
 
   constructor(private readonly groupwareService: GroupwareService, private readonly jwtService: JwtService) {}
-
   handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth.token;
@@ -39,7 +37,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
       }
     });
   }
-  
+
   cancelMails(data: Communication[]) {
     data.forEach(({ _id, receiver }) => {
       const user = this.groupwareService.getUser(String(receiver.cuenta._id));

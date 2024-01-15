@@ -1,4 +1,4 @@
-export enum validResources {
+export enum validResource {
   external = 'external',
   internal = 'internal',
   archived = 'archived',
@@ -10,5 +10,5 @@ export enum validResources {
   institutions = 'institutions',
   jobs = 'jobs',
   roles = 'roles',
-  reports = 'roles',
+  reports = 'reports',
 }

@@ -1,14 +1,12 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { validResources } from 'src/auth/interfaces/valid-resources.interface';
-import { Auth, GetUserRequest } from 'src/auth/decorators';
-import { Account } from 'src/auth/schemas/account.schema';
+import { GetUserRequest } from 'src/auth/decorators';
 import { TypeProcedureService } from 'src/administration/services/type-procedure.service';
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
 import { ExternalService } from '../services';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { Account } from 'src/users/schemas';
 
 @Controller('external')
-@Auth(validResources.external)
 export class ExternalController {
   constructor(
     private readonly externalService: ExternalService,

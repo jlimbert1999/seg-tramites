@@ -6,9 +6,9 @@ import { Communication, ProcedureEvents, Procedure, ExternalProcedure, InternalP
 import { EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
-import { Account } from 'src/auth/schemas/account.schema';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Eventos } from '../schemas/eventos.schema';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class ArchiveService {

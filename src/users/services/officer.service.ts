@@ -1,13 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Officer } from '../schemas';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CreateOfficerDto } from '../dto/create-officer.dto';
-import { UpdateOfficerDto } from '../dto/update-officer.dto';
-import { Job, JobSchema } from '../schemas/job.schema';
-import { v4 as uuidv4 } from 'uuid';
-import { join } from 'path';
-import * as fs from 'fs';
+import { Officer } from '../../users/schemas';
+import mongoose, { Model } from 'mongoose';
+import { CreateOfficerDto } from '../dtos/create-officer.dto';
+import { UpdateOfficerDto } from '../dtos/update-officer.dto';
+import { Job } from '../schemas/job.schema';
 import { JobChanges } from '../schemas/jobChanges.schema';
 
 @Injectable()
@@ -17,7 +14,6 @@ export class OfficerService {
     @InjectModel(Job.name) private jobModel: Model<Job>,
     @InjectModel(JobChanges.name) private jobChangesModel: Model<JobChanges>,
   ) {}
-
 
   async search(limit: number, offset: number, text: string) {
     offset = offset * limit;
@@ -75,16 +71,10 @@ export class OfficerService {
     return { officers, length };
   }
 
-  async add(officer: CreateOfficerDto, image: Express.Multer.File | undefined) {
+  async create(officer: CreateOfficerDto) {
     const { dni } = officer;
-    const duplicate = await this.officerModel.findOne({ dni });
-    if (duplicate) throw new BadRequestException('El dni introducido ya existe');
-    // TODO implementar carga de imagen
-    // if (image) {
-    //     const imageUrl = this.saveImageFileSystem(image)
-    //     officer.imageUrl = imageUrl
-    // }
-    if (!officer.cargo || officer.cargo === '') delete officer.cargo;
+    const duplicateOfficer = await this.officerModel.findOne({ dni });
+    if (duplicateOfficer) throw new BadRequestException('El dni introducido ya existe');
     const createdOfficer = new this.officerModel(officer);
     const officerDB = await createdOfficer.save();
     if (officerDB.cargo) {
@@ -94,24 +84,28 @@ export class OfficerService {
     return officerDB;
   }
 
+  public async createOfficerForAccount(
+    officer: CreateOfficerDto,
+    session: mongoose.mongo.ClientSession,
+  ): Promise<Officer> {
+    const createdOfficer = new this.officerModel(officer);
+    const officerDB = await createdOfficer.save({ session });
+    if (officerDB.cargo) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+    return officerDB;
+  }
+
   async edit(id_officer: string, officer: UpdateOfficerDto) {
-    const { dni } = officer;
-    const officerDB = await this.officerModel.findById(id_officer);
-    if (!officerDB) throw new BadRequestException('El funcionario no existe');
-    if (officerDB.dni !== dni) {
-      const duplicate = await this.officerModel.findOne({ dni });
-      if (duplicate) throw new BadRequestException('El dni introducido ya existe');
-    }
-    if (!officerDB.cargo && officer.cargo) {
-      const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo });
-      await createdEvent.save();
-    } else if (officerDB.cargo && !officer.cargo) {
-      await this.officerModel.findByIdAndUpdate(officerDB._id, { $unset: { cargo: 1 } });
-    } else if (officerDB.cargo._id != officer.cargo) {
-      const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo });
-      await createdEvent.save();
-    }
-    return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true }).populate('cargo');
+    // const { dni } = officer;
+    // if (!officerDB.cargo && officer.cargo) {
+    //   const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo });
+    //   await createdEvent.save();
+    // } else if (officerDB.cargo && !officer.cargo) {
+    //   await this.officerModel.findByIdAndUpdate(officerDB._id, { $unset: { cargo: 1 } });
+    // } else if (officerDB.cargo._id != officer.cargo) {
+    //   const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo });
+    //   await createdEvent.save();
+    // }
+    // return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true }).populate('cargo');
   }
   async delete(id_officer: string) {
     const officerDB = await this.officerModel.findById(id_officer);
@@ -188,7 +182,21 @@ export class OfficerService {
     ]);
   }
 
-  async markOfficerWithAccount(id_officer: string, hasAccount: boolean) {
+  private async markOfficerWithAccount(id_officer: string, hasAccount: boolean) {
     return await this.officerModel.findByIdAndUpdate(id_officer, { cuenta: hasAccount });
+  }
+
+  private async verifyDuplicateDni(dni: string): Promise<void> {
+    const officer = await this.officerModel.findOne({ dni });
+    if (officer) throw new BadRequestException('El dni introducido ya existe');
+  }
+
+  private async createLogRotation(
+    id_officer: string,
+    id_job: string,
+    session: mongoose.mongo.ClientSession,
+  ): Promise<void> {
+    const createdEvent = new this.jobChangesModel({ officer: id_officer, job: id_job });
+    await createdEvent.save({ session });
   }
 }

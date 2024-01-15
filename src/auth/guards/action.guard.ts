@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Account } from '../schemas/account.schema';
 import { META_PERMISSION } from '../decorators';
 import { permission } from '../interfaces';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class ActionGuard implements CanActivate {

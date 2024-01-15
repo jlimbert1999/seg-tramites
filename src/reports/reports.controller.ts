@@ -2,19 +2,17 @@ import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import {
   SearchProcedureByApplicantDto,
-  searchProcedureByPropertiesDto,
-  SearchProcedureByCodeDto,
+  SearchProcedureByPropertiesDto,
   searchProcedureByUnitDto,
   GetTotalMailsDto,
   GetTotalProceduresDto,
 } from './dto';
-import { Auth, GetUserRequest } from 'src/auth/decorators';
+import { GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { InstitutionService, TypeProcedureService } from 'src/administration/services';
-import { Account } from 'src/auth/schemas/account.schema';
+import { Account } from 'src/users/schemas';
 
 @Controller('reports')
-@Auth()
 export class ReportsController {
   constructor(
     private reportsService: ReportsService,
@@ -32,17 +30,7 @@ export class ReportsController {
   }
   @Get('institutions')
   getInstitutions() {
-    return this.institutionService.getActiveInstitutions();
-  }
-
-  @Get('procedure/:code')
-  searchProcedyreByCode(@Param('code') code: string) {
-    return this.reportsService.searchProcedureIdByCode(code);
-  }
-
-  @Get('procedures')
-  searchProceduresByCode(@Query() searchDto: SearchProcedureByCodeDto) {
-    return this.reportsService.searchProceduresByCode(searchDto);
+    return this.institutionService.searchActiveInstitutions();
   }
 
   @Post('applicant/:type')
@@ -55,7 +43,7 @@ export class ReportsController {
   }
   @Post('procedure')
   searchProcedureByProperties(
-    @Body() searchDto: searchProcedureByPropertiesDto,
+    @Body() searchDto: SearchProcedureByPropertiesDto,
     @Query() paginationParams: PaginationParamsDto,
   ) {
     return this.reportsService.searchProcedureByProperties(paginationParams, searchDto);

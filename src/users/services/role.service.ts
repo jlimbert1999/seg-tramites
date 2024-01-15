@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Role } from '../schemas';
-import { CreateRoleDto } from '../dto/create-role.dto';
-import { UpdateRoleDto } from '../dto/update-role.dto';
+import { Role } from '../../users/schemas';
+import { CreateJobDto, UpdateJobDto } from '../../users/dtos';
 
 @Injectable()
 export class RoleService {
   constructor(@InjectModel(Role.name) private roleModel: Model<Role>) {}
-  async getActiveRoles() {
+  async getRoles() {
     return await this.roleModel.find({});
   }
   async get(limit: number, offset: number) {
@@ -28,11 +27,12 @@ export class RoleService {
     ]);
     return { roles, length };
   }
-  async add(role: CreateRoleDto) {
+
+  async add(role: CreateJobDto) {
     const createdRole = new this.roleModel(role);
     return await createdRole.save();
   }
-  async edit(id_role: string, role: UpdateRoleDto) {
+  async edit(id_role: string, role: UpdateJobDto) {
     return await this.roleModel.findByIdAndUpdate(id_role, role, { new: true });
   }
 }
