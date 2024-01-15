@@ -1,4 +1,3 @@
-import { ConfigController } from './administration/controllers/config.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
@@ -31,7 +30,7 @@ import { UsersModule } from './users/users.module';
     GroupwareModule,
     ReportsModule,
   ],
-  controllers: [ConfigController, AppController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

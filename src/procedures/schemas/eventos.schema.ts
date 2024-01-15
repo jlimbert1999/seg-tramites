@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { Officer } from 'src/administration/schemas';
 import { ExternalProcedure } from './external.schema';
 import { InternalProcedure } from './internal.schema';
+import { Officer } from 'src/users/schemas';
 
 @Schema({ collection: 'eventos' })
 export class Eventos {

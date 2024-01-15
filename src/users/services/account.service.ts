@@ -113,6 +113,7 @@ export class AccountService {
     // await this.officerService.markOfficerWithAccount(account.funcionario, true);
     // return await this.create(account.funcionario, account);
   }
+  
   async create(account: CreateAccountDto, officer: CreateOfficerDto) {
     const session = await this.connection.startSession();
     try {
@@ -126,6 +127,7 @@ export class AccountService {
       await createdAccount.populate([
         {
           path: 'dependencia',
+          select: 'nombre',
         },
         {
           path: 'funcionario',
@@ -140,6 +142,7 @@ export class AccountService {
       return createdAccount;
     } catch (error) {
       await session.abortTransaction();
+      if (error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException('Error al crear cuenta');
     } finally {
       session.endSession();

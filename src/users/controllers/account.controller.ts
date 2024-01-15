@@ -45,8 +45,7 @@ export class AccountController {
   }
   @Post()
   async create(@Body('officer') officer: CreateOfficerDto, @Body('account') account: CreateAccountDto) {
-    console.log(officer, account);
-    // return await this.accountService.create(account, officer);
+    return await this.accountService.create(account, officer);
   }
   @Put('/:id_account')
   async update(@Param('id_account') id_account: string, @Body() account: UpdateAccountDto) {

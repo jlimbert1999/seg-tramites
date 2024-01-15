@@ -34,7 +34,7 @@ export class Officer extends Document {
     required: true,
     unique: true,
   })
-  dni: string;
+  dni: number;
 
   @Prop({
     type: String,
@@ -61,7 +61,7 @@ export class Officer extends Document {
 
   @Prop({
     type: Boolean,
-    default: false,
+    // default: false,
   })
   cuenta: boolean;
 

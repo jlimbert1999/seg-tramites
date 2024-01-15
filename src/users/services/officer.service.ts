@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Officer } from '../../users/schemas';
 import mongoose, { Model } from 'mongoose';
 import { CreateOfficerDto } from '../dtos/create-officer.dto';
@@ -13,51 +13,38 @@ export class OfficerService {
     @InjectModel(Officer.name) private officerModel: Model<Officer>,
     @InjectModel(Job.name) private jobModel: Model<Job>,
     @InjectModel(JobChanges.name) private jobChangesModel: Model<JobChanges>,
+    @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
   async search(limit: number, offset: number, text: string) {
-    offset = offset * limit;
     const regex = new RegExp(text, 'i');
-    const dataPaginated = await this.officerModel.aggregate([
-      {
-        $lookup: {
-          from: 'cargos',
-          localField: 'cargo',
-          foreignField: '_id',
-          as: 'cargo',
+    const dataPaginated = await this.officerModel
+      .aggregate()
+      .lookup({
+        from: 'cargos',
+        localField: 'cargo',
+        foreignField: '_id',
+        as: 'cargo',
+      })
+      .unwind({
+        path: '$cargo',
+        preserveNullAndEmptyArrays: true,
+      })
+      .addFields({
+        fullname: {
+          $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
         },
-      },
-      {
-        $unwind: {
-          path: '$cargo',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $addFields: {
-          fullname: {
-            $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
+      })
+      .match({ $or: [{ fullname: regex }, { dni: regex }, { 'cargo.nombre': regex }] })
+      .sort({ _id: -1 })
+      .facet({
+        paginatedResults: [{ $skip: offset }, { $limit: limit }],
+        totalCount: [
+          {
+            $count: 'count',
           },
-        },
-      },
-      {
-        $match: {
-          $or: [{ fullname: regex }, { dni: regex }, { 'cargo.nombre': regex }],
-        },
-      },
-
-      { $sort: { _id: -1 } },
-      {
-        $facet: {
-          paginatedResults: [{ $skip: offset }, { $limit: limit }],
-          totalCount: [
-            {
-              $count: 'count',
-            },
-          ],
-        },
-      },
-    ]);
+        ],
+      });
     const officers = dataPaginated[0].paginatedResults;
     const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
     return { officers, length };
@@ -72,25 +59,31 @@ export class OfficerService {
   }
 
   async create(officer: CreateOfficerDto) {
-    const { dni } = officer;
-    const duplicateOfficer = await this.officerModel.findOne({ dni });
-    if (duplicateOfficer) throw new BadRequestException('El dni introducido ya existe');
-    const createdOfficer = new this.officerModel(officer);
-    const officerDB = await createdOfficer.save();
-    if (officerDB.cargo) {
-      const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officerDB.cargo });
-      await createdEvent.save();
+    await this.verifyDuplicateDni(officer.dni);
+    const session = await this.connection.startSession();
+    try {
+      session.startTransaction();
+      const createdOfficer = new this.officerModel(officer);
+      const officerDB = await createdOfficer.save({ session });
+      if (officerDB.cargo._id) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+      await session.commitTransaction();
+      return officerDB;
+    } catch (error) {
+      await session.abortTransaction();
+      throw new InternalServerErrorException('Error al crear funcionario');
+    } finally {
+      session.endSession();
     }
-    return officerDB;
   }
 
   public async createOfficerForAccount(
     officer: CreateOfficerDto,
     session: mongoose.mongo.ClientSession,
   ): Promise<Officer> {
+    await this.verifyDuplicateDni(officer.dni);
     const createdOfficer = new this.officerModel(officer);
     const officerDB = await createdOfficer.save({ session });
-    if (officerDB.cargo) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+    if (officerDB.cargo._id) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
     return officerDB;
   }
 

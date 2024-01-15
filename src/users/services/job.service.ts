@@ -59,7 +59,7 @@ export class JobService {
         as: 'funcionario',
       })
       .match({ funcionario: { $size: 0 } })
-      .limit(5)
+      .limit(7)
       .project({ funcionario: 0 });
   }
   async searchDependents(text: string) {
