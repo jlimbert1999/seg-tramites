@@ -1,17 +1,6 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  Query,
-
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { JobService, OfficerService } from '../services';
-import { CreateOfficerDto } from '../dtos';
+import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('officer')
@@ -46,14 +35,19 @@ export class OfficerController {
   }
 
   @Post()
-  async add(@Body() body: CreateOfficerDto) {
+  add(@Body() body: CreateOfficerDto) {
     return this.officerService.create(body);
   }
 
-  //   @Put('/:id')
-  //   async edit(@Param('id') id_officer: string, @Body() officer: UpdateOfficerDto) {
-  //     return await this.officerService.edit(id_officer, officer);
-  //   }
+  @Put('/:id')
+  edit(@Param('id') id_officer: string, @Body() officer: UpdateOfficerDto) {
+    return this.officerService.edit(id_officer, officer);
+  }
+
+  @Put('unlink/:id_officer')
+  unlinkOfficerJob(@Param('id_officer') id_officer: string) {
+    return this.officerService.unlinkOfficerJob(id_officer);
+  }
 
   @Delete('/:id')
   async delete(@Param('id') id_officer: string) {

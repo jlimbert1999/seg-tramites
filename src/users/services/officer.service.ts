@@ -1,17 +1,15 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Officer } from '../../users/schemas';
 import mongoose, { Model } from 'mongoose';
 import { CreateOfficerDto } from '../dtos/create-officer.dto';
 import { UpdateOfficerDto } from '../dtos/update-officer.dto';
-import { Job } from '../schemas/job.schema';
 import { JobChanges } from '../schemas/jobChanges.schema';
 
 @Injectable()
 export class OfficerService {
   constructor(
     @InjectModel(Officer.name) private officerModel: Model<Officer>,
-    @InjectModel(Job.name) private jobModel: Model<Job>,
     @InjectModel(JobChanges.name) private jobChangesModel: Model<JobChanges>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
@@ -65,10 +63,12 @@ export class OfficerService {
       session.startTransaction();
       const createdOfficer = new this.officerModel(officer);
       const officerDB = await createdOfficer.save({ session });
-      if (officerDB.cargo._id) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+      if (officerDB.cargo) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
       await session.commitTransaction();
+      await this.officerModel.populate(officerDB, 'cargo');
       return officerDB;
     } catch (error) {
+      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException('Error al crear funcionario');
     } finally {
@@ -87,19 +87,37 @@ export class OfficerService {
     return officerDB;
   }
 
-  async edit(id_officer: string, officer: UpdateOfficerDto) {
-    // const { dni } = officer;
-    // if (!officerDB.cargo && officer.cargo) {
-    //   const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo });
-    //   await createdEvent.save();
-    // } else if (officerDB.cargo && !officer.cargo) {
-    //   await this.officerModel.findByIdAndUpdate(officerDB._id, { $unset: { cargo: 1 } });
-    // } else if (officerDB.cargo._id != officer.cargo) {
-    //   const createdEvent = new this.jobChangesModel({ officer: officerDB._id, job: officer.cargo });
-    //   await createdEvent.save();
-    // }
-    // return await this.officerModel.findByIdAndUpdate(id_officer, officer, { new: true }).populate('cargo');
+  async edit(id_officer: string, data: UpdateOfficerDto) {
+    const officerDB = await this.officerModel.findById(id_officer);
+    if (!officerDB) throw new NotFoundException(`El funcionario ${id_officer} no existe`);
+    if (data.dni && data.dni !== officerDB.dni) await this.verifyDuplicateDni(data.dni);
+    const session = await this.connection.startSession();
+    try {
+      session.startTransaction();
+      const currentJob = officerDB.cargo ? String(officerDB.cargo._id) : undefined;
+      if (data.cargo && data.cargo !== currentJob) {
+        console.log('log rotation');
+        await this.createLogRotation(id_officer, data.cargo, session);
+      }
+      const updatedOfficer = await this.officerModel
+        .findByIdAndUpdate(id_officer, data, { new: true, session })
+        .populate('cargo');
+      await session.commitTransaction();
+      return updatedOfficer;
+    } catch (error) {
+      await session.abortTransaction();
+      throw new InternalServerErrorException('Error al editar funcionario');
+    } finally {
+      session.endSession();
+    }
   }
+
+  async unlinkOfficerJob(id_officer: string) {
+    const queryResult = await this.officerModel.updateOne({ _id: id_officer }, { $unset: { cargo: 1 } });
+    if (queryResult.modifiedCount === 0) throw new BadRequestException('El cargo del funcionario ya ha sido removido');
+    return { message: 'El cargo del funcionario se ha removido' };
+  }
+
   async delete(id_officer: string) {
     const officerDB = await this.officerModel.findById(id_officer);
     if (!officerDB) throw new BadRequestException('El funcionario no existe');
@@ -175,11 +193,7 @@ export class OfficerService {
     ]);
   }
 
-  private async markOfficerWithAccount(id_officer: string, hasAccount: boolean) {
-    return await this.officerModel.findByIdAndUpdate(id_officer, { cuenta: hasAccount });
-  }
-
-  private async verifyDuplicateDni(dni: string): Promise<void> {
+  private async verifyDuplicateDni(dni: number): Promise<void> {
     const officer = await this.officerModel.findOne({ dni });
     if (officer) throw new BadRequestException('El dni introducido ya existe');
   }

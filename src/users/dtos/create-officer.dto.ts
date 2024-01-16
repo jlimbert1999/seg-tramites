@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsBoolean, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateOfficerDto {
@@ -14,10 +15,12 @@ export class CreateOfficerDto {
   materno?: string;
 
   @IsNumber()
-  dni: string;
+  @Type(() => Number)
+  dni: number;
 
   @IsNumber()
-  telefono: string;
+  @Type(() => Number)
+  telefono: number;
 
   @IsNotEmpty()
   @IsString()
