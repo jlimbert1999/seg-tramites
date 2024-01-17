@@ -1,7 +1,5 @@
 export * from './create-account.dto';
 export * from './update-account.dto';
-export * from './create-role.dto';
-export * from './update-role.dto';
 export * from './create-dependency.dto';
 export * from './update-dependency.dto';
 export * from './create-job.dto';

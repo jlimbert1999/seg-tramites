@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Role } from '../../users/schemas';
-import { CreateJobDto, UpdateJobDto } from '../../users/dtos';
+import { CreateRoleDto, UpdateRoleDto } from '../../users/dtos';
 
 @Injectable()
 export class RoleService {
@@ -28,11 +28,11 @@ export class RoleService {
     return { roles, length };
   }
 
-  async add(role: CreateJobDto) {
+  async add(role: CreateRoleDto) {
     const createdRole = new this.roleModel(role);
     return await createdRole.save();
   }
-  async edit(id_role: string, role: UpdateJobDto) {
+  async edit(id_role: string, role: UpdateRoleDto) {
     return await this.roleModel.findByIdAndUpdate(id_role, role, { new: true });
   }
 }

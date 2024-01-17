@@ -15,10 +15,10 @@ import {
 } from '../users/schemas';
 import { AccountService, OfficerService, JobService, RoleService } from '../users/services';
 import { AdministrationModule } from 'src/administration/administration.module';
-import { AccountController, OfficerController } from './controllers';
+import { AccountController, JobController, OfficerController, RoleController } from './controllers';
 
 @Module({
-  controllers: [AccountController, OfficerController],
+  controllers: [AccountController, OfficerController, JobController, RoleController],
   providers: [AccountService, OfficerService, JobService, RoleService],
   imports: [
     AdministrationModule,

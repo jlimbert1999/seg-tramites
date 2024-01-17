@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateJobDto {
   @IsNotEmpty()
@@ -6,9 +6,11 @@ export class CreateJobDto {
   nombre: string;
 
   @IsBoolean()
+  @IsOptional()
   isRoot: boolean;
 
   @IsArray()
   @IsString({ each: true })
+  @IsOptional()
   dependents: string[];
 }

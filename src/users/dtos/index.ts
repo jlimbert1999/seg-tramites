@@ -6,3 +6,5 @@ export * from './create-job.dto';
 export * from './update-job.dto';
 export * from './params/filter-accounts.dto';
 export * from './params/get-accounts.dto';
+export * from './create-role.dto';
+export * from './update-role.dto';

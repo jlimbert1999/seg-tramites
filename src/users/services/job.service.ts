@@ -72,39 +72,41 @@ export class JobService {
   async removeDependent(idDependentJob: string) {
     return this.jobModel.findByIdAndUpdate(idDependentJob, { superior: null });
   }
-  async get(limit: number, offset: number) {
+
+  async findAll(limit: number, offset: number) {
     const [jobs, length] = await Promise.all([
-      this.jobModel.find({}).sort({ _id: -1 }).skip(offset).limit(limit),
+      this.jobModel.find({}).lean().sort({ _id: -1 }).skip(offset).limit(limit),
       this.jobModel.count(),
     ]);
     return { jobs, length };
   }
-  async search(limit: number, offset: number, text: string) {
-    offset = offset * limit;
-    const regex = new RegExp(text, 'i');
+
+  async search(limit: number, offset: number, term: string) {
+    const regex = new RegExp(term, 'i');
     const [jobs, length] = await Promise.all([
-      this.jobModel.find({ nombre: regex }).skip(offset).limit(limit),
-      this.jobModel.count({ role: regex }),
+      this.jobModel.find({ nombre: regex }).lean().skip(offset).limit(limit),
+      this.jobModel.count({ nombre: regex }),
     ]);
     return { jobs, length };
   }
 
-  async add(job: CreateJobDto) {
-    const { dependents, ...values } = job;
-    const createdJob = new this.jobModel(values);
+  async create(job: CreateJobDto) {
+    const { nombre } = job;
+    const createdJob = new this.jobModel({ nombre });
     const newJob = await createdJob.save();
-    for (const dependent of dependents) {
-      await this.jobModel.findByIdAndUpdate(dependent, { superior: newJob._id });
-    }
+    // for (const dependent of dependents) {
+    //   await this.jobModel.findByIdAndUpdate(dependent, { superior: newJob._id });
+    // }
     return newJob;
   }
 
   async edit(id: string, job: UpdateJobDto) {
-    const { dependents, ...values } = job;
-    for (const dependent of dependents) {
-      await this.jobModel.findByIdAndUpdate(dependent, { superior: id });
-    }
-    return this.jobModel.findByIdAndUpdate(id, values, { new: true });
+    const { nombre } = job;
+    // ? FOR DEPENDENTS IN ORGCHAR
+    // for (const dependent of dependents) {
+    //   await this.jobModel.findByIdAndUpdate(dependent, { superior: id });
+    // }
+    return this.jobModel.findByIdAndUpdate(id, { nombre }, { new: true });
   }
 
   async getOrganization() {

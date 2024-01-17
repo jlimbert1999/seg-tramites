@@ -32,43 +32,43 @@ export const SYSTEM_MENU = [
     },
   },
   {
-    resource: validResource.roles,
-    text: 'Roles',
-    icon: 'folder_shared',
-    routerLink: 'configuraciones/roles',
-    group: {
-      text: 'Configuraciones',
-      icon: 'settings',
-    },
-  },
-  {
     resource: validResource.accounts,
     text: 'Funcionarios',
-    icon: 'folder_shared',
+    icon: 'person',
     routerLink: 'configuraciones/funcionarios',
     group: {
       text: 'Usuarios',
-      icon: 'user',
+      icon: 'groups',
     },
   },
   {
     resource: validResource.accounts,
     text: 'Cargos',
-    icon: 'folder_shared',
+    icon: 'badge',
     routerLink: 'configuraciones/cargos',
     group: {
       text: 'Usuarios',
-      icon: 'user',
+      icon: 'groups',
+    },
+  },
+  {
+    resource: validResource.roles,
+    text: 'Roles',
+    icon: 'verified_user',
+    routerLink: 'configuraciones/roles',
+    group: {
+      text: 'Usuarios',
+      icon: 'groups',
     },
   },
   {
     resource: validResource.accounts,
     text: 'Cuentas',
-    icon: 'folder_shared',
+    icon: 'account_circle',
     routerLink: 'configuraciones/cuentas',
     group: {
       text: 'Usuarios',
-      icon: 'user',
+      icon: 'groups',
     },
   },
   {

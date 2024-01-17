@@ -1,10 +1,8 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Officer } from '../../users/schemas';
 import mongoose, { Model } from 'mongoose';
-import { CreateOfficerDto } from '../dtos/create-officer.dto';
-import { UpdateOfficerDto } from '../dtos/update-officer.dto';
-import { JobChanges } from '../schemas/jobChanges.schema';
+import { Officer, JobChanges } from '../../users/schemas';
+import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
 
 @Injectable()
 export class OfficerService {
@@ -13,6 +11,55 @@ export class OfficerService {
     @InjectModel(JobChanges.name) private jobChangesModel: Model<JobChanges>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
+
+  public async createOfficerForAccount(
+    officer: CreateOfficerDto,
+    session: mongoose.mongo.ClientSession,
+  ): Promise<Officer> {
+    await this.verifyDuplicateDni(officer.dni);
+    const createdOfficer = new this.officerModel(officer);
+    const officerDB = await createdOfficer.save({ session });
+    if (officerDB.cargo._id) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+    return officerDB;
+  }
+
+  public async findOfficerForProcess(text: string) {
+    const regex = new RegExp(text, 'i');
+    return await this.officerModel.aggregate([
+      {
+        $match: {
+          activo: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'cargos',
+          localField: 'cargo',
+          foreignField: '_id',
+          as: 'cargo',
+        },
+      },
+      {
+        $unwind: {
+          path: '$cargo',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          fullname: {
+            $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
+          },
+        },
+      },
+      {
+        $match: {
+          $or: [{ fullname: regex }, { 'cargo.nombre': regex }],
+        },
+      },
+      { $limit: 5 },
+    ]);
+  }
 
   async search(limit: number, offset: number, text: string) {
     const regex = new RegExp(text, 'i');
@@ -50,7 +97,7 @@ export class OfficerService {
 
   async get(limit: number, offset: number) {
     const [officers, length] = await Promise.all([
-      this.officerModel.find({}).sort({ _id: -1 }).skip(offset).limit(limit).populate('cargo', 'nombre'),
+      this.officerModel.find({}).lean().sort({ _id: -1 }).skip(offset).limit(limit).populate('cargo', 'nombre'),
       this.officerModel.count(),
     ]);
     return { officers, length };
@@ -68,23 +115,11 @@ export class OfficerService {
       await this.officerModel.populate(officerDB, 'cargo');
       return officerDB;
     } catch (error) {
-      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException('Error al crear funcionario');
     } finally {
       session.endSession();
     }
-  }
-
-  public async createOfficerForAccount(
-    officer: CreateOfficerDto,
-    session: mongoose.mongo.ClientSession,
-  ): Promise<Officer> {
-    await this.verifyDuplicateDni(officer.dni);
-    const createdOfficer = new this.officerModel(officer);
-    const officerDB = await createdOfficer.save({ session });
-    if (officerDB.cargo._id) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
-    return officerDB;
   }
 
   async edit(id_officer: string, data: UpdateOfficerDto) {
@@ -118,21 +153,24 @@ export class OfficerService {
     return { message: 'El cargo del funcionario se ha removido' };
   }
 
-  async delete(id_officer: string) {
-    const officerDB = await this.officerModel.findById(id_officer);
-    if (!officerDB) throw new BadRequestException('El funcionario no existe');
-    return await this.officerModel.findByIdAndUpdate(id_officer, { activo: !officerDB.activo }, { new: true });
+  async changeOfficerStatus(id_officer: string) {
+    const { activo } = await this.officerModel.findOneAndUpdate({ _id: id_officer }, [
+      { $set: { activo: { $eq: [false, '$activo'] } } },
+    ]);
+    return { activo: !activo };
   }
 
-  async getOfficerWorkHistory(id_officer: string, limit: number, offset: number) {
+  async getOfficerWorkHistory(id_officer: string, offset: number) {
     return await this.jobChangesModel
       .find({ officer: id_officer })
+      .lean()
+      .limit(5)
       .skip(offset)
-      .limit(limit)
       .sort({ date: -1 })
       .populate('job', 'nombre')
       .populate('officer', 'nombre paterno materno');
   }
+
   async findOfficersWithoutAccount(text: string) {
     const regex = new RegExp(text, 'i');
     const officers = await this.officerModel.aggregate([
@@ -153,44 +191,6 @@ export class OfficerService {
       { $limit: 5 },
     ]);
     return await this.officerModel.populate(officers, { path: 'cargo' });
-  }
-
-  async findOfficerForProcess(text: string) {
-    const regex = new RegExp(text, 'i');
-    return await this.officerModel.aggregate([
-      {
-        $match: {
-          activo: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'cargos',
-          localField: 'cargo',
-          foreignField: '_id',
-          as: 'cargo',
-        },
-      },
-      {
-        $unwind: {
-          path: '$cargo',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $addFields: {
-          fullname: {
-            $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
-          },
-        },
-      },
-      {
-        $match: {
-          $or: [{ fullname: regex }, { 'cargo.nombre': regex }],
-        },
-      },
-      { $limit: 5 },
-    ]);
   }
 
   private async verifyDuplicateDni(dni: number): Promise<void> {
