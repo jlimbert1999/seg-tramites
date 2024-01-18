@@ -113,7 +113,7 @@ export class AccountService {
     // await this.officerService.markOfficerWithAccount(account.funcionario, true);
     // return await this.create(account.funcionario, account);
   }
-  
+
   async create(account: CreateAccountDto, officer: CreateOfficerDto) {
     const session = await this.connection.startSession();
     try {

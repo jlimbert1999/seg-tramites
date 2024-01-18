@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
+import { Document } from 'mongoose';
 
-class Requirements {
+@Schema({ _id: false })
+export class Requirement extends Document {
   @Prop({
     type: String,
     required: true,
@@ -15,6 +16,7 @@ class Requirements {
   })
   activo: boolean;
 }
+const RequirementSchema = SchemaFactory.createForClass(Requirement);
 
 @Schema({ collection: 'tipos_tramites' })
 export class TypeProcedure extends Document {
@@ -45,7 +47,7 @@ export class TypeProcedure extends Document {
   })
   activo: boolean;
 
-  @Prop({ type: mongoose.Types.Array, default: [] })
-  requerimientos: Requirements[];
+  @Prop({ type: [RequirementSchema], default: [] })
+  requerimientos: Requirement[];
 }
 export const TypeProcedureSchema = SchemaFactory.createForClass(TypeProcedure);

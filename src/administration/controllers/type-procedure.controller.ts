@@ -3,7 +3,7 @@ import { TypeProcedureService } from '../services/type-procedure.service';
 import { CreateTypeProcedureDto } from '../dto/create-typeProcedure.dto';
 import { UpdateTypeProcedureDto } from '../dto/update-typeProcedure.dto';
 
-@Controller('type-procedure')
+@Controller('types-procedures')
 export class TypeProcedureController {
   constructor(private readonly typeProcedureService: TypeProcedureService) {}
   @Get('search/:text')
@@ -14,13 +14,13 @@ export class TypeProcedureController {
   ) {
     return await this.typeProcedureService.search(limit, offset, text);
   }
-  @Get('/segments/:type')
-  async getSegments(@Param('type') type: string) {
-    return await this.typeProcedureService.getSegmentsOfTypesProcedures(type);
+  @Get('/segments')
+  getSegments() {
+    return this.typeProcedureService.getSegments();
   }
   @Get()
   async get(@Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number) {
-    return await this.typeProcedureService.get(limit, offset);
+    return await this.typeProcedureService.findAll(limit, offset);
   }
 
   @Post()

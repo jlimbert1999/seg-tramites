@@ -1,19 +1,6 @@
-import { IsArray, IsNotEmpty, IsString, ValidateNested } from "class-validator";
-import { CreateRequirementDto } from "./create-typeProcedure.dto";
-import { Type } from "class-transformer";
+import { CreateTypeProcedureDto } from './create-typeProcedure.dto';
+import { OmitType, PartialType } from '@nestjs/mapped-types';
 
-export class UpdateTypeProcedureDto {
-    @IsNotEmpty()
-    @IsString()
-    nombre: string;
-
-    @IsNotEmpty()
-    @IsString()
-    segmento: string;
-
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => CreateRequirementDto)
-    requerimientos: CreateRequirementDto[]
-}
-
+export class UpdateTypeProcedureDto extends PartialType(
+  OmitType(CreateTypeProcedureDto, ['segmento', 'tipo'] as const),
+) {}

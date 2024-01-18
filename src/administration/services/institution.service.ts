@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 import { Institution } from '../schemas/institution.schema';
@@ -35,31 +35,31 @@ export class InstitutionService {
   }
 
   async add(institution: CreateInstitutionDto) {
-    const duplicate = await this.institutionModel.findOne({ sigla: institution.sigla });
-    if (duplicate) throw new BadRequestException('Ya existe una institucion con la sigla introducida');
+    await this.checkDuplicateCode(institution.sigla);
     const createdInstitucion = new this.institutionModel(institution);
     return await createdInstitucion.save();
   }
 
-  async edit(id_institution: string, institution: UpdateInstitutionDto) {
-    const { sigla } = institution;
-    const institutionDB = await this.institutionModel.findById(id_institution);
-    if (!institutionDB) throw new BadRequestException('La institucion no existe');
-    if (institutionDB.sigla !== sigla) {
-      const duplicate = await this.institutionModel.findOne({ sigla: institution.sigla });
-      if (duplicate) throw new BadRequestException('Ya existe una institucion con la sigla introducida');
+  async edit(id: string, institution: UpdateInstitutionDto) {
+    const institutionDB = await this.institutionModel.findById(id);
+    if (!institutionDB) throw new NotFoundException(`La institucion ${id} no existe`);
+    if (institution.sigla && institution.sigla !== institutionDB.sigla) {
+      await this.checkDuplicateCode(institution.sigla);
     }
-    return await this.institutionModel.findByIdAndUpdate(id_institution, institution, { new: true });
+    return await this.institutionModel.findByIdAndUpdate(id, institution, { new: true });
   }
 
-  async delete(id_institution: string) {
-    const instituciondb = await this.institutionModel.findById(id_institution);
-    if (!instituciondb) throw new BadRequestException('La institucion no existe');
-    const newInstitucion = await this.institutionModel.findByIdAndUpdate(
-      id_institution,
-      { activo: !instituciondb.activo },
+  async delete(id: string) {
+    const { activo } = await this.institutionModel.findOneAndUpdate(
+      { _id: id },
+      [{ $set: { activo: { $eq: [false, '$activo'] } } }],
       { new: true },
     );
-    return newInstitucion.activo;
+    return { activo };
+  }
+
+  private async checkDuplicateCode(sigla: string): Promise<void> {
+    const duplicate = await this.institutionModel.findOne({ sigla: sigla.toUpperCase().trim() });
+    if (duplicate) throw new BadRequestException(`La sigla: ${sigla} ya existe`);
   }
 }

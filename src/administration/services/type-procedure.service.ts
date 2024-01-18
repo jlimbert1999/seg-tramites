@@ -1,52 +1,50 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TypeProcedure } from '../schemas/type-procedure.schema';
-import { CreateTypeProcedureDto } from '../dto/create-typeProcedure.dto';
-import { UpdateTypeProcedureDto } from '../dto/update-typeProcedure.dto';
+import { CreateTypeProcedureDto, UpdateTypeProcedureDto } from '../dto';
 
 @Injectable()
 export class TypeProcedureService {
   constructor(@InjectModel(TypeProcedure.name) private typeProcedureModel: Model<TypeProcedure>) {}
-  async getSegmentsOfTypesProcedures(type: string) {
-    return await this.typeProcedureModel
-      .aggregate()
-      .match({ activo: true, tipo: type })
-      .group({ _id: '$segmento' })
-      .project({ segmento: 1 });
+
+  public async getSegments() {
+    return await this.typeProcedureModel.distinct('segmento');
   }
+
   async search(limit: number, offset: number, text: string) {
-    offset = offset * limit;
     const regex = new RegExp(text, 'i');
-    const [typesProcedures, length] = await Promise.all([
-      this.typeProcedureModel.find({ nombre: regex }).skip(offset).limit(limit),
+    const [types, length] = await Promise.all([
+      this.typeProcedureModel.find({ nombre: regex }).lean().skip(offset).limit(limit),
       this.typeProcedureModel.count({ nombre: regex }),
     ]);
-    return { typesProcedures, length };
+    return { types, length };
   }
-  async get(limit: number, offset: number) {
-    offset = offset * limit;
-    const [typesProcedures, length] = await Promise.all([
-      this.typeProcedureModel.find({}).skip(offset).limit(limit).sort({ _id: -1 }),
+
+  async findAll(limit: number, offset: number) {
+    const [types, length] = await Promise.all([
+      this.typeProcedureModel.find({}).lean().skip(offset).limit(limit).sort({ _id: -1 }),
       this.typeProcedureModel.count({}),
     ]);
-    return { typesProcedures, length };
+    return { types, length };
   }
+
   async add(typeProcedure: CreateTypeProcedureDto) {
     const createdTypeProcedure = new this.typeProcedureModel(typeProcedure);
     return await createdTypeProcedure.save();
   }
-  async edit(id_typeProcedure: string, typeProcedure: UpdateTypeProcedureDto) {
-    return this.typeProcedureModel.findByIdAndUpdate(id_typeProcedure, typeProcedure, { new: true });
+
+  async edit(id: string, typeProcedure: UpdateTypeProcedureDto) {
+    return this.typeProcedureModel.findByIdAndUpdate(id, typeProcedure, { new: true });
   }
-  async delete(id_typeProcedure: string) {
-    const typeProcedureDB = await this.typeProcedureModel.findById(id_typeProcedure);
-    if (!typeProcedureDB) throw new BadRequestException('El tipo de tramite no existe');
-    return this.typeProcedureModel.findByIdAndUpdate(
-      id_typeProcedure,
-      { activo: !typeProcedureDB.activo },
+
+  async delete(id: string) {
+    const { activo } = await this.typeProcedureModel.findOneAndUpdate(
+      { _id: id },
+      [{ $set: { activo: { $eq: [false, '$activo'] } } }],
       { new: true },
     );
+    return { activo };
   }
 
   async getEnabledTypesBySegment(segment: string) {

@@ -1,8 +1,7 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
-import { DependencieService } from '../services/dependencie.service';
-import { InstitutionService } from '../services';
-import { UpdateDependencyDto } from '../dto/update-dependency.dto';
-import { CreateDependencyDto } from '../dto/create-dependency.dto';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { InstitutionService, DependencieService } from '../services';
+import { UpdateDependencyDto, CreateDependencyDto } from '../dto';
+import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 @Controller('dependencies')
 export class DependencyController {
@@ -16,17 +15,13 @@ export class DependencyController {
   }
 
   @Get()
-  async get(@Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number) {
-    return await this.dependencyService.get(limit, offset);
+  async get(@Query() params: PaginationParamsDto) {
+    return await this.dependencyService.findAll(params.limit, params.offset);
   }
 
-  @Get('search/:text')
-  async findByText(
-    @Query('limit', ParseIntPipe) limit: number,
-    @Query('offset', ParseIntPipe) offset: number,
-    @Param('text') text: string,
-  ) {
-    return await this.dependencyService.search(limit, offset, text);
+  @Get('search/:term')
+  async findByText(@Query() params: PaginationParamsDto, @Param('term') text: string) {
+    return await this.dependencyService.search(params.limit, params.offset, text);
   }
 
   @Put('/:id')
