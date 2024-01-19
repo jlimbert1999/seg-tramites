@@ -1,22 +1,20 @@
 import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
-import { CreateAccountDto } from '../dtos/create-account.dto';
-import { CreateOfficerDto } from '../dtos/create-officer.dto';
-import { UpdateAccountDto } from '../dtos/update-account.dto';
-import { Account } from '../../users/schemas';
 import { ConfigService } from '@nestjs/config';
-import { GetAccountsDto, FilterAccountsDto } from '../dtos';
+import * as bcrypt from 'bcrypt';
+
+import { CreateAccountDto, CreateOfficerDto, UpdateAccountDto, GetAccountsDto, FilterAccountsDto } from '../dtos';
 import { OfficerService } from './officer.service';
+import { Account } from '../../users/schemas';
 
 @Injectable()
 export class AccountService {
   constructor(
-    @InjectModel(Account.name) private accountModel: Model<Account>,
     private configService: ConfigService,
-    private readonly officerService: OfficerService,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    private officerService: OfficerService,
+    @InjectModel(Account.name) private accountModel: Model<Account>,
+    @InjectConnection() private connection: mongoose.Connection,
   ) {}
 
   async findAll({ id_dependency, limit, offset }: GetAccountsDto) {
@@ -31,7 +29,7 @@ export class AccountService {
         .skip(offset)
         .limit(limit)
         .sort({ _id: -1 })
-        .populate('dependencia')
+        .populate('dependencia', 'nombre')
         .populate({
           path: 'funcionario',
           populate: {
@@ -97,7 +95,7 @@ export class AccountService {
         ],
       });
     const accounts = data[0].paginatedResults;
-    await this.accountModel.populate(accounts, 'dependencia');
+    await this.accountModel.populate(accounts, { path: 'dependencia', select: 'nombre' });
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { accounts, length };
   }
@@ -184,22 +182,6 @@ export class AccountService {
     return updatedAccount;
   }
 
-  async unlinkAccountOfficer(id_account: string) {
-    const accountDB = await this.accountModel.findById(id_account);
-    if (!accountDB) throw new BadRequestException('La cuenta seleccionada no existe');
-    if (!accountDB.funcionario) throw new BadRequestException('La cuenta ya ha sido desvinculada');
-    const updatedAccount = await this.accountModel
-      .findByIdAndUpdate(id_account, { activo: false, $unset: { funcionario: 1 } }, { new: true })
-      .populate({
-        path: 'dependencia',
-        populate: {
-          path: 'institucion',
-        },
-      });
-    // await this.officerService.markOfficerWithAccount(accountDB.funcionario._id, false);
-    return updatedAccount;
-  }
-
   async assingAccountOfficer(id_account: string, id_officer: string) {
     const accountDB = await this.accountModel.findById(id_account).populate('funcionario');
     if (!accountDB) throw new BadRequestException('La cuenta seleccionada no existe');
@@ -239,5 +221,21 @@ export class AccountService {
           select: 'nombre',
         },
       });
+  }
+
+  async toggleVisibility(id: string) {
+    const { isVisible } = await this.accountModel.findOneAndUpdate(
+      { _id: id },
+      [{ $set: { isVisible: { $eq: [false, '$isVisible'] } } }],
+      { new: true },
+    );
+    return isVisible;
+  }
+
+  async unlinkAccount(id: string): Promise<{ message: string }> {
+    const result = await this.accountModel.updateOne({ _id: id }, { $unset: { funcionario: 1 } });
+    if (result.matchedCount === 0) throw new BadRequestException(`La cuenta ${id} no existe`);
+    console.log(result);
+    return { message: 'Cuenta desvinculada' };
   }
 }

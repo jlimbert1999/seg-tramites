@@ -43,10 +43,12 @@ export class AccountController {
   async findAll(@Query() params: GetAccountsDto) {
     return await this.accountService.findAll(params);
   }
+
   @Post()
-  async create(@Body('officer') officer: CreateOfficerDto, @Body('account') account: CreateAccountDto) {
-    return await this.accountService.create(account, officer);
+  create(@Body('officer') officer: CreateOfficerDto, @Body('account') account: CreateAccountDto) {
+    return this.accountService.create(account, officer);
   }
+
   @Put('/:id_account')
   async update(@Param('id_account') id_account: string, @Body() account: UpdateAccountDto) {
     return await this.accountService.update(id_account, account);
@@ -56,13 +58,18 @@ export class AccountController {
   async createAccountWithAssignment(@Body() account: CreateAccountDto) {
     return await this.accountService.createAccountWithAssignment(account);
   }
-  @Delete('unlink/:id_account')
-  async unlinkAccountOfficer(@Param('id_account') id_account: string) {
-    return await this.accountService.unlinkAccountOfficer(id_account);
+  @Delete('unlink/:id')
+  async unlinkAccount(@Param('id') id: string) {
+    return await this.accountService.unlinkAccount(id);
   }
 
   @Put('assign/:id_account')
   async assignAccountOfficer(@Param('id_account') id_account: string, @Body('id_officer') id_officer: string) {
     return await this.accountService.assingAccountOfficer(id_account, id_officer);
+  }
+
+  @Put('visibility/:id')
+  toggleVisibility(@Param('id') id: string) {
+    return this.accountService.toggleVisibility(id);
   }
 }
