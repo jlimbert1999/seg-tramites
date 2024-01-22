@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/
 import { InstitutionService, DependencieService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService, ObservationService } from '../services';
-import { GetUserRequest } from 'src/auth/decorators';
+import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import {
   CancelMailsDto,
   CreateCommunicationDto,
@@ -13,9 +13,10 @@ import {
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { AccountService } from 'src/users/services/account.service';
 import { Account } from 'src/users/schemas';
+import { validResource } from 'src/auth/interfaces';
 
 @Controller('communication')
-// @Auth(validResources.communication)
+@ResourceProtected(validResource.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
@@ -7,11 +7,11 @@ import { ExternalDetail, Procedure } from '../schemas';
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
-import { groupProcedure, stateProcedure } from '../interfaces';
+import { ValidProcedureService, groupProcedure, stateProcedure } from '../interfaces';
 import { Account } from 'src/users/schemas';
 
 @Injectable()
-export class ExternalService {
+export class ExternalService implements ValidProcedureService {
   constructor(
     @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
@@ -140,9 +140,10 @@ export class ExternalService {
       session.endSession();
     }
   }
-  async getProcedureDetail(id_procedure: string) {
+
+  async getDetail(id: string) {
     const procedureDB = await this.procedureModel
-      .findById(id_procedure)
+      .findById(id)
       .populate('details')
       .populate('type', 'nombre')
       .populate({
@@ -157,7 +158,7 @@ export class ExternalService {
           },
         },
       });
-    if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
+    if (!procedureDB) throw new NotFoundException(`El tramite ${id} no existe.`);
     return procedureDB;
   }
 

@@ -2,8 +2,11 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/
 import { InstitutionService, DependencieService } from '../services';
 import { UpdateDependencyDto, CreateDependencyDto } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { ResourceProtected } from 'src/auth/decorators';
+import { validResource } from 'src/auth/interfaces';
 
 @Controller('dependencies')
+@ResourceProtected(validResource.dependencies)
 export class DependencyController {
   constructor(
     private readonly dependencyService: DependencieService,

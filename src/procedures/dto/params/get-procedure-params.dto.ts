@@ -1,9 +1,9 @@
 import { IsEnum, IsMongoId } from 'class-validator';
-import { groupProcedure } from '../interfaces';
+import { groupProcedure } from '../../interfaces';
 
 export class GetProcedureParamsDto {
   @IsMongoId({ message: 'Identificador del tramite invalido' })
-  id_procedure: string;
+  id: string;
 
   @IsEnum(groupProcedure, { message: 'Grupo de tramite no valido' })
   group: groupProcedure;

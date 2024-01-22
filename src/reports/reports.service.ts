@@ -10,8 +10,6 @@ import {
   SearchProcedureByPropertiesDto,
   searchProcedureByUnitDto,
 } from './dto';
-import { workDetailsAccount } from './interfaces';
-import { validResource } from 'src/auth/interfaces';
 import { groupProcedure, statusMail } from 'src/procedures/interfaces';
 import { Dependency } from 'src/administration/schemas';
 import { Account } from 'src/users/schemas';
@@ -135,44 +133,6 @@ export class ReportsService {
       this.communicationModel.count({ $and: query }),
     ]);
     return { communications, length };
-  }
-  async getWorkDetailsOfAccount(id_account: string): Promise<workDetailsAccount> {
-    const account = await this.accountModel.findById(id_account).select('rol').populate('rol');
-    const workdetails: workDetailsAccount = {
-      numberOfRecords: {},
-      numberOfShipments: {},
-    };
-    const permissionNames = account.rol.permissions.map(({ resource }) => resource);
-    if (permissionNames.includes(validResource.external)) {
-      workdetails.numberOfRecords.external = await this.procedureModel.count({
-        account: id_account,
-        group: groupProcedure.EXTERNAL,
-      });
-    }
-    if (permissionNames.includes(validResource.internal)) {
-      workdetails.numberOfRecords.internal = await this.procedureModel.count({
-        account: id_account,
-        group: groupProcedure.INTERNAL,
-      });
-    }
-    if (permissionNames.includes(validResource.communication)) {
-      const results: { _id: statusMail; count: number }[] = await this.communicationModel.aggregate([
-        {
-          $match: {
-            'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
-            $or: [{ status: statusMail.Pending }, { status: statusMail.Received }, { status: statusMail.Rejected }],
-          },
-        },
-        {
-          $group: {
-            _id: '$status',
-            count: { $sum: 1 },
-          },
-        },
-      ]);
-      results.forEach((result) => (workdetails.numberOfShipments[result._id] = result.count));
-    }
-    return workdetails;
   }
 
   async getOfficersInDependency(id_dependency: string): Promise<Account[]> {
@@ -339,5 +299,17 @@ export class ReportsService {
       .lean()
       .populate('procedure');
     return { account, inbox };
+  }
+
+  async getWorkDetails(id_account: string) {
+    return await this.communicationModel
+      .aggregate()
+      .match({
+        'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
+      })
+      .group({
+        _id: '$status',
+        count: { $sum: 1 },
+      });
   }
 }

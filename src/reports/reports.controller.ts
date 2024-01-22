@@ -62,11 +62,6 @@ export class ReportsController {
     return this.reportsService.getDetailsDependentsByUnit(accont.dependencia._id);
   }
 
-  @Get('work/details/:id_account')
-  getWorkDetailsOfAccount(@Param('id_account') id_account: string) {
-    return this.reportsService.getWorkDetailsOfAccount(id_account);
-  }
-
   @Get('total/communications/:id_institution')
   getTotalMailsByInstitution(@Param('id_institution') id_procedure: string, @Query() params: GetTotalMailsDto) {
     return this.reportsService.getTotalMailsByInstitution(id_procedure, params);
@@ -88,5 +83,10 @@ export class ReportsController {
   @Get('pendings')
   getAccountInbox(@GetUserRequest() account: Account) {
     return this.reportsService.getAccountInbox(account);
+  }
+
+  @Get('work/:id_account')
+  getWorkDetails(@Param('id_account') id:string) {
+    return this.reportsService.getWorkDetails(id);
   }
 }

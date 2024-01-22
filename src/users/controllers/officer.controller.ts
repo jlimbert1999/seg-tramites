@@ -2,7 +2,10 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } 
 import { JobService, OfficerService } from '../services';
 import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { ResourceProtected } from 'src/auth/decorators';
+import { validResource } from 'src/auth/interfaces';
 
+@ResourceProtected(validResource.officers)
 @Controller('officer')
 export class OfficerController {
   constructor(private readonly officerService: OfficerService, private readonly jobService: JobService) {}

@@ -2,7 +2,10 @@ import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@n
 import { RoleService } from '../services';
 import { SYSTEM_RESOURCES } from 'src/administration/constants';
 import { CreateRoleDto } from '../dtos/create-role.dto';
+import { ResourceProtected } from 'src/auth/decorators';
+import { validResource } from 'src/auth/interfaces';
 
+@ResourceProtected(validResource.roles)
 @Controller('roles')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
@@ -18,8 +21,8 @@ export class RoleController {
   }
 
   @Post()
-   add(@Body() role: CreateRoleDto) {
-    return  this.roleService.add(role);
+  add(@Body() role: CreateRoleDto) {
+    return this.roleService.add(role);
   }
 
   @Put('/:id')

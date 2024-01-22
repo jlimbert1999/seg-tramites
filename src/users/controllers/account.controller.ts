@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
-import { AccountService } from '../services/account.service';
-import { JobService } from '../services/job.service';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { AccountService, JobService } from '../services';
 import { CreateAccountDto, CreateOfficerDto, GetAccountsDto, UpdateAccountDto } from '../../users/dtos';
 import { DependencieService, InstitutionService } from 'src/administration/services';
 import { RoleService } from '../../users/services';
 import { FilterAccountsDto } from '../dtos/params/filter-accounts.dto';
+import { ResourceProtected } from 'src/auth/decorators';
+import { validResource } from 'src/auth/interfaces';
+
+@ResourceProtected(validResource.accounts)
 @Controller('accounts')
 export class AccountController {
   constructor(
@@ -18,6 +21,7 @@ export class AccountController {
   async getRoles() {
     return await this.roleService.getRoles();
   }
+
   @Get('jobs/:text')
   async getJob(@Param('text') text: string) {
     return await this.jobService.searchJobForUser(text);
@@ -30,10 +34,12 @@ export class AccountController {
   async getDependencies(@Param('id_institucion') id_institucion: string, @Query('text') text: string) {
     return await this.dependencieService.getActiveDependenciesOfInstitution(id_institucion, text);
   }
-  @Get('officers/assign/:text')
-  async searchOfficersForAssign(@Param('text') text: string) {
-    return await this.accountService.findOfficersForAssign(text);
+
+  @Get('assign/:text')
+  searchOfficersForAssign(@Param('text') text: string) {
+    return this.accountService.searchOfficersWithoutAccount(text);
   }
+
   @Get('search')
   async search(@Query() params: FilterAccountsDto) {
     return await this.accountService.search(params);
@@ -48,24 +54,24 @@ export class AccountController {
   create(@Body('officer') officer: CreateOfficerDto, @Body('account') account: CreateAccountDto) {
     return this.accountService.create(account, officer);
   }
-
-  @Put('/:id_account')
-  async update(@Param('id_account') id_account: string, @Body() account: UpdateAccountDto) {
-    return await this.accountService.update(id_account, account);
-  }
-
   @Post('assign')
-  async createAccountWithAssignment(@Body() account: CreateAccountDto) {
-    return await this.accountService.createAccountWithAssignment(account);
-  }
-  @Delete('unlink/:id')
-  async unlinkAccount(@Param('id') id: string) {
-    return await this.accountService.unlinkAccount(id);
+  assignAccountOfficer(@Body() account: CreateAccountDto) {
+    return this.accountService.assing(account);
   }
 
-  @Put('assign/:id_account')
-  async assignAccountOfficer(@Param('id_account') id_account: string, @Body('id_officer') id_officer: string) {
-    return await this.accountService.assingAccountOfficer(id_account, id_officer);
+  @Put(':id')
+  update(@Param('id') id: string, @Body() account: UpdateAccountDto) {
+    return this.accountService.update(id, account);
+  }
+
+  @Delete('unlink/:id')
+  unlinkAccount(@Param('id') id: string) {
+    return this.accountService.unlinkAccount(id);
+  }
+
+  @Delete(':id')
+  disable(@Param('id') id: string) {
+    return this.accountService.disable(id);
   }
 
   @Put('visibility/:id')

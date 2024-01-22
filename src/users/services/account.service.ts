@@ -100,44 +100,18 @@ export class AccountService {
     return { accounts, length };
   }
 
-  async createAccountWithAssignment(account: CreateAccountDto) {
-    // const accountDB = await this.accountModel.findOne({ login: account.login });
-    // if (accountDB) throw new BadRequestException('El login introducido ya existe');
-    // if (!account.funcionario) throw new BadRequestException('No se selecciono ningun funcionario para crear la cuenta');
-    // const assignedAccountDB = await this.accountModel.findOne({
-    //   funcionario: account.funcionario,
-    // });
-    // if (assignedAccountDB) throw new BadRequestException('El funcionario seleccionado ya esta asignado a una cuenta');
-    // await this.officerService.markOfficerWithAccount(account.funcionario, true);
-    // return await this.create(account.funcionario, account);
-  }
-
   async create(account: CreateAccountDto, officer: CreateOfficerDto) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       const { _id } = await this.officerService.createOfficerForAccount(officer, session);
-      const salt = bcrypt.genSaltSync();
-      const encryptedPassword = bcrypt.hashSync(account.password, salt);
-      account.password = encryptedPassword;
-      let createdAccount = new this.accountModel({ ...account, funcionario: _id });
+      await this.checkDuplicateLogin(account.login);
+      account.password = this.encryptPassword(account.password);
+      const createdAccount = new this.accountModel({ ...account, funcionario: _id });
       await createdAccount.save({ session });
-      await createdAccount.populate([
-        {
-          path: 'dependencia',
-          select: 'nombre',
-        },
-        {
-          path: 'funcionario',
-          populate: {
-            path: 'cargo',
-          },
-        },
-      ]);
+      await createdAccount.populate(this.populateOptions);
       await session.commitTransaction();
-      createdAccount = createdAccount.toObject();
-      delete createdAccount.password;
-      return createdAccount;
+      return this.removePasswordField(createdAccount);
     } catch (error) {
       await session.abortTransaction();
       if (error instanceof BadRequestException) throw error;
@@ -146,69 +120,75 @@ export class AccountService {
       session.endSession();
     }
   }
-  async findOfficersForAssign(text: string) {
-    // return await this.officerService.findOfficersWithoutAccount(text);
-  }
-  async update(id_account: string, account: UpdateAccountDto) {
-    const accountDB = await this.accountModel.findById(id_account);
-    if (!accountDB) throw new BadRequestException('La cuenta no existe');
-    if (accountDB.login !== account.login) {
-      const duplicateLogin = await this.accountModel.findOne({
-        login: account.login,
-      });
-      if (duplicateLogin) throw new BadRequestException('El login introducido ya existe');
-    }
-    if (account.password) {
-      const salt = bcrypt.genSaltSync();
-      const encryptedPassword = bcrypt.hashSync(account.password.toString(), salt);
-      account.password = encryptedPassword;
-    }
-    let updatedAccount = await this.accountModel
-      .findByIdAndUpdate(id_account, account, { new: true })
-      .populate({
-        path: 'dependencia',
-        populate: {
-          path: 'institucion',
-        },
-      })
-      .populate({
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-        },
-      });
-    updatedAccount = updatedAccount.toObject();
-    delete updatedAccount.password;
-    return updatedAccount;
+
+  async update(id: string, account: UpdateAccountDto) {
+    const accountDB = await this.accountModel.findById(id);
+    if (!accountDB) throw new BadRequestException(`La cuenta ${id} no existe`);
+    if (accountDB.login !== account.login) await this.checkDuplicateLogin(account.login);
+    if (account.password) account.password = this.encryptPassword(account.password);
+    const updated = await this.accountModel
+      .findByIdAndUpdate(id, account, { new: true })
+      .populate(this.populateOptions);
+    return this.removePasswordField(updated);
   }
 
-  async assingAccountOfficer(id_account: string, id_officer: string) {
-    const accountDB = await this.accountModel.findById(id_account).populate('funcionario');
-    if (!accountDB) throw new BadRequestException('La cuenta seleccionada no existe');
-    if (accountDB.funcionario)
-      throw new BadRequestException(
-        `La cuenta ya ha sido asignanda a ${accountDB.funcionario.nombre} ${accountDB.funcionario.paterno} ${accountDB.funcionario.materno}`,
-      );
-    // await this.officerService.markOfficerWithAccount(id_officer, true);
-    return await this.accountModel
-      .findByIdAndUpdate(id_account, { funcionario: id_officer, activo: true }, { new: true })
-      .populate({
+  async assing(account: CreateAccountDto) {
+    if (account.funcionario) {
+      const duplicate = await this.accountModel.findOne({ funcionario: account.funcionario });
+      if (duplicate) throw new BadRequestException('El funcionario seleccionado ya esta asginado a una cuenta');
+    }
+    await this.checkDuplicateLogin(account.login);
+    const createdAccount = new this.accountModel(account);
+    await createdAccount.save();
+    await createdAccount.populate(this.populateOptions);
+    return this.removePasswordField(createdAccount);
+  }
+
+  private get populateOptions(): mongoose.PopulateOptions[] {
+    return [
+      {
         path: 'dependencia',
+        select: 'nombre institucion',
         populate: {
           path: 'institucion',
+          select: 'nombre',
         },
-      })
-      .populate({
+      },
+      {
         path: 'funcionario',
         populate: {
           path: 'cargo',
+          select: 'nombre',
         },
-      });
+      },
+    ];
   }
+
+  private encryptPassword(password: string): string {
+    const salt = bcrypt.genSaltSync();
+    return bcrypt.hashSync(password, salt);
+  }
+
+  private async checkDuplicateLogin(login: string) {
+    const duplicate = await this.accountModel.findOne({ login });
+    if (duplicate) throw new BadRequestException(`El login ya existre ${login}`);
+  }
+
+  private removePasswordField(account: Account) {
+    const result = { ...account.toObject() };
+    delete result.password;
+    return result;
+  }
+
+  async searchOfficersWithoutAccount(text: string) {
+    return await this.officerService.searchOfficersWithoutAccount(text);
+  }
+
   async getAccountsForSend(id_dependencie: string, id_account: string) {
     return await this.accountModel
       .find({
         dependencia: id_dependencie,
+        isVisible: true,
         activo: true,
         funcionario: { $ne: null },
         _id: { $ne: id_account },
@@ -223,6 +203,15 @@ export class AccountService {
       });
   }
 
+  async disable(id: string) {
+    const { activo } = await this.accountModel.findOneAndUpdate(
+      { _id: id },
+      [{ $set: { activo: { $eq: [false, '$activo'] } } }],
+      { new: true },
+    );
+    return activo;
+  }
+
   async toggleVisibility(id: string) {
     const { isVisible } = await this.accountModel.findOneAndUpdate(
       { _id: id },
@@ -235,7 +224,7 @@ export class AccountService {
   async unlinkAccount(id: string): Promise<{ message: string }> {
     const result = await this.accountModel.updateOne({ _id: id }, { $unset: { funcionario: 1 } });
     if (result.matchedCount === 0) throw new BadRequestException(`La cuenta ${id} no existe`);
-    console.log(result);
     return { message: 'Cuenta desvinculada' };
   }
+
 }

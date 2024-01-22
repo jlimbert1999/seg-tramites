@@ -13,4 +13,8 @@ export class CreateAccountDto {
 
   @IsMongoId()
   rol: string;
+
+  @IsOptional()
+  @IsMongoId()
+  funcionario?: string;
 }

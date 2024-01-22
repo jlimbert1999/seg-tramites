@@ -6,9 +6,9 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { META_RESOURCE } from '../decorators';
 import { Account } from 'src/users/schemas';
 import { validResource } from '../interfaces';
+import { META_RESOURCE } from '../decorators';
 
 @Injectable()
 export class ResourceGuard implements CanActivate {
@@ -20,8 +20,9 @@ export class ResourceGuard implements CanActivate {
     const account: Account = req['user'];
     if (!account) throw new InternalServerErrorException('ResourceGuard error, no user in request');
     const permissions = account.rol.permissions.find((permission) => permission.resource === validResource);
-    if (!permissions) throw new ForbiddenException(`Esta cuenta no tiene los permisos necesarios`);
+    if (!permissions) throw new ForbiddenException(`Esta cuenta no tiene los permisos necesarios.`);
     const methodToActionMap = {
+      PATCH: 'update',
       POST: 'create',
       GET: 'read',
       PUT: 'update',

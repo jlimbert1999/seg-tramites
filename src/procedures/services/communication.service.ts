@@ -333,6 +333,7 @@ export class CommunicationService {
       await this.communicationModel.updateOne(
         { _id: id_mail },
         { status: statusMail.Received, inboundDate: new Date() },
+        { session },
       );
       if (procedure.state !== stateProcedure.OBSERVADO) {
         await this.procedureModel.updateOne(
@@ -371,7 +372,7 @@ export class CommunicationService {
         },
         { session },
       );
-      await this.recoverLastMailSend(procedure._id, emitter.cuenta._id, session);
+      await this.recoverLastMailReceived(procedure._id, emitter.cuenta._id, session);
       await session.commitTransaction();
       return { message: 'Tramite rechazado.' };
     } catch (error) {
@@ -388,7 +389,7 @@ export class CommunicationService {
     try {
       session.startTransaction();
       await this.communicationModel.deleteMany({ _id: { $in: ids_mails } }, { session });
-      const recoveredMail = await this.recoverLastMailSend(id_procedure, id_emitter, session);
+      const recoveredMail = await this.recoverLastMailReceived(id_procedure, id_emitter, session);
       await session.commitTransaction();
       return {
         message: `El tramite ahora se encuentra en su ${
@@ -418,7 +419,7 @@ export class CommunicationService {
     return mails;
   }
 
-  private async recoverLastMailSend(
+  private async recoverLastMailReceived(
     id_procedure: string,
     id_currentEmitter: string,
     session: mongoose.mongo.ClientSession,

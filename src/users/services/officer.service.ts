@@ -23,42 +23,29 @@ export class OfficerService {
     return officerDB;
   }
 
-  public async findOfficerForProcess(text: string) {
+  public async findOfficersForProcess(text: string, limit = 7) {
     const regex = new RegExp(text, 'i');
-    return await this.officerModel.aggregate([
-      {
-        $match: {
-          activo: true,
+    return await this.officerModel
+      .aggregate()
+      .match({ activo: true })
+      .addFields({
+        fullname: {
+          $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
         },
-      },
-      {
-        $lookup: {
-          from: 'cargos',
-          localField: 'cargo',
-          foreignField: '_id',
-          as: 'cargo',
-        },
-      },
-      {
-        $unwind: {
-          path: '$cargo',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $addFields: {
-          fullname: {
-            $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
-          },
-        },
-      },
-      {
-        $match: {
-          $or: [{ fullname: regex }, { 'cargo.nombre': regex }],
-        },
-      },
-      { $limit: 5 },
-    ]);
+      })
+      .match({ fullname: regex })
+      .limit(limit)
+      .project({ fullname: 0 })
+      .lookup({
+        from: 'cargos',
+        localField: 'cargo',
+        foreignField: '_id',
+        as: 'cargo',
+      })
+      .unwind({
+        path: '$cargo',
+        preserveNullAndEmptyArrays: true,
+      });
   }
 
   async search(limit: number, offset: number, text: string) {
@@ -130,8 +117,7 @@ export class OfficerService {
     try {
       session.startTransaction();
       const currentJob = officerDB.cargo ? String(officerDB.cargo._id) : undefined;
-      if (data.cargo && data.cargo !== currentJob) {
-        console.log('log rotation');
+      if (data.cargo !== currentJob) {
         await this.createLogRotation(id_officer, data.cargo, session);
       }
       const updatedOfficer = await this.officerModel
@@ -171,25 +157,26 @@ export class OfficerService {
       .populate('officer', 'nombre paterno materno');
   }
 
-  async findOfficersWithoutAccount(text: string) {
+  async searchOfficersWithoutAccount(text: string, limit = 7) {
     const regex = new RegExp(text, 'i');
-    const officers = await this.officerModel.aggregate([
-      {
-        $addFields: {
-          fullname: {
-            $concat: ['$nombre', ' ', '$paterno', ' ', { $ifNull: ['$materno', ''] }],
-          },
+    const officers = await this.officerModel
+      .aggregate()
+      .addFields({
+        fullname: {
+          $concat: ['$nombre', ' ', '$paterno', ' ', { $ifNull: ['$materno', ''] }],
         },
-      },
-      {
-        $match: {
-          cuenta: false,
-          activo: true,
-          $or: [{ fullname: regex }, { dni: regex }],
-        },
-      },
-      { $limit: 5 },
-    ]);
+      })
+      .match({ fullname: regex, activo: true })
+      .project({ fullname: 0 })
+      .lookup({
+        from: 'cuentas',
+        localField: '_id',
+        foreignField: 'funcionario',
+        as: 'cuenta',
+      })
+      .match({ cuenta: { $size: 0 } })
+      .project({ cuenta: 0 })
+      .limit(limit);
     return await this.officerModel.populate(officers, { path: 'cargo' });
   }
 

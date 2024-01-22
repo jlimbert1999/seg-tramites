@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, Param, Post, Put } from '@nestjs/common';
 import { GetUserRequest } from 'src/auth/decorators';
 import {
   CommunicationService,
@@ -30,13 +30,13 @@ export class ProcedureController {
     return await this.observationService.generateCollection();
   }
 
-  @Get('/:group/:id_procedure')
-  async getFullProcedure(@Param() { id_procedure, group }: GetProcedureParamsDto) {
-    const procedureService = this.getServiceByGroup(group);
+  @Get('/:group/:id')
+  async getFullProcedure(@Param() params: GetProcedureParamsDto) {
+    const procedureService = this.getServiceByGroup(params.group);
     const [procedure, workflow, observations] = await Promise.all([
-      procedureService.getProcedureDetail(id_procedure),
-      this.communicationService.getWorkflowOfProcedure(id_procedure),
-      this.observationService.getObservationsOfProcedure(id_procedure),
+      procedureService.getDetail(params.id),
+      this.communicationService.getWorkflowOfProcedure(params.id),
+      this.observationService.getObservationsOfProcedure(params.id),
     ]);
     return { procedure, workflow, observations };
   }
@@ -45,10 +45,13 @@ export class ProcedureController {
     switch (group) {
       case groupProcedure.EXTERNAL:
         return this.externalService;
-      default:
+      case groupProcedure.INTERNAL:
         return this.internalService;
+      default:
+        throw new InternalServerErrorException('Group procedure is not defined');
     }
   }
+
   @Post('/:id_procedure/observation')
   addObservation(
     @GetUserRequest() account: Account,

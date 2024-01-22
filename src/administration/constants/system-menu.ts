@@ -2,10 +2,10 @@ import { validResource } from '../../auth/interfaces/valid-resources.enum';
 
 export const SYSTEM_MENU = [
   {
-    resource: validResource.typeProcedures,
-    text: 'Tipos de tramite',
-    icon: 'folder_shared',
-    routerLink: 'configuraciones/tipos',
+    resource: validResource.institutions,
+    text: 'Instituciones',
+    icon: 'apartment',
+    routerLink: 'configuraciones/instituciones',
     group: {
       text: 'Configuraciones',
       icon: 'settings',
@@ -14,7 +14,7 @@ export const SYSTEM_MENU = [
   {
     resource: validResource.dependencies,
     text: 'Dependencias',
-    icon: 'folder_shared',
+    icon: 'holiday_village',
     routerLink: 'configuraciones/dependencias',
     group: {
       text: 'Configuraciones',
@@ -22,10 +22,10 @@ export const SYSTEM_MENU = [
     },
   },
   {
-    resource: validResource.institutions,
-    text: 'Instituciones',
-    icon: 'folder_shared',
-    routerLink: 'configuraciones/instituciones',
+    resource: validResource.typeProcedures,
+    text: 'Tipos de tramite',
+    icon: 'summarize',
+    routerLink: 'configuraciones/tipos',
     group: {
       text: 'Configuraciones',
       icon: 'settings',
@@ -123,16 +123,6 @@ export const SYSTEM_MENU = [
   },
   {
     resource: validResource.communication,
-    text: 'Busqueda avanzada',
-    icon: 'manage_search',
-    routerLink: 'reportes/busqueda-avanzada',
-    group: {
-      text: 'Reportes',
-      icon: 'analytics',
-    },
-  },
-  {
-    resource: validResource.communication,
     text: 'Unidad',
     icon: 'manage_search',
     routerLink: 'reportes/unidad',
@@ -141,35 +131,35 @@ export const SYSTEM_MENU = [
       icon: 'analytics',
     },
   },
-  {
-    resource: validResource.communication,
-    text: 'Dependientes',
-    icon: 'manage_search',
-    routerLink: 'reportes/dependientes',
-    group: {
-      text: 'Reportes',
-      icon: 'analytics',
-    },
-  },
+  // {
+  //   resource: validResource.communication,
+  //   text: 'Dependientes',
+  //   icon: 'manage_search',
+  //   routerLink: 'reportes/dependientes',
+  //   group: {
+  //     text: 'Reportes',
+  //     icon: 'analytics',
+  //   },
+  // },
 
-  {
-    resource: validResource.communication,
-    text: 'Informe mas general',
-    icon: 'manage_search',
-    routerLink: 'reportes/total',
-    group: {
-      text: 'Reportes',
-      icon: 'analytics',
-    },
-  },
-  {
-    resource: validResource.communication,
-    text: 'Ranking usuarios',
-    icon: 'manage_search',
-    routerLink: 'reportes/ranking',
-    group: {
-      text: 'Reportes',
-      icon: 'analytics',
-    },
-  },
+  // {
+  //   resource: validResource.communication,
+  //   text: 'Informe mas general',
+  //   icon: 'manage_search',
+  //   routerLink: 'reportes/total',
+  //   group: {
+  //     text: 'Reportes',
+  //     icon: 'analytics',
+  //   },
+  // },
+  // {
+  //   resource: validResource.communication,
+  //   text: 'Ranking usuarios',
+  //   icon: 'manage_search',
+  //   routerLink: 'reportes/ranking',
+  //   group: {
+  //     text: 'Reportes',
+  //     icon: 'analytics',
+  //   },
+  // },
 ];

@@ -1,13 +1,14 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ArchiveService } from '../services/archive.service';
-import { Auth, GetUserRequest } from 'src/auth/decorators';
+import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { EventProcedureDto } from '../dto';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/users/schemas';
+import { validResource } from 'src/auth/interfaces';
 
+@ResourceProtected(validResource.archived)
 @Controller('archive')
-// @Auth()
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}
 

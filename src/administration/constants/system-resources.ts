@@ -102,6 +102,17 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
+    value: validResource.archived,
+    isSelected: false,
+    label: 'ARCHIVOS',
+    actions: [
+      { value: 'create', label: 'Crear', isSelected: false },
+      { value: 'read', label: 'Ver', isSelected: false },
+      { value: 'update', label: 'Editar', isSelected: false },
+      { value: 'delete', label: 'Eliminar', isSelected: false },
+    ],
+  },
+  {
     value: validResource.communication,
     isSelected: false,
     label: 'BANDEJAS',

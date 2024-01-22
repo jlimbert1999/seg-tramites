@@ -126,9 +126,9 @@ export class InternalService implements ValidProcedureService {
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { procedures, length };
   }
-  async getProcedureDetail(id_procedure: string) {
+  async getDetail(id: string) {
     const procedureDB = await this.procedureModel
-      .findById(id_procedure)
+      .findById(id)
       .populate('details')
       .populate('type', 'nombre')
       .populate({
