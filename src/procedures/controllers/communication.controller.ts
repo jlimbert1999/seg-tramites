@@ -16,7 +16,7 @@ import { Account } from 'src/users/schemas';
 import { validResource } from 'src/auth/interfaces';
 
 @Controller('communication')
-@ResourceProtected(validResource.communication)
+// @ResourceProtected(validResource.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,
@@ -27,16 +27,9 @@ export class CommunicationController {
     private readonly groupwareGateway: GroupwareGateway,
   ) {}
 
-  @Get('repair')
-  async repairCollection() {
-    await this.communicationService.repairOldSchemas();
-    return { ok: true };
-  }
-
   @Get('generate')
-  async generateCollection() {
-    await this.communicationService.generateCollection();
-    return { ok: true };
+  generate() {
+    return this.communicationService.repairCollection();
   }
 
   @Get('institutions')

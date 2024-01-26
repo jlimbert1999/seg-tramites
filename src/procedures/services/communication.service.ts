@@ -2,129 +2,68 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 
-import { Outbox, Inbox, Procedure, Communication } from '../schemas';
-
+import { Procedure, Communication, ProcedureEvents } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
-
 import { createFullName } from 'src/administration/helpers/fullname';
 import { HumanizeTime } from 'src/shared/helpers';
-
 import { stateProcedure, statusMail, workflow } from '../interfaces';
-import { Account, Officer } from 'src/users/schemas';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class CommunicationService {
   constructor(
-    @InjectModel(Outbox.name) private outboxModel: Model<Outbox>,
-    @InjectModel(Inbox.name) private inboxModel: Model<Inbox>,
-    @InjectModel(Officer.name) private officerModel: Model<Officer>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectConnection() private readonly connection: mongoose.Connection,
-  ) {}
+  ) // @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
+  {}
 
-  async generateCollection() {
-    // ! method execute after modify emitter an recerivers old collection
-    // FIRT STEP
-    // const outbox = await this.outboxModel.find({});
-    // for (const item of outbox) {
-    //   const status = item.recibido === true ? 'completed' : item.recibido === false ? 'rejected' : 'pending';
-    //   const newCommunication = new this.communicationModel({
-    //     emitter: item.emisor,
-    //     receiver: item.receptor,
-    //     procedure: item.tramite,
-    //     reference: item.motivo,
-    //     attachmentQuantity: item.cantidad,
-    //     internalNumber: item.numero_interno,
-    //     outboundDate: item.fecha_envio,
-    //     inboundDate: item.fecha_recibido,
-    //     rejectionReason: item.motivo_rechazo,
-    //     status,
-    //     id_old: item._id,
-    //   });
-    //   await newCommunication.save();
-    // }
-    // console.log('completed');
-    // SECOND STEP
-    // const inbox = await this.inboxModel.find({});
-    // for (const item of inbox) {
-    //   const status = item.recibido === undefined ? 'pending' : 'received';
-    //   const editCom = await this.communicationModel.findOneAndUpdate(
+  async repairCollection() {
+    // FIRST STEP CHANGE REJECTED FIELD
+    // const communications = await this.communicationModel.find({ status: statusMail.Rejected });
+    // for (const communication of communications) {
+    //   await this.communicationModel.findByIdAndUpdate(
+    //     { _id: communication._id },
     //     {
-    //       procedure: item.tramite,
-    //       'emitter.cuenta': item.emisor.cuenta,
-    //       'receiver.cuenta': item.receptor.cuenta,
-    //       outboundDate: item.fecha_envio,
-    //       status: { $ne: 'rejected' },
+    //       eventLog: {
+    //         manager: communication.receiver.fullname,
+    //         description: communication.rejectionReason ?? 'Sin descripcion',
+    //         date: communication.inboundDate,
+    //       },
+    //       $unset: { rejectionReason: 1, inboundDate: 1 },
     //     },
-    //     { status },
     //   );
-    //   if (!editCom) console.log('no found document', item);
     // }
-    // console.log('collection done!!!');
-  }
-  async repairOldSchemas() {
-    // FOR EMITTER
-    // const mails = await this.inboxModel.find({});
-    // for (const mail of mails) {
-    //   const participant = {};
-    //   if (!mail.emisor.funcionario) {
-    //     await this.inboxModel.populate(mail, { path: 'emisor.cuenta' });
-    //     if (!mail.emisor.cuenta.funcionario) {
-    //       participant['fullname'] = 'NO DESIGNADO';
-    //     } else {
-    //       const officer = await this.officerModel
-    //         .findById(mail.emisor.cuenta.funcionario._id)
-    //         .populate('cargo', 'nombre');
-    //       participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
-    //       if (officer.cargo) {
-    //         participant['jobtitle'] = officer.cargo.nombre;
-    //       }
-    //     }
+    // SECOND STEP
+    // const communications = await this.communicationModel.find({ status: statusMail.Archived });
+    // for (const communication of communications) {
+    //   const event = await this.eventModel.findOne({ procedure: communication.procedure._id }).sort({ _id: -1 });
+    //   if (event) {
+    //     await this.communicationModel.findByIdAndUpdate(
+    //       { _id: communication._id },
+    //       {
+    //         eventLog: {
+    //           manager: event.fullNameOfficer,
+    //           description: `${event.description}`,
+    //           date: new Date(event.date.getTime() + 1000),
+    //         },
+    //       },
+    //     );
     //   } else {
-    //     const officer = await this.officerModel.findById(mail.emisor.funcionario._id).populate('cargo', 'nombre');
-    //     participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
-    //     if (officer.cargo) {
-    //       participant['jobtitle'] = officer.cargo.nombre;
-    //     }
+    //     await this.communicationModel.findByIdAndUpdate(
+    //       { _id: communication._id },
+    //       {
+    //         eventLog: {
+    //           manager: communication.receiver.fullname,
+    //           description: 'Se concluye..',
+    //           date: new Date(communication.inboundDate.getTime() + 1000),
+    //         },
+    //       },
+    //     );
     //   }
-    //   await this.inboxModel.findByIdAndUpdate(mail._id, {
-    //     emisor: { cuenta: mail.emisor.cuenta._id, ...participant },
-    //   });
-    //   console.log('ok');
     // }
-    // console.log('end');
-    // FOR RECEIVER
-    // const mails = await this.inboxModel.find({});
-    // for (const mail of mails) {
-    //   const participant = {};
-    //   if (!mail.receptor.funcionario) {
-    //     await this.inboxModel.populate(mail, { path: 'receptor.cuenta' });
-    //     if (!mail.receptor.cuenta.funcionario) {
-    //       participant['fullname'] = 'NO DESIGNADO';
-    //     } else {
-    //       const officer = await this.officerModel
-    //         .findById(mail.receptor.cuenta.funcionario._id)
-    //         .populate('cargo', 'nombre');
-    //       participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
-    //       if (officer.cargo) {
-    //         participant['jobtitle'] = officer.cargo.nombre;
-    //       }
-    //     }
-    //   } else {
-    //     const officer = await this.officerModel.findById(mail.receptor.funcionario._id).populate('cargo', 'nombre');
-    //     participant['fullname'] = [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
-    //     if (officer.cargo) {
-    //       participant['jobtitle'] = officer.cargo.nombre;
-    //     }
-    //   }
-    //   await this.inboxModel.findByIdAndUpdate(mail._id, {
-    //     receptor: { cuenta: mail.receptor.cuenta._id, ...participant },
-    //   });
-    //   console.log('ok');
-    // }
-    // console.log('end');
+    return { ok: true };
   }
 
   async getInbox(id_account: string, { limit, offset, status }: GetInboxParamsDto) {
@@ -277,7 +216,6 @@ export class CommunicationService {
   }
 
   async verifyDuplicateSend(id_procedure: string, receivers: ReceiverDto[]): Promise<void> {
-    // ! change query for receive procedures distinc emitter
     const existingMails = await this.communicationModel.find({
       procedure: id_procedure,
       $or: [{ status: statusMail.Pending }, { status: statusMail.Received }],

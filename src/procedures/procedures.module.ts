@@ -10,33 +10,16 @@ import {
   ProcedureController,
   CommunicationController,
 } from './controllers';
-import {
-  ExternalService,
-  InternalService,
-  CommunicationService,
-  ObservationService,
-  ArchiveService,
-  ProcedureService,
-} from './services';
+import { ExternalService, InternalService, CommunicationService, ObservationService, ArchiveService } from './services';
 import {
   Communication,
   CommunicationSchema,
   ProcedureEvents,
   ProcedureEventSchema,
-  Observaciones,
-  ObservacionSchema,
-  ExternalProcedure,
-  ExternalProcedureSchema,
-  InternalProcedure,
-  InternalProcedureSchema,
   Inbox,
   InboxSchema,
-  Outbox,
-  OutboxSchema,
   ExternalDetail,
   ExternalDetailSchema,
-  ArchivoSchema,
-  Archivos,
   Procedure,
   ProcedureSchema,
   InternalDetail,
@@ -45,7 +28,6 @@ import {
   ObservationSchema,
 } from './schemas/index';
 import { GroupwareModule } from 'src/groupware/groupware.module';
-import { Eventos, EventosSchema } from './schemas/eventos.schema';
 import { UsersModule } from 'src/users/users.module';
 
 @Module({
@@ -58,13 +40,7 @@ import { UsersModule } from 'src/users/users.module';
       { name: ProcedureEvents.name, schema: ProcedureEventSchema },
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
-      { name: ExternalProcedure.name, schema: ExternalProcedureSchema },
-      { name: InternalProcedure.name, schema: InternalProcedureSchema },
-      { name: Observaciones.name, schema: ObservacionSchema },
       { name: Inbox.name, schema: InboxSchema },
-      { name: Outbox.name, schema: OutboxSchema },
-      { name: Archivos.name, schema: ArchivoSchema },
-      { name: Eventos.name, schema: EventosSchema },
     ]),
     // AuthModule,
     UsersModule,
@@ -78,14 +54,7 @@ import { UsersModule } from 'src/users/users.module';
     CommunicationController,
     ArchiveController,
   ],
-  providers: [
-    ExternalService,
-    InternalService,
-    ProcedureService,
-    CommunicationService,
-    ObservationService,
-    ArchiveService,
-  ],
+  providers: [ExternalService, InternalService, CommunicationService, ObservationService, ArchiveService],
   exports: [MongooseModule],
 })
 export class ProceduresModule {}

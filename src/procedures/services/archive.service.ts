@@ -1,61 +1,23 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
-import { Archivos } from '../schemas/archivos.schema';
-import { Communication, ProcedureEvents, Procedure, ExternalProcedure, InternalProcedure } from '../schemas';
+import mongoose, { FilterQuery, Model } from 'mongoose';
+import { Communication, ProcedureEvents, Procedure } from '../schemas';
 import { EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { Eventos } from '../schemas/eventos.schema';
 import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class ArchiveService {
   constructor(
-    @InjectModel(Archivos.name) private oldArchiveModel: Model<Archivos>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectModel(ProcedureEvents.name) private procedureEventModel: Model<ProcedureEvents>,
     @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Communication.name)
     private communicationModel: Model<Communication>,
-    @InjectModel(Eventos.name) private eventoModel: Model<Eventos>,
-    @InjectModel(ExternalProcedure.name)
-    private externalProcedureModel: Model<ExternalProcedure>,
-    @InjectModel(InternalProcedure.name)
-    private internalProcedureModel: Model<InternalProcedure>,
   ) {}
-
-  async repiarOldArchives() {
-    // FIRST STEP
-    // const oldArchives = await this.oldArchiveModel.find({ location: { $ne: null } });
-    // for (const archive of oldArchives) {
-    //   await this.communicationModel.updateOne({ id_old: archive.location }, { status: statusMail.Archived });
-    // }
-    // console.log('ok');
-    // return { message: 'ok' };
-    // SECOND STEP
-    // const oldArchives = await this.oldArchiveModel.find({ location: null });
-    // for (const archive of oldArchives) {
-    //   const { _id } = await this.procedureModel.findOne({ tramite: archive.procedure._id });
-    //   if (_id) {
-    //     await this.communicationModel
-    //       .updateOne(
-    //         {
-    //           'receiver.cuenta': archive.account._id,
-    //           procedure: String(_id),
-    //           status: statusMail.Completed,
-    //         },
-    //         {
-    //           status: statusMail.Archived,
-    //         },
-    //       )
-    //       .sort({ _id: -1 });
-    //   }
-    // }
-    // return { message: 'ok' };
-  }
 
   async archiveProcedure(eventDto: EventProcedureDto, account: Account) {
     const { procedure } = eventDto;
@@ -134,27 +96,25 @@ export class ArchiveService {
     }
   }
 
-  async findAll({ limit, offset }: PaginationParamsDto, account: Account) {
-    const officersInDependency = await this.accountModel
+  async findAll({ limit, offset }: PaginationParamsDto, id_dependency: string) {
+    const unit = await this.accountModel
       .find({
-        dependencia: account.dependencia._id,
+        dependencia: id_dependency,
       })
       .select('_id');
+    const query: FilterQuery<Communication> = {
+      status: statusMail.Archived,
+      'receiver.cuenta': { $in: unit.map((acount) => acount._id) },
+    };
     const [archives, length] = await Promise.all([
       this.communicationModel
-        .find({
-          status: statusMail.Archived,
-          'receiver.cuenta': { $in: officersInDependency.map((officer) => officer._id) },
-        })
+        .find(query)
         .limit(limit)
         .skip(offset)
-        .sort({ inboundDate: -1 })
+        .sort({ 'eventLog.date': -1 })
         .populate('procedure')
         .lean(),
-      this.communicationModel.count({
-        status: statusMail.Archived,
-        'receiver.cuenta': { $in: officersInDependency },
-      }),
+      this.communicationModel.count(),
     ]);
     return { archives, length };
   }
@@ -284,22 +244,6 @@ export class ArchiveService {
     };
     const createdMail = new this.communicationModel(newMail);
     await createdMail.save({ session });
-  }
-  async createEvents() {
-    const eventos = await this.eventoModel.find({});
-    for (const evento of eventos) {
-      const { officer } = await evento.populate({ path: 'officer' });
-      const fullname = createFullName(officer);
-      const procedureDB = await this.procedureModel.findOne({ tramite: evento.procedure });
-      const newEvent = new this.procedureEventModel({
-        procedure: procedureDB._id,
-        fullNameOfficer: fullname,
-        description: evento.description,
-        date: evento.date,
-      });
-      await newEvent.save();
-    }
-    return { message: 'ok' };
   }
 
   async getProcedureEvents(id_procedure: string) {

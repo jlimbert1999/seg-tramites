@@ -1,8 +1,21 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Procedure } from './procedure.schema';
 import { Participant, ParticipantSchema } from './inbox.schema';
+import { Procedure } from './procedure.schema';
 import { statusMail } from '../interfaces/status.interface';
+
+@Schema({ _id: false })
+export class EventLog extends Document {
+  @Prop({ type: String, required: true })
+  manager: string;
+
+  @Prop({ type: String, required: true })
+  description: string;
+
+  @Prop({ type: Date, required: true })
+  date: Date;
+}
+const EventLogSchema = SchemaFactory.createForClass(EventLog);
 
 @Schema()
 export class Communication extends Document {
@@ -67,10 +80,9 @@ export class Communication extends Document {
   status: statusMail;
 
   @Prop({
-    type: String,
+    type: EventLogSchema,
   })
-  // ! delete after update
-  id_old: string;
+  eventLog: EventLog;
 }
 
 export const CommunicationSchema = SchemaFactory.createForClass(Communication);

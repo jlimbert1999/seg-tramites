@@ -1,12 +1,6 @@
 import { Body, Controller, Get, InternalServerErrorException, Param, Post, Put } from '@nestjs/common';
 import { GetUserRequest } from 'src/auth/decorators';
-import {
-  CommunicationService,
-  ExternalService,
-  InternalService,
-  ObservationService,
-  ProcedureService,
-} from '../services';
+import { CommunicationService, ExternalService, InternalService, ObservationService } from '../services';
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
 import { Account } from 'src/users/schemas';
@@ -14,21 +8,11 @@ import { Account } from 'src/users/schemas';
 @Controller('procedure')
 export class ProcedureController {
   constructor(
-    private readonly procedureService: ProcedureService,
     private readonly externalService: ExternalService,
     private readonly internalService: InternalService,
     private readonly communicationService: CommunicationService,
     private readonly observationService: ObservationService,
   ) {}
-
-  @Get('generate')
-  async generateNewProcedures() {
-    return await this.procedureService.updateAll();
-  }
-  @Get('observations/generate')
-  async generateObservations() {
-    return await this.observationService.generateCollection();
-  }
 
   @Get('/:group/:id')
   async getFullProcedure(@Param() params: GetProcedureParamsDto) {

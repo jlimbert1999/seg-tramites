@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Observaciones, Observation, Procedure } from '../schemas';
+import { Observation, Procedure } from '../schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
@@ -13,28 +13,8 @@ export class ObservationService {
     @InjectModel(Observation.name) private observationModel: Model<Observation>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
-    @InjectModel(Observaciones.name) private oldObservacionesModel: Model<Observaciones>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
-
-  async generateCollection() {
-    // const observationes = await this.oldObservacionesModel.find({});
-    // for (const obs of observationes) {
-    //   const procedure = await this.procedureModel.findOne({ tramite: obs.procedure });
-    //   const { officer } = await obs.populate({ path: 'officer' });
-    //   const fullname = createFullName(officer);
-    //   const newObservation = new this.observationModel({
-    //     procedure: procedure._id,
-    //     account: obs.account,
-    //     fullnameOfficer: fullname,
-    //     description: obs.description,
-    //     isSolved: obs.solved,
-    //     date: obs.date,
-    //   });
-    //   await newObservation.save();
-    // }
-    // console.log('end');
-  }
 
   async getObservationsOfProcedure(id_procedure: string) {
     return await this.observationModel.find({ procedure: id_procedure }).sort({ date: -1 });
