@@ -1,0 +1,29 @@
+[data-l-id] path {
+    stroke-width: 3px;
+    stroke: #2B2D42;
+}
+
+[data-n-id] rect {
+    fill: #F4F1BB;
+}
+
+[data-n-id] rect:hover {
+    filter: drop-shadow(4px 5px 5px #aeaeae);
+}
+
+.field_0 {
+    font-family: Helvetica;
+    text-transform: uppercase;
+}
+
+.field_1 {
+    text-transform: uppercase;
+}
+
+
+.node.no-user rect {
+    fill: #F25C54;
+}
+.node.no-user text {
+    fill: white;
+}

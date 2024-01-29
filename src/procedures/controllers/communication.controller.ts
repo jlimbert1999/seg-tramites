@@ -12,7 +12,7 @@ import {
 } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { AccountService } from 'src/users/services/account.service';
-import { Account } from 'src/users/schemas';
+import type { Account } from 'src/users/schemas';
 import { validResource } from 'src/auth/interfaces';
 
 @Controller('communication')
@@ -56,7 +56,7 @@ export class CommunicationController {
 
   @Get('inbox')
   getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: GetInboxParamsDto) {
-    return this.communicationService.getInbox(id_account, paginationParams);
+    return this.communicationService.getAccountInbox(id_account, paginationParams);
   }
 
   @Get('outbox')
@@ -70,8 +70,8 @@ export class CommunicationController {
   }
 
   @Put('reject/:id_mail')
-  rejectMail(@Param('id_mail') id_mail: string, @Body() body: RejectionDetail) {
-    return this.communicationService.rejectMail(id_mail, body.rejectionReason);
+  rejectMail(@Param('id_mail') id_mail: string, @Body() body: RejectionDetail, @GetUserRequest() account: Account) {
+    return this.communicationService.rejectMail(id_mail, body.rejectionReason, account);
   }
 
   @Delete('outbox/:id_procedure')

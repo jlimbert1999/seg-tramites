@@ -12,3 +12,4 @@ export * from './event_procedure.dto';
 export * from './params/get-procedure-params.dto';
 
 export * from './params/get-inbox-params.dto';
+export * from './archives/create-archive.dto';

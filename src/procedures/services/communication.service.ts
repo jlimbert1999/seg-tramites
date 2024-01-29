@@ -1,14 +1,15 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 
 import { Procedure, Communication, ProcedureEvents } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
 import { createFullName } from 'src/administration/helpers/fullname';
-import { HumanizeTime } from 'src/shared/helpers';
+import { HumanizeTime } from 'src/common/dto/helpers';
 import { stateProcedure, statusMail, workflow } from '../interfaces';
 import { Account } from 'src/users/schemas';
+import { buildFullname } from 'src/users/helpers/fullname';
 
 @Injectable()
 export class CommunicationService {
@@ -16,14 +17,14 @@ export class CommunicationService {
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectConnection() private readonly connection: mongoose.Connection,
-  ) // @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
-  {}
+    @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
+  ) {}
 
   async repairCollection() {
     // FIRST STEP CHANGE REJECTED FIELD
     // const communications = await this.communicationModel.find({ status: statusMail.Rejected });
-    // for (const communication of communications) {
-    //   await this.communicationModel.findByIdAndUpdate(
+    // for await (const communication of communications) {
+    //   await this.communicationModel.updateOne(
     //     { _id: communication._id },
     //     {
     //       eventLog: {
@@ -31,7 +32,6 @@ export class CommunicationService {
     //         description: communication.rejectionReason ?? 'Sin descripcion',
     //         date: communication.inboundDate,
     //       },
-    //       $unset: { rejectionReason: 1, inboundDate: 1 },
     //     },
     //   );
     // }
@@ -40,7 +40,7 @@ export class CommunicationService {
     // for (const communication of communications) {
     //   const event = await this.eventModel.findOne({ procedure: communication.procedure._id }).sort({ _id: -1 });
     //   if (event) {
-    //     await this.communicationModel.findByIdAndUpdate(
+    //     await this.communicationModel.updateOne(
     //       { _id: communication._id },
     //       {
     //         eventLog: {
@@ -51,7 +51,7 @@ export class CommunicationService {
     //       },
     //     );
     //   } else {
-    //     await this.communicationModel.findByIdAndUpdate(
+    //     await this.communicationModel.updateOne(
     //       { _id: communication._id },
     //       {
     //         eventLog: {
@@ -66,9 +66,9 @@ export class CommunicationService {
     return { ok: true };
   }
 
-  async getInbox(id_account: string, { limit, offset, status }: GetInboxParamsDto) {
-    const query: mongoose.FilterQuery<Communication> = {
-      'receiver.cuenta': id_account,
+  async getAccountInbox(id: string, { limit, offset, status }: GetInboxParamsDto) {
+    const query: FilterQuery<Communication> = {
+      'receiver.cuenta': id,
     };
     status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
     const [mails, length] = await Promise.all([
@@ -78,45 +78,34 @@ export class CommunicationService {
     return { mails, length };
   }
 
-  async searchInbox(id_account: string, text: string, { limit, offset, status }: GetInboxParamsDto) {
-    const regex = new RegExp(text, 'i');
+  async searchInbox(id_account: string, term: string, { limit, offset, status }: GetInboxParamsDto) {
+    const regex = new RegExp(term, 'i');
     const query: mongoose.FilterQuery<Communication> = {
-      'receiver.cuenta': id_account,
+      'receiver.cuentas': id_account,
     };
     status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
-    const data = await this.communicationModel.aggregate([
-      {
-        $match: query,
-      },
-      {
-        $lookup: {
-          from: 'procedures',
-          localField: 'procedure',
-          foreignField: '_id',
-          as: 'procedure',
-        },
-      },
-      {
-        $unwind: '$procedure',
-      },
-      {
-        $match: {
-          $or: [{ 'procedure.code': regex }, { 'procedure.reference': regex }],
-        },
-      },
-      {
-        $facet: {
-          paginatedResults: [{ $skip: offset }, { $limit: limit }],
-          totalCount: [
-            {
-              $count: 'count',
-            },
-          ],
-        },
-      },
-    ]);
-    const mails = data[0].paginatedResults;
-    const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
+
+    const [data] = await this.communicationModel
+      .aggregate()
+      .match(query)
+      .lookup({
+        from: 'procedures',
+        localField: 'procedure',
+        foreignField: '_id',
+        as: 'procedure',
+      })
+      .unwind('$procedure')
+      .match({ $or: [{ 'procedure.code': regex }, { 'procedure.reference': regex }] })
+      .facet({
+        paginatedResults: [{ $skip: offset }, { $limit: limit }],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      });
+    const mails = data.paginatedResults;
+    const length = data.totalCount[0] ? data[0].totalCount[0].count : 0;
     return { mails, length };
   }
 
@@ -293,24 +282,28 @@ export class CommunicationService {
     }
   }
 
-  async rejectMail(id_mail: string, rejectionReason: string) {
-    const mailDB = await this.communicationModel.findById(id_mail);
-    if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
+  async rejectMail(id: string, rejectionReason: string, account: Account) {
+    const mailDB = await this.communicationModel.findById(id);
+    if (!mailDB) throw new NotFoundException('El envio del tramite ha sido cancelado');
     if (mailDB.status !== statusMail.Pending) throw new BadRequestException('El tramite ya fue rechazado');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       const { procedure, emitter } = mailDB;
+      const { funcionario } = await account.populate('funcionario');
       await this.communicationModel.updateOne(
-        { _id: id_mail },
+        { _id: id },
         {
           status: statusMail.Rejected,
-          inboundDate: new Date(),
-          rejectionReason,
+          eventLog: {
+            manager: buildFullname(funcionario),
+            description: rejectionReason,
+            date: new Date(),
+          },
         },
         { session },
       );
-      await this.recoverLastMailReceived(procedure._id, emitter.cuenta._id, session);
+      await this.restoreProcessStage(procedure._id, emitter.cuenta._id, session);
       await session.commitTransaction();
       return { message: 'Tramite rechazado.' };
     } catch (error) {
@@ -327,7 +320,7 @@ export class CommunicationService {
     try {
       session.startTransaction();
       await this.communicationModel.deleteMany({ _id: { $in: ids_mails } }, { session });
-      const recoveredMail = await this.recoverLastMailReceived(id_procedure, id_emitter, session);
+      const recoveredMail = await this.restoreProcessStage(id_procedure, id_emitter, session);
       await session.commitTransaction();
       return {
         message: `El tramite ahora se encuentra en su ${
@@ -357,24 +350,24 @@ export class CommunicationService {
     return mails;
   }
 
-  private async recoverLastMailReceived(
+  private async restoreProcessStage(
     id_procedure: string,
-    id_currentEmitter: string,
+    id_currentManager: string,
     session: mongoose.mongo.ClientSession,
   ): Promise<Communication | undefined> {
-    const lastMailSend = await this.communicationModel.findOneAndUpdate(
+    const lastStage = await this.communicationModel.findOneAndUpdate(
       {
         procedure: id_procedure,
-        'receiver.cuenta': id_currentEmitter,
+        'receiver.cuenta': id_currentManager,
         $or: [{ status: statusMail.Completed }, { status: statusMail.Received }],
       },
       { status: statusMail.Received },
       { session, sort: { _id: -1 }, new: true },
     );
-    if (!lastMailSend) {
+    if (!lastStage) {
       await this.procedureModel.updateOne({ _id: id_procedure }, { send: false }, { session });
     }
-    return lastMailSend;
+    return lastStage;
   }
 
   async getWorkflowOfProcedure(id_procedure: string) {

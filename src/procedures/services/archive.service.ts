@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Communication, ProcedureEvents, Procedure } from '../schemas';
-import { EventProcedureDto } from '../dto';
+import { CreateArchiveDto, EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
@@ -19,42 +19,53 @@ export class ArchiveService {
     private communicationModel: Model<Communication>,
   ) {}
 
-  async archiveProcedure(eventDto: EventProcedureDto, account: Account) {
-    const { procedure } = eventDto;
-    await this.checkIfProcedureCanBeCompleted(procedure);
+  // async archiveProcedure(id: string, eventDto: CreateArchiveDto, account: Account) {
+  //   const mail = await this.communicationModel.findById();
+  //   await this.checkIfProcedureCanBeCompleted(procedure);
+  //   const session = await this.connection.startSession();
+  //   try {
+  //     session.startTransaction();
+  //     await this.procedureModel.updateOne(
+  //       { _id: procedure },
+  //       {
+  //         state: stateProcedure.CONCLUIDO,
+  //         endDate: new Date(),
+  //       },
+  //       { session },
+  //     );
+  //     await this.createArchiveEvent(eventDto, account, session);
+  //     await session.commitTransaction();
+  //     return { message: 'Tramite archivado' };
+  //   } catch (error) {
+  //     await session.abortTransaction();
+  //     throw new InternalServerErrorException('Error al archivar tramite', {
+  //       cause: error,
+  //     });
+  //   } finally {
+  //     session.endSession();
+  //   }
+  // }
+
+  async archiveMail(id: string, event: CreateArchiveDto, account: Account) {
+    const mail = await this.communicationModel.findById(id);
+    if (mail.status !== statusMail.Received) throw new BadRequestException(`El tramite ya ha sido desarchivado.`);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.procedureModel.updateOne(
-        { _id: procedure },
+      const { funcionario } = await account.populate('funcionario');
+      await this.communicationModel.updateOne(
+        { _id: id },
         {
-          state: stateProcedure.CONCLUIDO,
-          endDate: new Date(),
+          status: statusMail.Archived,
+          eventLog: {
+            manager: `${funcionario.nombre} ${funcionario.paterno} ${funcionario.materno}`,
+            description: event.description,
+            date: new Date(),
+          },
         },
         { session },
       );
-      await this.createArchiveEvent(eventDto, account, session);
-      await session.commitTransaction();
-      return { message: 'Tramite archivado' };
-    } catch (error) {
-      await session.abortTransaction();
-      throw new InternalServerErrorException('Error al archivar tramite', {
-        cause: error,
-      });
-    } finally {
-      session.endSession();
-    }
-  }
-
-  async archiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account) {
-    const { status, procedure } = await this.communicationModel.findById(id_mail);
-    if (status !== statusMail.Received) throw new BadRequestException(`El tramite ya ha sido desarchivado.`);
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      await this.communicationModel.updateOne({ _id: id_mail }, { status: statusMail.Archived }, { session });
-      await this.concludeProcedureIfAppropriate(procedure._id, eventDto.stateProcedure, session);
-      await this.createArchiveEvent(eventDto, account, session);
+      await this.concludeProcedureIfAppropriate(mail.procedure._id, event.stateProcedure, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado.' };
     } catch (error) {
@@ -83,7 +94,7 @@ export class ArchiveService {
         { _id: mailDB.procedure._id },
         { state: stateProcedure.EN_REVISION, $unset: { endDate: 1 } },
       );
-      await this.createArchiveEvent(eventDto, account, session);
+
       await session.commitTransaction();
       return { message: 'Tramite desarchivado.' };
     } catch (error) {
@@ -106,6 +117,7 @@ export class ArchiveService {
       status: statusMail.Archived,
       'receiver.cuenta': { $in: unit.map((acount) => acount._id) },
     };
+    console.log(query);
     const [archives, length] = await Promise.all([
       this.communicationModel
         .find(query)
@@ -114,7 +126,7 @@ export class ArchiveService {
         .sort({ 'eventLog.date': -1 })
         .populate('procedure')
         .lean(),
-      this.communicationModel.count(),
+      this.communicationModel.count(query),
     ]);
     return { archives, length };
   }
@@ -166,20 +178,6 @@ export class ArchiveService {
     return { archives, length };
   }
 
-  private async createArchiveEvent(
-    { description, procedure }: EventProcedureDto,
-    account: Account,
-    session: mongoose.mongo.ClientSession,
-  ) {
-    const { funcionario } = await account.populate('funcionario');
-    const createdEvent = new this.procedureEventModel({
-      procedure,
-      description,
-      fullNameOfficer: createFullName(funcionario),
-    });
-    await createdEvent.save({ session });
-  }
-
   async checkIfProcedureCanBeCompleted(id_procedure: string): Promise<void> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (procedureDB.state === stateProcedure.CONCLUIDO) {
@@ -192,13 +190,13 @@ export class ArchiveService {
   }
 
   async concludeProcedureIfAppropriate(
-    id_procedure: string,
-    stateCompleted: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
+    id: string,
+    state: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
     session: mongoose.mongo.ClientSession,
   ): Promise<void> {
     const isProcessActive = await this.communicationModel.findOne(
       {
-        procedure: id_procedure,
+        procedure: id,
         $or: [{ status: statusMail.Pending }, { status: statusMail.Received }],
       },
       undefined,
@@ -206,9 +204,9 @@ export class ArchiveService {
     );
     if (isProcessActive) return;
     await this.procedureModel.updateOne(
-      { _id: id_procedure },
+      { _id: id },
       {
-        state: stateCompleted,
+        state: state,
         endDate: new Date(),
       },
       { session },
@@ -244,9 +242,5 @@ export class ArchiveService {
     };
     const createdMail = new this.communicationModel(newMail);
     await createdMail.save({ session });
-  }
-
-  async getProcedureEvents(id_procedure: string) {
-    return await this.procedureEventModel.find({ procedure: id_procedure }).sort({ date: -1 });
   }
 }

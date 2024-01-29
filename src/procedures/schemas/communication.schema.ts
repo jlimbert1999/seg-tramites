@@ -1,11 +1,40 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Participant, ParticipantSchema } from './inbox.schema';
 import { Procedure } from './procedure.schema';
 import { statusMail } from '../interfaces/status.interface';
+import { Account, Officer } from 'src/users/schemas';
 
 @Schema({ _id: false })
-export class EventLog extends Document {
+class Participant extends Document {
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Account.name,
+    required: true,
+    index: true,
+  })
+  cuenta: Account;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Officer.name,
+  })
+  funcionario: Officer;
+
+  @Prop({
+    type: String,
+    required: true,
+  })
+  fullname: string;
+
+  @Prop({
+    type: String,
+  })
+  jobtitle?: string;
+}
+const ParticipantSchema = SchemaFactory.createForClass(Participant);
+
+@Schema({ _id: false })
+class EventLog extends Document {
   @Prop({ type: String, required: true })
   manager: string;
 

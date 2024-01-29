@@ -11,6 +11,7 @@ import { ProceduresModule } from './procedures/procedures.module';
 import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -23,6 +24,9 @@ import { UsersModule } from './users/users.module';
         uri: process.env.MONGODB_URL,
       }),
     }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'public'),
+    // }),
     AuthModule,
     UsersModule,
     AdministrationModule,

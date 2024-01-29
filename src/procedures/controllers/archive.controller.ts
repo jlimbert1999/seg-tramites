@@ -14,7 +14,7 @@ export class ArchiveController {
 
   @Post('procedure')
   archiveProcedure(@Body() eventProcedureDto: EventProcedureDto, @GetUserRequest() account: Account) {
-    return this.archiveService.archiveProcedure(eventProcedureDto, account);
+    // return this.archiveService.archiveProcedure(eventProcedureDto, account);
   }
 
   @Post('mail/:id_mail')
@@ -37,14 +37,9 @@ export class ArchiveController {
     return { message };
   }
 
-  @Get('events/:id_procedure')
-  async getProcedureEvents(@Param('id_procedure') id_procedure: string) {
-    return this.archiveService.getProcedureEvents(id_procedure);
-  }
-
   @Get()
   findAll(@Query() paginationParams: PaginationParamsDto, @GetUserRequest() account: Account) {
-    return this.archiveService.findAll(paginationParams, account);
+    return this.archiveService.findAll(paginationParams, account.dependencia._id);
   }
 
   @Get('search/:text')
