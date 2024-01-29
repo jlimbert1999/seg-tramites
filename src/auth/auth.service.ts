@@ -10,6 +10,7 @@ import { UpdateMyAccountDto } from './dto/my-account.dto';
 import { SYSTEM_MENU } from '../administration/constants';
 import { EnvConfig, JwtPayload } from './interfaces';
 import { Account } from 'src/users/schemas';
+import { ADMINISTRATION_MENU } from 'src/administration/constants/menu';
 
 @Injectable()
 export class AuthService {
@@ -124,28 +125,30 @@ export class AuthService {
   }
 
   getSystemMenu(resources: string[]) {
-    const allowedResources = SYSTEM_MENU.filter((menuItem) => resources.includes(menuItem.resource));
-    const groupedMenu = allowedResources.reduce((result, menuItem) => {
-      if (!menuItem.group) {
-        const category = menuItem.routerLink;
-        result[category] = menuItem;
-      } else {
-        const { text, icon } = menuItem.group;
-        if (!result[text]) {
-          result[text] = {
-            text: text,
-            icon,
-            children: [],
-          };
-        }
-        result[text].children.push({
-          text: menuItem.text,
-          icon: menuItem.icon,
-          routerLink: menuItem.routerLink,
-        });
-      }
-      return result;
-    }, {});
-    return Object.values(groupedMenu);
+    const menu = ADMINISTRATION_MENU.filter((item) => resources.includes(item.resource));
+    return menu;
+    // const allowedResources = SYSTEM_MENU.filter((menuItem) => resources.includes(menuItem.resource));
+    // const groupedMenu = allowedResources.reduce((result, menuItem) => {
+    //   if (!menuItem.group) {
+    //     const category = menuItem.routerLink;
+    //     result[category] = menuItem;
+    //   } else {
+    //     const { text, icon } = menuItem.group;
+    //     if (!result[text]) {
+    //       result[text] = {
+    //         text: text,
+    //         icon,
+    //         children: [],
+    //       };
+    //     }
+    //     result[text].children.push({
+    //       text: menuItem.text,
+    //       icon: menuItem.icon,
+    //       routerLink: menuItem.routerLink,
+    //     });
+    //   }
+    //   return result;
+    // }, {});
+    // return Object.values(groupedMenu);
   }
 }

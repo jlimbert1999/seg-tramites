@@ -5,35 +5,34 @@ export interface workflow {
   detail: Detail[];
 }
 
-export interface ID {
+interface ID {
   emitterAccount: string;
   outboundDate: Date;
   duration: string;
 }
 
-export interface Detail {
+interface Detail {
   _id: string;
-  emitter: Emitter;
-  receiver: Receiver;
+  emitter: Participant;
+  receiver: Participant;
   procedure: string;
   reference: string;
   attachmentQuantity: string;
   internalNumber: string;
+  status: statusMail;
   outboundDate: Date;
   inboundDate?: Date;
-  status: statusMail;
-  rejectionReason?: string;
+  eventLog?: EventLog;
 }
 
-export interface Emitter {
+interface EventLog {
+  manager: string;
+  description: string;
+  date: string;
+}
+
+interface Participant {
   cuenta: string;
   fullname: string;
   jobtitle?: string;
-}
-
-export interface Receiver {
-  cuenta: string;
-  fullname: string;
-  jobtitle?: string;
-  duration: string;
 }

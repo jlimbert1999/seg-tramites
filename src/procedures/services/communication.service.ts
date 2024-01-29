@@ -291,14 +291,16 @@ export class CommunicationService {
       session.startTransaction();
       const { procedure, emitter } = mailDB;
       const { funcionario } = await account.populate('funcionario');
+      const date = new Date();
       await this.communicationModel.updateOne(
         { _id: id },
         {
           status: statusMail.Rejected,
+          inboundDate: date,
           eventLog: {
             manager: buildFullname(funcionario),
             description: rejectionReason,
-            date: new Date(),
+            date: date,
           },
         },
         { session },
@@ -370,7 +372,7 @@ export class CommunicationService {
     return lastStage;
   }
 
-  async getWorkflowOfProcedure(id_procedure: string) {
+  async getWorkflow(id_procedure: string): Promise<any[]> {
     const workflow: workflow[] = await this.communicationModel
       .aggregate()
       .match({ procedure: new mongoose.Types.ObjectId(id_procedure) })
@@ -399,18 +401,14 @@ export class CommunicationService {
         }
       }
       return {
-        emitter: {
-          ...stage.detail[0].emitter,
-          duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : '- No calculado -',
-        },
-        outboundDate: stage._id.outboundDate,
-        detail: stage.detail.map(({ outboundDate, ...values }) => {
-          values.receiver.duration = values.inboundDate
-            ? HumanizeTime(values.inboundDate.getTime() - outboundDate.getTime())
-            : 'Pendiente';
-          delete values.emitter;
-          return values;
-        }),
+        officer: stage.detail[0].emitter,
+        date: stage._id.outboundDate,
+        duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : '- No calculado -',
+        receivers: stage.detail.map(({ receiver, inboundDate, outboundDate }) => ({
+          officer: receiver,
+          date: inboundDate,
+          duration: inboundDate ? HumanizeTime(inboundDate.getTime() - outboundDate.getTime()) : 'Pendiente',
+        })),
       };
     });
     return stages;

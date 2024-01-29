@@ -19,7 +19,7 @@ export class ProcedureController {
     const procedureService = this.getServiceByGroup(params.group);
     const [procedure, workflow, observations] = await Promise.all([
       procedureService.getDetail(params.id),
-      this.communicationService.getWorkflowOfProcedure(params.id),
+      this.communicationService.getWorkflow(params.id),
       this.observationService.getObservationsOfProcedure(params.id),
     ]);
     return { procedure, workflow, observations };
