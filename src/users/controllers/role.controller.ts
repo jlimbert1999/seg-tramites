@@ -1,11 +1,10 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { RoleService } from '../services';
-import { SYSTEM_RESOURCES } from 'src/administration/constants';
+import { SYSTEM_RESOURCES, VALID_RESOURCES } from 'src/auth/constants';
 import { CreateRoleDto } from '../dtos/create-role.dto';
 import { ResourceProtected } from 'src/auth/decorators';
-import { validResource } from 'src/auth/interfaces';
 
-@ResourceProtected(validResource.roles)
+@ResourceProtected(VALID_RESOURCES.roles)
 @Controller('roles')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}

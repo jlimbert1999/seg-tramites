@@ -13,10 +13,10 @@ import {
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { AccountService } from 'src/users/services/account.service';
 import type { Account } from 'src/users/schemas';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
 @Controller('communication')
-// @ResourceProtected(validResource.communication)
+@ResourceProtected(VALID_RESOURCES.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,

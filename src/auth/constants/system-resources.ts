@@ -1,8 +1,8 @@
-import { validResource } from '../../auth/interfaces';
+import { VALID_ACTIONS, VALID_RESOURCES } from './valid-resources.enum';
 
 export const SYSTEM_RESOURCES = [
   {
-    value: validResource.institutions,
+    value: VALID_RESOURCES.institutions,
     isSelected: false,
     label: 'INSTITUCIONES',
     actions: [
@@ -13,7 +13,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.dependencies,
+    value: VALID_RESOURCES.dependencies,
     isSelected: false,
     label: 'DEPENDENCIAS',
     actions: [
@@ -24,7 +24,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.accounts,
+    value: VALID_RESOURCES.accounts,
     isSelected: false,
     label: 'CUENTAS',
     actions: [
@@ -35,7 +35,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.roles,
+    value: VALID_RESOURCES.roles,
     isSelected: false,
     label: 'ROLES',
     actions: [
@@ -46,7 +46,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.officers,
+    value: VALID_RESOURCES.officers,
     isSelected: false,
     label: 'FUNCIONARIOS',
     actions: [
@@ -57,7 +57,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.jobs,
+    value: VALID_RESOURCES.jobs,
     isSelected: false,
     label: 'CARGOS',
     actions: [
@@ -68,7 +68,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.typeProcedures,
+    value: VALID_RESOURCES.typeProcedures,
     isSelected: false,
     label: 'TIPOS DE TRAMITES',
     actions: [
@@ -80,7 +80,7 @@ export const SYSTEM_RESOURCES = [
   },
 
   {
-    value: validResource.external,
+    value: VALID_RESOURCES.external,
     isSelected: false,
     label: 'TRAMITES EXTERNOS',
     actions: [
@@ -91,7 +91,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.internal,
+    value: VALID_RESOURCES.internal,
     isSelected: false,
     label: 'TRAMITES INTERNOS',
     actions: [
@@ -102,7 +102,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.archived,
+    value: VALID_RESOURCES.archived,
     isSelected: false,
     label: 'ARCHIVOS',
     actions: [
@@ -113,7 +113,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.communication,
+    value: VALID_RESOURCES.communication,
     isSelected: false,
     label: 'BANDEJAS',
     actions: [
@@ -124,14 +124,12 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: validResource.reports,
+    value: VALID_RESOURCES.reports,
     label: 'REPORTES',
     isSelected: false,
     actions: [
-      { value: 'advanced-search', label: 'Busqueda avanzada', isSelected: false },
-      { value: 'quick-search', label: 'Busqueda rapida', isSelected: false },
-      { value: 'simple-search', label: 'Busqueda simple', isSelected: false },
-      { value: 'applicant', label: 'Solicitante', isSelected: false },
+      { value: VALID_ACTIONS.applicant, label: 'Solicitante', isSelected: false },
+      { value: VALID_ACTIONS.search, label: 'Busquedas', isSelected: false },
     ],
   },
 ];

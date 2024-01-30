@@ -6,9 +6,9 @@ import { InternalService } from '../services';
 import { TypeProcedureService } from 'src/administration/services';
 import { OfficerService } from 'src/users/services';
 import { Account } from 'src/users/schemas';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
-@ResourceProtected(validResource.internal)
+@ResourceProtected(VALID_RESOURCES.internal)
 @Controller('internal')
 export class InternalController {
   constructor(

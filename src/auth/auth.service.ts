@@ -5,12 +5,10 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 
-import { AuthDto } from './dto/auth.dto';
-import { UpdateMyAccountDto } from './dto/my-account.dto';
-import { SYSTEM_MENU } from '../administration/constants';
+import { AuthDto, UpdateMyAccountDto } from './dto';
 import { EnvConfig, JwtPayload } from './interfaces';
-import { Account } from 'src/users/schemas';
-import { ADMINISTRATION_MENU } from 'src/administration/constants/menu';
+import { Account, Role } from 'src/users/schemas';
+import { SYSTEM_MENU } from './constants';
 
 @Injectable()
 export class AuthService {
@@ -47,13 +45,12 @@ export class AuthService {
       })
       .populate('rol');
     if (!account) throw new UnauthorizedException();
-    const resources = account.rol.permissions.map((privilege) => privilege.resource);
-    if (resources.length === 0) throw new UnauthorizedException();
+    if (account.rol.permissions.length === 0) throw new UnauthorizedException();
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
-      return { token: this.generateRootToken(account), menu: this.getSystemMenu(resources) };
+      return { token: this.generateRootToken(account), menu: this.getSystemMenu(account.rol) };
     }
     if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
-    return { token: this.generateToken(account), menu: this.getSystemMenu(resources) };
+    return { token: this.generateToken(account), menu: this.getSystemMenu(account.rol) };
   }
 
   async getMyAuthDetails(id_account: string) {
@@ -124,31 +121,11 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  getSystemMenu(resources: string[]) {
-    const menu = ADMINISTRATION_MENU.filter((item) => resources.includes(item.resource));
-    return menu;
-    // const allowedResources = SYSTEM_MENU.filter((menuItem) => resources.includes(menuItem.resource));
-    // const groupedMenu = allowedResources.reduce((result, menuItem) => {
-    //   if (!menuItem.group) {
-    //     const category = menuItem.routerLink;
-    //     result[category] = menuItem;
-    //   } else {
-    //     const { text, icon } = menuItem.group;
-    //     if (!result[text]) {
-    //       result[text] = {
-    //         text: text,
-    //         icon,
-    //         children: [],
-    //       };
-    //     }
-    //     result[text].children.push({
-    //       text: menuItem.text,
-    //       icon: menuItem.icon,
-    //       routerLink: menuItem.routerLink,
-    //     });
-    //   }
-    //   return result;
-    // }, {});
-    // return Object.values(groupedMenu);
+  private getSystemMenu(role: Role) {
+    const resources = role.permissions.map((permision) => permision.resource);
+    return SYSTEM_MENU.filter((menu) => {
+      if (!menu.children) return resources.includes(menu.resource);
+      return menu.children.filter((submenu) => resources.includes(submenu.resource)).length > 0;
+    });
   }
 }

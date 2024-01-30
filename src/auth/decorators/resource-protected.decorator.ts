@@ -1,8 +1,8 @@
 import { SetMetadata, UseGuards, applyDecorators } from '@nestjs/common';
-import { validResource } from '../interfaces';
 import { ResourceGuard } from '../guards';
+import { VALID_RESOURCES } from '../constants';
 
 export const META_RESOURCE = 'resource';
-export function ResourceProtected(resource: validResource) {
+export function ResourceProtected(resource: VALID_RESOURCES) {
   return applyDecorators(SetMetadata(META_RESOURCE, resource), UseGuards(ResourceGuard));
 }

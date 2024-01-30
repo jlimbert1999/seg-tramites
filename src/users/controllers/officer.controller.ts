@@ -3,9 +3,9 @@ import { JobService, OfficerService } from '../services';
 import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { ResourceProtected } from 'src/auth/decorators';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
-@ResourceProtected(validResource.officers)
+@ResourceProtected(VALID_RESOURCES.officers)
 @Controller('officer')
 export class OfficerController {
   constructor(private readonly officerService: OfficerService, private readonly jobService: JobService) {}

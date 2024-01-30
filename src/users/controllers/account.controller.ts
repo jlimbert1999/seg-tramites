@@ -5,9 +5,9 @@ import { DependencieService, InstitutionService } from 'src/administration/servi
 import { RoleService } from '../../users/services';
 import { FilterAccountsDto } from '../dtos/params/filter-accounts.dto';
 import { ResourceProtected } from 'src/auth/decorators';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
-@ResourceProtected(validResource.accounts)
+@ResourceProtected(VALID_RESOURCES.accounts)
 @Controller('accounts')
 export class AccountController {
   constructor(

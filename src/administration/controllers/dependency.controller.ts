@@ -3,18 +3,18 @@ import { InstitutionService, DependencieService } from '../services';
 import { UpdateDependencyDto, CreateDependencyDto } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { ResourceProtected } from 'src/auth/decorators';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
 @Controller('dependencies')
-@ResourceProtected(validResource.dependencies)
+@ResourceProtected(VALID_RESOURCES.dependencies)
 export class DependencyController {
   constructor(
     private readonly dependencyService: DependencieService,
     private readonly institutionService: InstitutionService,
   ) {}
   @Get('institutions')
-  async getInstitutions() {
-    return await this.institutionService.searchActiveInstitutions();
+  async getInstitutions(@Query() params: any) {
+    return await this.institutionService.searchActiveInstitutions(params.term, params.limit);
   }
 
   @Get()

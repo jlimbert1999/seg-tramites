@@ -5,11 +5,11 @@ import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateP
 import { ExternalService } from '../services';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/users/schemas';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
 
 @Controller('external')
-@ResourceProtected(validResource.external)
+@ResourceProtected(VALID_RESOURCES.external)
 export class ExternalController {
   constructor(
     private readonly externalService: ExternalService,

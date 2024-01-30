@@ -5,9 +5,9 @@ import { EventProcedureDto } from '../dto';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/users/schemas';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
-@ResourceProtected(validResource.archived)
+@ResourceProtected(VALID_RESOURCES.archived)
 @Controller('archive')
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}

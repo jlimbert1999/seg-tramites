@@ -3,9 +3,9 @@ import { JobService } from '../services';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateJobDto, UpdateJobDto } from '../dtos';
 import { ResourceProtected } from 'src/auth/decorators';
-import { validResource } from 'src/auth/interfaces';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
-@ResourceProtected(validResource.jobs)
+@ResourceProtected(VALID_RESOURCES.jobs)
 @Controller('jobs')
 export class JobController {
   constructor(private readonly jobService: JobService) {}

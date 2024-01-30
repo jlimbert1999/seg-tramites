@@ -7,14 +7,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Account } from 'src/users/schemas';
-import { validResource } from '../interfaces';
 import { META_RESOURCE } from '../decorators';
+import { VALID_RESOURCES } from '../constants';
 
 @Injectable()
 export class ResourceGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
   canActivate(context: ExecutionContext): boolean {
-    const validResource: validResource | undefined = this.reflector.get(META_RESOURCE, context.getClass());
+    const validResource: VALID_RESOURCES | undefined = this.reflector.get(META_RESOURCE, context.getClass());
     if (!validResource) return true;
     const req = context.switchToHttp().getRequest();
     const account: Account = req['user'];

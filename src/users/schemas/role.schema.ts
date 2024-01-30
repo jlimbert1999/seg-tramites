@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { validResource } from 'src/auth/interfaces/valid-resources.enum';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
 class Permissions {
   @Prop({
     type: String,
-    enum: Object.values(validResource),
+    enum: Object.values(VALID_RESOURCES),
   })
   resource: string;
 
