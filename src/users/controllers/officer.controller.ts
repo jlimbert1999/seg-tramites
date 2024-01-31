@@ -6,7 +6,7 @@ import { ResourceProtected } from 'src/auth/decorators';
 import { VALID_RESOURCES } from 'src/auth/constants';
 
 @ResourceProtected(VALID_RESOURCES.officers)
-@Controller('officer')
+@Controller('officers')
 export class OfficerController {
   constructor(private readonly officerService: OfficerService, private readonly jobService: JobService) {}
 

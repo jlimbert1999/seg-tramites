@@ -10,19 +10,14 @@ export class RoleService {
   async getRoles() {
     return await this.roleModel.find({});
   }
-  async get(limit: number, offset: number) {
-    offset = offset * limit;
-    const [roles, length] = await Promise.all([
-      this.roleModel.find({}).skip(offset).limit(limit).sort({ _id: -1 }),
-      this.roleModel.count({}),
-    ]);
+  async get() {
+    const [roles, length] = await Promise.all([this.roleModel.find({}).sort({ _id: -1 }), this.roleModel.count({})]);
     return { roles, length };
   }
-  async search(limit: number, offset: number, text: string) {
-    offset = offset * limit;
+  async search(text: string) {
     const regex = new RegExp(text, 'i');
     const [roles, length] = await Promise.all([
-      this.roleModel.find({ role: regex }).skip(offset).limit(limit),
+      this.roleModel.find({ role: regex }),
       this.roleModel.count({ role: regex }),
     ]);
     return { roles, length };

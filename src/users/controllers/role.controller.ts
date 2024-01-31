@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { RoleService } from '../services';
 import { SYSTEM_RESOURCES, VALID_RESOURCES } from 'src/auth/constants';
 import { CreateRoleDto } from '../dtos/create-role.dto';
@@ -8,17 +8,15 @@ import { ResourceProtected } from 'src/auth/decorators';
 @Controller('roles')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
-
-  @Get()
-  async get(@Query('limit', ParseIntPipe) limit: number, @Query('offset', ParseIntPipe) offset: number) {
-    return await this.roleService.get(limit, offset);
-  }
-
   @Get('resources')
   getResources() {
     return SYSTEM_RESOURCES;
   }
 
+  @Get()
+  findAll() {
+    return this.roleService.get();
+  }
   @Post()
   add(@Body() role: CreateRoleDto) {
     return this.roleService.add(role);

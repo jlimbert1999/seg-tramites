@@ -153,8 +153,7 @@ export class OfficerService {
       .limit(5)
       .skip(offset)
       .sort({ date: -1 })
-      .populate('job', 'nombre')
-      .populate('officer', 'nombre paterno materno');
+      .populate('job', 'nombre');
   }
 
   async searchOfficersWithoutAccount(text: string, limit = 7) {

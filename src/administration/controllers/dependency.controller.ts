@@ -12,9 +12,10 @@ export class DependencyController {
     private readonly dependencyService: DependencieService,
     private readonly institutionService: InstitutionService,
   ) {}
+  
   @Get('institutions')
-  async getInstitutions(@Query() params: any) {
-    return await this.institutionService.searchActiveInstitutions(params.term, params.limit);
+  getInstitutions() {
+    return this.institutionService.searchActiveInstitutions();
   }
 
   @Get()
