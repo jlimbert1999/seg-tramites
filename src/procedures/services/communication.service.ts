@@ -6,7 +6,7 @@ import { Procedure, Communication, ProcedureEvents } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
 import { createFullName } from 'src/administration/helpers/fullname';
-import { HumanizeTime } from 'src/common/dto/helpers';
+import { HumanizeTime } from 'src/common/helpers';
 import { stateProcedure, statusMail, workflow } from '../interfaces';
 import { Account } from 'src/users/schemas';
 import { buildFullname } from 'src/users/helpers/fullname';

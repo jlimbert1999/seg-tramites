@@ -19,7 +19,7 @@ export class OfficerService {
     await this.verifyDuplicateDni(officer.dni);
     const createdOfficer = new this.officerModel(officer);
     const officerDB = await createdOfficer.save({ session });
-    if (officerDB.cargo._id) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+    if (officerDB.cargo) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
     return officerDB;
   }
 

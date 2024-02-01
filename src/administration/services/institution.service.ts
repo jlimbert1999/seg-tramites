@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { Institution } from '../schemas/institution.schema';
 import { CreateInstitutionDto, UpdateInstitutionDto } from '../dto';
 
@@ -8,9 +8,8 @@ import { CreateInstitutionDto, UpdateInstitutionDto } from '../dto';
 export class InstitutionService {
   constructor(@InjectModel(Institution.name) private institutionModel: Model<Institution>) {}
 
-  public async searchActiveInstitutions(term?: string, limit?: number) {
-    const query: FilterQuery<Institution> = { activo: true, ...(term && { nombre: RegExp(term, 'i') }) };
-    return await this.institutionModel.find(query).limit(limit ?? 0);
+  public async searchActiveInstitutions() {
+    return await this.institutionModel.find({ activo: true });
   }
 
   async get(limit: number, offset: number) {

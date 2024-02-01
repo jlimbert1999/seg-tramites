@@ -37,11 +37,6 @@ export class Officer extends Document {
   dni: number;
 
   @Prop({
-    type: String,
-  })
-  direccion: string;
-
-  @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: Job.name,
   })

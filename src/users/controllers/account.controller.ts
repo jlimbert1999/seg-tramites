@@ -6,6 +6,7 @@ import { RoleService } from '../../users/services';
 import { FilterAccountsDto } from '../dtos/params/filter-accounts.dto';
 import { ResourceProtected } from 'src/auth/decorators';
 import { VALID_RESOURCES } from 'src/auth/constants';
+import { IsMongoidPipe } from 'src/common/pipes';
 
 @ResourceProtected(VALID_RESOURCES.accounts)
 @Controller('accounts')
@@ -27,11 +28,11 @@ export class AccountController {
     return await this.jobService.searchJobForUser(text);
   }
   @Get('institutions')
-  async getInstitutions(@Query() params: { text?: string; limit?: number }) {
-    return await this.institutionService.searchActiveInstitutions(params.text, params.limit);
+  async getInstitutions() {
+    return await this.institutionService.searchActiveInstitutions();
   }
   @Get('dependencie/:id_institucion')
-  async getDependencies(@Param('id_institucion') id_institucion: string, @Query('text') text: string) {
+  async getDependencies(@Param('id_institucion', IsMongoidPipe) id_institucion: string, @Query('text') text: string) {
     return await this.dependencieService.getActiveDependenciesOfInstitution(id_institucion, text);
   }
 
