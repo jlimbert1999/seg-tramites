@@ -59,13 +59,13 @@ export const SYSTEM_MENU: Menu[] = [
     resource: VALID_RESOURCES.external,
     text: 'Tramites externos',
     icon: 'folder_shared',
-    routerLink: 'tramites/externos',
+    routerLink: 'external',
   },
   {
     resource: VALID_RESOURCES.internal,
     text: 'Tramites internos',
     icon: 'folder',
-    routerLink: 'tramites/internos',
+    routerLink: 'internal',
   },
   {
     resource: VALID_RESOURCES.communication,

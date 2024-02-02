@@ -5,12 +5,17 @@ import { GroupwareService } from './groupware.service';
 import { Communication } from 'src/procedures/schemas';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
 export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
   constructor(private readonly groupwareService: GroupwareService, private readonly jwtService: JwtService) {}
   handleConnection(client: Socket) {
+    console.log(client);
     try {
       const token = client.handshake.auth.token;
       const decoded: JwtPayload = this.jwtService.verify(token);
