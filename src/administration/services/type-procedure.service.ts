@@ -8,8 +8,8 @@ import { CreateTypeProcedureDto, UpdateTypeProcedureDto } from '../dto';
 export class TypeProcedureService {
   constructor(@InjectModel(TypeProcedure.name) private typeProcedureModel: Model<TypeProcedure>) {}
 
-  public async getSegments() {
-    return await this.typeProcedureModel.distinct('segmento');
+  public async getSegments(type?: 'EXTERNO' | 'INTERNO') {
+    return await this.typeProcedureModel.find(type ? { tipo: type } : {}).distinct('segmento');
   }
 
   async search(limit: number, offset: number, text: string) {
@@ -47,8 +47,12 @@ export class TypeProcedureService {
     return { activo };
   }
 
-  async getEnabledTypesBySegment(segment: string) {
-    return await this.typeProcedureModel.find({ segmento: segment.toUpperCase(), activo: true });
+  async getEnabledTypesBySegment(segment: string, type?: 'INTERNO' | 'EXTERNO') {
+    return await this.typeProcedureModel.find({
+      segmento: segment.toUpperCase(),
+      activo: true,
+      ...(type ? { tipo: type } : {}),
+    });
   }
 
   async getEnabledTypesByGroup(group: 'INTERNO' | 'EXTERNO') {

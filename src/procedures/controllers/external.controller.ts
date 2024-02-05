@@ -7,7 +7,6 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/users/schemas';
 import { VALID_RESOURCES } from 'src/auth/constants';
 
-
 @Controller('external')
 @ResourceProtected(VALID_RESOURCES.external)
 export class ExternalController {
@@ -18,11 +17,11 @@ export class ExternalController {
 
   @Get('segments')
   getSegments() {
-    return this.typeProcedure.getSegments();
+    return this.typeProcedure.getSegments('EXTERNO');
   }
-  @Get('segments/:segment')
+  @Get('types-procedures/:segment')
   async getTypesProceduresBySegment(@Param('segment') segment: string) {
-    return await this.typeProcedure.getEnabledTypesBySegment(segment);
+    return await this.typeProcedure.getEnabledTypesBySegment(segment, 'EXTERNO');
   }
 
   @Get('search/:text')

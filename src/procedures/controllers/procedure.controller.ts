@@ -1,17 +1,21 @@
 import { Body, Controller, Get, InternalServerErrorException, Param, Post, Put } from '@nestjs/common';
 import { GetUserRequest } from 'src/auth/decorators';
-import { CommunicationService, ExternalService, InternalService, ObservationService } from '../services';
+import { CommunicationService, ObservationService } from '../services';
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
 import { Account } from 'src/users/schemas';
+import { IsMongoidPipe } from 'src/common/pipes';
+import { ExternalService, InternalService } from '../services';
+import { ModuleRef } from '@nestjs/core';
 
 @Controller('procedure')
 export class ProcedureController {
   constructor(
-    private readonly externalService: ExternalService,
-    private readonly internalService: InternalService,
+    // private readonly externalService: ExternalService,
+    // private readonly internalService: InternalService,
     private readonly communicationService: CommunicationService,
     private readonly observationService: ObservationService,
+    private moduleRef: ModuleRef,
   ) {}
 
   @Get('/:group/:id')
@@ -28,12 +32,17 @@ export class ProcedureController {
   private getServiceByGroup(group: groupProcedure): ValidProcedureService {
     switch (group) {
       case groupProcedure.EXTERNAL:
-        return this.externalService;
+        return this.moduleRef.get(ExternalService);
       case groupProcedure.INTERNAL:
-        return this.internalService;
+        return this.moduleRef.get(InternalService);
       default:
         throw new InternalServerErrorException('Group procedure is not defined');
     }
+  }
+
+  @Get('workflow/:id')
+  getWorkflow(@Param('id', IsMongoidPipe) id_procedure: string) {
+    return this.communicationService.getWorkflow(id_procedure);
   }
 
   @Post('/:id_procedure/observation')
