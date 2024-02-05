@@ -372,7 +372,7 @@ export class CommunicationService {
     return lastStage;
   }
 
-  async getWorkflow(id_procedure: string): Promise<any[]> {
+  async getWorkflow(id_procedure: string) {
     const workflow: workflow[] = await this.communicationModel
       .aggregate()
       .match({ procedure: new mongoose.Types.ObjectId(id_procedure) })
@@ -382,32 +382,35 @@ export class CommunicationService {
       })
       .sort({ '_id.outboundDate': 1 });
     if (workflow.length === 0) return [];
-    return await this.timedWorkflow(workflow, id_procedure);
+    // return await this.timedWorkflow(workflow, id_procedure);
   }
 
   private async timedWorkflow(workflow: workflow[], id_procedure: string) {
-    const { startDate } = await this.procedureModel.findById(id_procedure, 'startDate');
+    const { startDate } = await this.procedureModel.findById(id_procedure, 'startDate').explain();
+    console.log(startDate);
     const stages = workflow.map((stage, index) => {
-      let start: Date | undefined = index === 0 ? startDate : undefined;
-      for (let i = workflow.length - 1; i >= 0; i--) {
-        const lastStep = workflow[i].detail.find(
-          (send) =>
-            send.receiver.cuenta.toString() === stage._id.emitterAccount.toString() &&
-            send.status === statusMail.Completed,
-        );
-        if (lastStep) {
-          start = lastStep.inboundDate;
-          break;
-        }
-      }
+      console.log(stage);
+      // let start: Date | undefined = index === 0 ? startDate : undefined;
+      // for (let i = workflow.length - 1; i >= 0; i--) {
+      //   const lastStep = workflow[i].detail.find(
+      //     (send) =>
+      //       send.receiver.cuenta.toString() === stage._id.emitterAccount.toString() &&
+      //       send.status === statusMail.Completed,
+      //   );
+      //   if (lastStep) {
+      //     start = lastStep.inboundDate;
+      //     break;
+      //   }
+      // }
       return {
-        officer: stage.detail[0].emitter,
+        emitter: stage.detail[0].emitter,
         date: stage._id.outboundDate,
-        duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : '- No calculado -',
-        receivers: stage.detail.map(({ receiver, inboundDate, outboundDate }) => ({
+        duration: '- No calculado -',
+        receivers: stage.detail.map(({ receiver, inboundDate, outboundDate, reference, attachmentQuantity }) => ({
           officer: receiver,
           date: inboundDate,
           duration: inboundDate ? HumanizeTime(inboundDate.getTime() - outboundDate.getTime()) : 'Pendiente',
+          reference,
         })),
       };
     });

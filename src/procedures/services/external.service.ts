@@ -74,8 +74,8 @@ export class ExternalService implements ValidProcedureService {
           state: { $ne: stateProcedure.ANULADO },
         })
         .sort({ _id: -1 })
-        .skip(offset)
         .limit(limit)
+        .skip(offset)
         .populate('details'),
       await this.procedureModel.count({
         account: id_account,

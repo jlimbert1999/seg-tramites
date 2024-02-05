@@ -13,8 +13,8 @@ interface ID {
 
 interface Detail {
   _id: string;
-  emitter: Participant;
-  receiver: Participant;
+  emitter: officer;
+  receiver: officer;
   procedure: string;
   reference: string;
   attachmentQuantity: string;
@@ -31,7 +31,7 @@ interface EventLog {
   date: string;
 }
 
-interface Participant {
+interface officer {
   cuenta: string;
   fullname: string;
   jobtitle?: string;
