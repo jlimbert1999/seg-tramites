@@ -2,7 +2,7 @@ import { WebSocketGateway, OnGatewayConnection, WebSocketServer, OnGatewayDiscon
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { GroupwareService } from './groupware.service';
-import { Communication } from 'src/procedures/schemas';
+import { Comm } from 'src/procedures/schemas';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 
 @WebSocketGateway({
@@ -32,7 +32,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     client.broadcast.emit('listar', this.groupwareService.getConnectedUsers());
   }
 
-  sendMails(data: Communication[]) {
+  sendMails(data: Comm[]) {
     data.forEach((mail) => {
       const user = this.groupwareService.getUser(String(mail.receiver.cuenta._id));
       if (user) {
@@ -43,7 +43,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     });
   }
 
-  cancelMails(data: Communication[]) {
+  cancelMails(data: Comm[]) {
     data.forEach(({ _id, receiver }) => {
       const user = this.groupwareService.getUser(String(receiver.cuenta._id));
       if (user) {

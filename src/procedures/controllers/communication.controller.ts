@@ -32,6 +32,11 @@ export class CommunicationController {
     return this.communicationService.repairCollection();
   }
 
+  @Get('new')
+  generateNewCollection() {
+    return this.communicationService.generateLastCollection();
+  }
+
   @Get('institutions')
   async getInstitutions() {
     return await this.institutionService.searchActiveInstitutions();

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
+import { Comm, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import {
   GetTotalMailsDto,
@@ -20,7 +20,7 @@ export class ReportsService {
     @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
-    @InjectModel(Communication.name) private communicationModel: Model<Communication>,
+    @InjectModel(Comm.name) private communicationModel: Model<Comm>,
     @InjectModel(ExternalDetail.name) private externalProcedureModel: Model<ExternalDetail>,
   ) {}
 
@@ -109,7 +109,7 @@ export class ReportsService {
     { limit, offset }: PaginationParamsDto,
   ) {
     const { start, end, status, account } = properties;
-    const query: mongoose.FilterQuery<Communication>[] = [];
+    const query: mongoose.FilterQuery<Comm>[] = [];
     const interval = {
       ...(start && { $gte: new Date(start) }),
       ...(end && { $lte: new Date(end) }),
@@ -149,7 +149,7 @@ export class ReportsService {
   async getTotalMailsByInstitution(id_institution: string, { group, participant }: GetTotalMailsDto) {
     const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
     const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
-    const query: mongoose.FilterQuery<Communication> =
+    const query: mongoose.FilterQuery<Comm> =
       participant === 'receiver'
         ? { 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } }
         : { 'emitter.cuenta': { $in: accounts.map((acc) => acc._id) } };

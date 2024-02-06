@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Procedure } from './procedure.schema';
 import { statusMail } from '../interfaces/status.interface';
-import { Account, Officer } from 'src/users/schemas';
+import { Account } from 'src/users/schemas';
 
 @Schema({ _id: false })
 class Participant extends Document {
@@ -12,13 +12,7 @@ class Participant extends Document {
     required: true,
     index: true,
   })
-  cuenta: Account;
-
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: Officer.name,
-  })
-  funcionario: Officer;
+  account: Account;
 
   @Prop({
     type: String,
@@ -46,26 +40,13 @@ class EventLog extends Document {
 }
 const EventLogSchema = SchemaFactory.createForClass(EventLog);
 
-@Schema({ collection: 'comm' })
-export class Comm extends Document {
-  @Prop({
-    type: ParticipantSchema,
-    required: true,
-  })
-  emitter: Participant;
-
+@Schema({ _id: false })
+class Dispatch extends Document {
   @Prop({
     type: ParticipantSchema,
     required: true,
   })
   receiver: Participant;
-
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: Procedure.name,
-    required: true,
-  })
-  procedure: Procedure;
 
   @Prop({
     type: String,
@@ -80,25 +61,9 @@ export class Comm extends Document {
   attachmentQuantity: string;
 
   @Prop({
-    type: String,
-  })
-  internalNumber: string;
-
-  @Prop({
-    type: Date,
-    required: true,
-  })
-  outboundDate: Date;
-
-  @Prop({
     type: Date,
   })
-  inboundDate?: Date;
-
-  @Prop({
-    type: String,
-  })
-  rejectionReason?: string;
+  date?: Date;
 
   @Prop({
     type: String,
@@ -111,7 +76,41 @@ export class Comm extends Document {
   @Prop({
     type: EventLogSchema,
   })
-  eventLog: EventLog;
+  eventLog?: EventLog;
+}
+const DispatchSchema = SchemaFactory.createForClass(Dispatch);
+
+@Schema()
+export class Communication extends Document {
+  @Prop({
+    type: ParticipantSchema,
+    required: true,
+  })
+  emitter: Participant;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Procedure.name,
+    required: true,
+  })
+  procedure: Procedure;
+
+  @Prop({
+    type: Date,
+    required: true,
+  })
+  date: Date;
+
+  @Prop({
+    type: String,
+  })
+  internalNumber: string;
+
+  @Prop({
+    type: [DispatchSchema],
+    required: true,
+  })
+  dispatches: Dispatch[];
 }
 
-export const CommSchema = SchemaFactory.createForClass(Comm);
+export const CommunicationSchema = SchemaFactory.createForClass(Communication);

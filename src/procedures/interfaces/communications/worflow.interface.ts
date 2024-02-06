@@ -8,7 +8,7 @@ export interface workflow {
 interface ID {
   emitterAccount: string;
   outboundDate: Date;
-  duration: string;
+  // duration: string;
 }
 
 interface Detail {

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
-import { Communication, ProcedureEvents, Procedure } from '../schemas';
+import { Comm, ProcedureEvents, Procedure } from '../schemas';
 import { CreateArchiveDto, EventProcedureDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
@@ -15,8 +15,8 @@ export class ArchiveService {
     @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectModel(ProcedureEvents.name) private procedureEventModel: Model<ProcedureEvents>,
     @InjectConnection() private readonly connection: mongoose.Connection,
-    @InjectModel(Communication.name)
-    private communicationModel: Model<Communication>,
+    @InjectModel(Comm.name)
+    private communicationModel: Model<Comm>,
   ) {}
 
   // async archiveProcedure(id: string, eventDto: CreateArchiveDto, account: Account) {
@@ -113,7 +113,7 @@ export class ArchiveService {
         dependencia: id_dependency,
       })
       .select('_id');
-    const query: FilterQuery<Communication> = {
+    const query: FilterQuery<Comm> = {
       status: statusMail.Archived,
       'receiver.cuenta': { $in: unit.map((acount) => acount._id) },
     };
@@ -214,7 +214,7 @@ export class ArchiveService {
   }
 
   async insertPartipantInWokflow(
-    currentMail: Communication,
+    currentMail: Comm,
     participant: Account,
     session: mongoose.mongo.ClientSession,
   ): Promise<void> {
