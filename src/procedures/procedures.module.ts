@@ -12,8 +12,6 @@ import {
 } from './controllers';
 import { ExternalService, InternalService, CommunicationService, ObservationService, ArchiveService } from './services';
 import {
-  Comm,
-  CommSchema,
   ProcedureEvents,
   ProcedureEventSchema,
   ExternalDetail,
@@ -38,7 +36,6 @@ import { UsersModule } from 'src/users/users.module';
       { name: InternalDetail.name, schema: InternalDetailSchema },
       { name: ExternalDetail.name, schema: ExternalDetailSchema },
       { name: ProcedureEvents.name, schema: ProcedureEventSchema },
-      { name: Comm.name, schema: CommSchema },
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
     ]),

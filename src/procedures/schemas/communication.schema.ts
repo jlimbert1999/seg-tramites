@@ -46,8 +46,8 @@ class EventLog extends Document {
 }
 const EventLogSchema = SchemaFactory.createForClass(EventLog);
 
-@Schema({ collection: 'comm' })
-export class Comm extends Document {
+@Schema()
+export class Communication extends Document {
   @Prop({
     type: ParticipantSchema,
     required: true,
@@ -114,4 +114,4 @@ export class Comm extends Document {
   eventLog: EventLog;
 }
 
-export const CommSchema = SchemaFactory.createForClass(Comm);
+export const CommunicationSchema = SchemaFactory.createForClass(Communication);

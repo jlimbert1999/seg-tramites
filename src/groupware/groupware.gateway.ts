@@ -2,8 +2,8 @@ import { WebSocketGateway, OnGatewayConnection, WebSocketServer, OnGatewayDiscon
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { GroupwareService } from './groupware.service';
-import { Comm } from 'src/procedures/schemas';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
+import { Communication } from 'src/procedures/schemas';
 
 @WebSocketGateway({
   cors: {
@@ -15,7 +15,6 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   constructor(private readonly groupwareService: GroupwareService, private readonly jwtService: JwtService) {}
   handleConnection(client: Socket) {
-    console.log(client);
     try {
       const token = client.handshake.auth.token;
       const decoded: JwtPayload = this.jwtService.verify(token);
@@ -32,7 +31,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     client.broadcast.emit('listar', this.groupwareService.getConnectedUsers());
   }
 
-  sendMails(data: Comm[]) {
+  sendMails(data: Communication[]) {
     data.forEach((mail) => {
       const user = this.groupwareService.getUser(String(mail.receiver.cuenta._id));
       if (user) {
@@ -43,7 +42,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     });
   }
 
-  cancelMails(data: Comm[]) {
+  cancelMails(data: Communication[]) {
     data.forEach(({ _id, receiver }) => {
       const user = this.groupwareService.getUser(String(receiver.cuenta._id));
       if (user) {

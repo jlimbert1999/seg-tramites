@@ -1,38 +1,24 @@
-import { statusMail } from '../status.interface';
-
 export interface workflow {
   _id: ID;
-  detail: Detail[];
+  dispatches: Dispatch[];
 }
 
 interface ID {
-  emitterAccount: string;
-  outboundDate: Date;
-  // duration: string;
+  emitter: Participant;
+  date: Date;
 }
 
-interface Detail {
+interface Dispatch {
   _id: string;
-  emitter: officer;
-  receiver: officer;
-  procedure: string;
+  receiver: Participant;
   reference: string;
+  date?: Date;
   attachmentQuantity: string;
-  internalNumber: string;
-  status: statusMail;
-  outboundDate: Date;
-  inboundDate?: Date;
-  eventLog?: EventLog;
+  status: string;
 }
 
-interface EventLog {
-  manager: string;
-  description: string;
-  date: string;
-}
-
-interface officer {
+interface Participant {
   cuenta: string;
   fullname: string;
-  jobtitle?: string;
+  jobtitle: string;
 }

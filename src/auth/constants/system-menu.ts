@@ -71,13 +71,13 @@ export const SYSTEM_MENU: Menu[] = [
     resource: VALID_RESOURCES.communication,
     text: 'Bandeja de entrada',
     icon: 'drafts',
-    routerLink: 'bandejas/entrada',
+    routerLink: 'inbox',
   },
   {
     resource: VALID_RESOURCES.communication,
     text: 'Bandeja de salida',
     icon: 'mark_as_unread',
-    routerLink: 'bandejas/salida',
+    routerLink: 'outbox',
   },
   {
     resource: VALID_RESOURCES.archived,

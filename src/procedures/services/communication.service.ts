@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 
-import { Procedure, Comm, ProcedureEvents, Communication } from '../schemas';
+import { Procedure, ProcedureEvents, Communication } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
 import { createFullName } from 'src/administration/helpers/fullname';
@@ -15,8 +15,7 @@ import { buildFullname } from 'src/users/helpers/fullname';
 export class CommunicationService {
   constructor(
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
-    @InjectModel(Comm.name) private communicationModel: Model<Comm>,
-    @InjectModel(Communication.name) private newCommunicationModel: Model<Communication>,
+    @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
   ) {}
@@ -66,47 +65,9 @@ export class CommunicationService {
     // }
     return { ok: true };
   }
-  async generateLastCollection() {
-    // ? EXECUTE AFTER GENERATE EVENTLOG FIELDS
-    // ! DELETE AFTER UPDATE
-    const data: workflow[] = await this.communicationModel
-      .aggregate()
-      .match({})
-      .group({
-        _id: { emitterAccount: '$emitter.cuenta', outboundDate: '$outboundDate' },
-        detail: { $push: '$$ROOT' },
-      });
-    for (const item of data) {
-      const newComunication = {
-        emitter: {
-          account: item._id.emitterAccount,
-          fullname: item.detail[0].emitter.fullname,
-          jobtitle: item.detail[0].emitter.jobtitle,
-        },
-        procedure: item.detail[0].procedure,
-        date: item._id.outboundDate,
-        internalNumber: item.detail[0].internalNumber,
-        dispatches: item.detail.map((el) => ({
-          receiver: {
-            account: el.receiver.cuenta,
-            fullname: el.receiver.fullname,
-            jobtitle: el.receiver.jobtitle,
-          },
-          reference: el.reference,
-          attachmentQuantity: el.attachmentQuantity,
-          date: el.inboundDate,
-          status: el.status,
-          eventLog: el.eventLog,
-        })),
-      };
-      const createdCommunication = new this.newCommunicationModel(newComunication);
-      await createdCommunication.save();
-    }
-    return { message: 'collection is done.' };
-  }
 
   async getAccountInbox(id: string, { limit, offset, status }: GetInboxParamsDto) {
-    const query: FilterQuery<Comm> = {
+    const query: FilterQuery<Communication> = {
       'receiver.cuenta': id,
     };
     status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
@@ -119,11 +80,10 @@ export class CommunicationService {
 
   async searchInbox(id_account: string, term: string, { limit, offset, status }: GetInboxParamsDto) {
     const regex = new RegExp(term, 'i');
-    const query: mongoose.FilterQuery<Comm> = {
-      'receiver.cuentas': id_account,
+    const query: mongoose.FilterQuery<Communication> = {
+      'receiver.cuenta': id_account,
     };
     status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
-
     const [data] = await this.communicationModel
       .aggregate()
       .match(query)
@@ -144,7 +104,7 @@ export class CommunicationService {
         ],
       });
     const mails = data.paginatedResults;
-    const length = data.totalCount[0] ? data[0].totalCount[0].count : 0;
+    const length = data.totalCount[0] ? data.totalCount[0].count : 0;
     return { mails, length };
   }
 
@@ -217,7 +177,7 @@ export class CommunicationService {
     return { mails, length };
   }
 
-  async create(communication: CreateCommunicationDto, account: Account): Promise<Comm[]> {
+  async create(communication: CreateCommunicationDto, account: Account): Promise<Communication[]> {
     const { id_mail, id_procedure, receivers } = communication;
     await this.verifyDuplicateSend(id_procedure, receivers);
     const session = await this.connection.startSession();
@@ -257,7 +217,10 @@ export class CommunicationService {
     }
   }
 
-  async createCommunicationModel(emitterAccount: Account, communication: CreateCommunicationDto): Promise<Comm[]> {
+  async createCommunicationModel(
+    emitterAccount: Account,
+    communication: CreateCommunicationDto,
+  ): Promise<Communication[]> {
     const { receivers, id_procedure, ...values } = communication;
     const { _id, funcionario } = await emitterAccount.populate({
       path: 'funcionario',
@@ -374,7 +337,7 @@ export class CommunicationService {
     }
   }
 
-  private async checkIfMailsHaveBeenReceived(ids_mails: string[]): Promise<Comm[]> {
+  private async checkIfMailsHaveBeenReceived(ids_mails: string[]): Promise<Communication[]> {
     const mails = await this.communicationModel.find({ _id: { $in: ids_mails } });
     if (mails.length === 0) throw new BadRequestException('Los envios ya han sido cancelados');
     const receivedMail = mails.find((mail) => mail.status !== statusMail.Pending);
@@ -392,7 +355,7 @@ export class CommunicationService {
     id_procedure: string,
     id_currentManager: string,
     session: mongoose.mongo.ClientSession,
-  ): Promise<Comm | undefined> {
+  ): Promise<Communication | undefined> {
     const lastStage = await this.communicationModel.findOneAndUpdate(
       {
         procedure: id_procedure,
@@ -409,7 +372,60 @@ export class CommunicationService {
   }
 
   async getWorkflow(id_procedure: string) {
-    return await this.newCommunicationModel.find({ procedure: id_procedure }).sort({ date: 1 });
+    const workflow: workflow[] = await this.communicationModel
+      .aggregate()
+      .match({ procedure: new mongoose.Types.ObjectId(id_procedure) })
+      .group({
+        _id: { emitter: '$emitter', date: '$outboundDate' },
+        dispatches: {
+          $push: {
+            _id: '$_id',
+            receiver: '$receiver',
+            date: '$inboundDate',
+            reference: '$reference',
+            attachmentQuantity: '$attachmentQuantity',
+            status: '$status',
+          },
+        },
+      })
+      .sort({ '_id.outboundDate': 1 });
+    return workflow;
+  }
+
+  private async timedWorkflow(workflow: workflow[], id_procedure: string) {
+    const { startDate } = await this.procedureModel.findById(id_procedure, 'startDate');
+    const list: Record<string, Date> = {};
+    const stages = workflow.map(({ _id, dispatches }, index) => {
+      dispatches.forEach((el) => (list[el.receiver.cuenta] = el.date));
+      return {
+        ..._id,
+        time: HumanizeTime(list[_id.emitter.cuenta].getTime() - _id.date.getTime()),
+        dispatches: dispatches,
+      };
+      // let start: Date | undefined = index === 0 ? startDate : undefined;
+      for (let i = workflow.length - 1; i >= 0; i--) {
+        // const lastStep = workflow[i].detail.find(
+        //   (send) =>
+        //     send.receiver.cuenta.toString() === stage._id.emitterAccount.toString() &&
+        //     send.status === statusMail.Completed,
+        // );
+        // if (lastStep) {
+        //   start = lastStep.inboundDate;
+        //   break;
+        // }
+      }
+      return {
+        // officer: stage.detail[0].emitter,
+        // date: stage._id.outboundDate,
+        // duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : '- No calculado -',
+        // receivers: stage.detail.map(({ receiver, inboundDate, outboundDate }) => ({
+        //   officer: receiver,
+        //   date: inboundDate,
+        //   duration: inboundDate ? HumanizeTime(inboundDate.getTime() - outboundDate.getTime()) : 'Pendiente',
+        // })),
+      };
+    });
+    return stages;
   }
 
   async getMailDetails(id_mail: string) {
