@@ -2,13 +2,13 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 
+import { Account } from 'src/users/schemas';
 import { Procedure, ProcedureEvents, Communication } from '../schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateCommunicationDto, GetInboxParamsDto, ReceiverDto } from '../dto';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { HumanizeTime } from 'src/common/helpers';
 import { stateProcedure, statusMail, workflow } from '../interfaces';
-import { Account } from 'src/users/schemas';
 import { buildFullname } from 'src/users/helpers/fullname';
 
 @Injectable()
@@ -16,8 +16,7 @@ export class CommunicationService {
   constructor(
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
-    @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
+    @InjectConnection() private readonly connection: mongoose.Connection, // @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
   ) {}
 
   async repairCollection() {
@@ -64,6 +63,12 @@ export class CommunicationService {
     //   }
     // }
     return { ok: true };
+  }
+
+  async getMailDetails(id_mail: string) {
+    const mailDB = await this.communicationModel.findById(id_mail).populate('procedure');
+    if (!mailDB) throw new BadRequestException('El envio de este tramite ha sido cancelado');
+    return mailDB;
   }
 
   async getAccountInbox(id: string, { limit, offset, status }: GetInboxParamsDto) {
@@ -376,61 +381,33 @@ export class CommunicationService {
       .aggregate()
       .match({ procedure: new mongoose.Types.ObjectId(id_procedure) })
       .group({
-        _id: { emitter: '$emitter', date: '$outboundDate' },
+        _id: { emitter: '$emitter', outboundDate: '$outboundDate' },
         dispatches: {
-          $push: {
-            _id: '$_id',
-            receiver: '$receiver',
-            date: '$inboundDate',
-            reference: '$reference',
-            attachmentQuantity: '$attachmentQuantity',
-            status: '$status',
-          },
+          $push: '$$ROOT',
         },
       })
-      .sort({ '_id.outboundDate': 1 });
-    return workflow;
+      .sort({ '_id.outboundDate': 1 })
+      .project({ 'dispatches.emitter': 0, 'dispatches.outboundDate': 0 });
+    return await this.timedWorkflow(workflow, id_procedure);
   }
 
   private async timedWorkflow(workflow: workflow[], id_procedure: string) {
     const { startDate } = await this.procedureModel.findById(id_procedure, 'startDate');
-    const list: Record<string, Date> = {};
-    const stages = workflow.map(({ _id, dispatches }, index) => {
-      dispatches.forEach((el) => (list[el.receiver.cuenta] = el.date));
+    const receptionList: Record<string, Date> = {};
+    const stages = workflow.map(({ _id, dispatches }) => {
+      dispatches.forEach((el) => (receptionList[el.receiver.cuenta] = el.inboundDate));
+      const start = receptionList[_id.emitter.cuenta] ?? startDate;
       return {
         ..._id,
-        time: HumanizeTime(list[_id.emitter.cuenta].getTime() - _id.date.getTime()),
-        dispatches: dispatches,
-      };
-      // let start: Date | undefined = index === 0 ? startDate : undefined;
-      for (let i = workflow.length - 1; i >= 0; i--) {
-        // const lastStep = workflow[i].detail.find(
-        //   (send) =>
-        //     send.receiver.cuenta.toString() === stage._id.emitterAccount.toString() &&
-        //     send.status === statusMail.Completed,
-        // );
-        // if (lastStep) {
-        //   start = lastStep.inboundDate;
-        //   break;
-        // }
-      }
-      return {
-        // officer: stage.detail[0].emitter,
-        // date: stage._id.outboundDate,
-        // duration: start ? HumanizeTime(stage._id.outboundDate.getTime() - start.getTime()) : '- No calculado -',
-        // receivers: stage.detail.map(({ receiver, inboundDate, outboundDate }) => ({
-        //   officer: receiver,
-        //   date: inboundDate,
-        //   duration: inboundDate ? HumanizeTime(inboundDate.getTime() - outboundDate.getTime()) : 'Pendiente',
-        // })),
+        duration: start ? HumanizeTime(_id.outboundDate.getTime() - start.getTime()) : 'No calculado',
+        dispatches: dispatches.map((dispatch) => {
+          const duration = dispatch.inboundDate
+            ? HumanizeTime(dispatch.inboundDate.getTime() - _id.outboundDate.getTime())
+            : 'Pendiente';
+          return { ...dispatch, duration };
+        }),
       };
     });
     return stages;
-  }
-
-  async getMailDetails(id_mail: string) {
-    const mailDB = await this.communicationModel.findById(id_mail).populate('procedure');
-    if (!mailDB) throw new BadRequestException('El envio de este tramite ha sido cancelado');
-    return mailDB;
   }
 }
