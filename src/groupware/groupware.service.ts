@@ -8,16 +8,16 @@ export class GroupwareService {
 
   addUser(id_socket: string, payloadToken: JwtPayload): void {
     const { id_account, id_dependency, officer } = payloadToken;
-    if (!this.users[id_account]) {
-      this.users[id_account] = {
-        id_dependency,
-        id_account,
-        officer,
-        socketIds: [id_socket],
-      };
+    if (this.users[id_account]) {
+      this.users[id_account].socketIds.push(id_socket);
       return;
     }
-    this.users[id_account].socketIds.push(id_socket);
+    this.users[id_account] = {
+      id_dependency,
+      id_account,
+      officer,
+      socketIds: [id_socket],
+    };
   }
 
   removeUser(id_socket: string) {
@@ -32,7 +32,7 @@ export class GroupwareService {
     return this.users[id_account];
   }
 
-  getConnectedUsers() {
+  getUsers() {
     return Object.values(this.users);
   }
 }

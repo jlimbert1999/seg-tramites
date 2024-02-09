@@ -13,22 +13,23 @@ import { Communication } from 'src/procedures/schemas';
 export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly groupwareService: GroupwareService, private readonly jwtService: JwtService) {}
+  constructor(private groupwareService: GroupwareService, private jwtService: JwtService) {}
+
   handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth.token;
       const decoded: JwtPayload = this.jwtService.verify(token);
-      if (decoded.id_dependency !== '') client.join(decoded.id_dependency);
+      if (decoded.id_dependency) client.join(decoded.id_dependency);
       this.groupwareService.addUser(client.id, decoded);
-      this.server.emit('listar', this.groupwareService.getConnectedUsers());
+      this.server.emit('listar', this.groupwareService.getUsers());
     } catch (error) {
       client.disconnect();
-      return;
     }
   }
+  
   handleDisconnect(client: Socket) {
     this.groupwareService.removeUser(client.id);
-    client.broadcast.emit('listar', this.groupwareService.getConnectedUsers());
+    client.broadcast.emit('listar', this.groupwareService.getUsers());
   }
 
   sendMails(data: Communication[]) {

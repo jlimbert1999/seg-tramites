@@ -85,4 +85,10 @@ export const SYSTEM_MENU: Menu[] = [
     icon: 'folder_copy',
     routerLink: 'tramites/archivados',
   },
+  {
+    resource: VALID_RESOURCES.communication,
+    text: 'Publicaciones',
+    icon: 'folder_copy',
+    routerLink: 'posts',
+  },
 ];
