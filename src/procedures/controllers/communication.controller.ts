@@ -14,6 +14,7 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { AccountService } from 'src/users/services/account.service';
 import type { Account } from 'src/users/schemas';
 import { VALID_RESOURCES } from 'src/auth/constants';
+import { IsMongoidPipe } from 'src/common/pipes';
 
 @Controller('communication')
 @ResourceProtected(VALID_RESOURCES.communication)
@@ -38,12 +39,15 @@ export class CommunicationController {
   }
 
   @Get('dependencies/:id_institution')
-  async getDependencies(@Param('id_institution') id_institution: string) {
+  async getDependencies(@Param('id_institution', IsMongoidPipe) id_institution: string) {
     return await this.dependencieService.getActiveDependenciesOfInstitution(id_institution);
   }
 
   @Get('accounts/:id_dependency')
-  async getAccountsForSend(@GetUserRequest('_id') id_account: string, @Param('id_dependency') id_dependency: string) {
+  async getAccountsForSend(
+    @GetUserRequest('_id') id_account: string,
+    @Param('id_dependency', IsMongoidPipe) id_dependency: string,
+  ) {
     return await this.accountService.getAccountsForSend(id_dependency, id_account);
   }
 
@@ -61,7 +65,7 @@ export class CommunicationController {
 
   @Get('outbox')
   getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
-    return this.communicationService.getOutbox(id_account, paginationParams);
+    return this.communicationService.getAccountOutbox(id_account, paginationParams);
   }
 
   @Put('accept/:id_mail')

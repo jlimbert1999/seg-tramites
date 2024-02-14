@@ -13,7 +13,7 @@ import { Account } from 'src/users/schemas';
 @Injectable()
 export class ExternalService implements ValidProcedureService {
   constructor(
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectConnection() private connection: mongoose.Connection,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name) private externalDetailModel: Model<ExternalDetail>,
     private configService: ConfigService,
@@ -92,11 +92,11 @@ export class ExternalService implements ValidProcedureService {
       session.startTransaction();
       const createdDetail = new this.externalDetailModel(details);
       const { _id } = await createdDetail.save({ session });
-      const alterno = await this.generateCode(account, segment);
+      const code = await this.generateCode(account, segment);
       const createdProcedure = new this.procedureModel({
         group: groupProcedure.EXTERNAL,
         account: account._id,
-        code: alterno,
+        code: code,
         details: _id,
         ...procedureProps,
       });
@@ -111,22 +111,20 @@ export class ExternalService implements ValidProcedureService {
       session.endSession();
     }
   }
-  async update(id_procedure: string, procedure: UpdateProcedureDto, details: UpdateExternalDto) {
-    const {
-      details: { _id: id_detail },
-    } = await this.isEditable(id_procedure);
+  async update(id: string, procedure: UpdateProcedureDto, details: UpdateExternalDto) {
+    const procedureDB = await this.checkIsEditable(id);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       await this.externalDetailModel.updateOne(
         {
-          _id: id_detail,
+          _id: procedureDB.details._id,
         },
         details,
         { session },
       );
       const updatedProcedure = await this.procedureModel
-        .findByIdAndUpdate(id_procedure, procedure, {
+        .findByIdAndUpdate(id, procedure, {
           session,
           new: true,
         })
@@ -162,7 +160,7 @@ export class ExternalService implements ValidProcedureService {
     return procedureDB;
   }
 
-  private async isEditable(id_procedure: string): Promise<Procedure> {
+  private async checkIsEditable(id_procedure: string): Promise<Procedure> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
     if (procedureDB.state !== stateProcedure.INSCRITO) {

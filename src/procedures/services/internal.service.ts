@@ -26,12 +26,12 @@ export class InternalService implements ValidProcedureService {
       const createdDetail = new this.internalModel(details);
       await createdDetail.save({ session });
       const { segment, ...procedureProps } = procedure;
-      const alterno = await this.generateCode(account, segment);
+      const code = await this.generateCode(account, segment);
       const createdProcedure = new this.procedureModel({
         group: groupProcedure.INTERNAL,
         details: createdDetail._id,
         account: account._id,
-        code: alterno,
+        code: code,
         ...procedureProps,
       });
       await createdProcedure.save({ session });
@@ -45,22 +45,20 @@ export class InternalService implements ValidProcedureService {
       session.endSession();
     }
   }
-  async update(id_procedure: string, procedure: UpdateProcedureDto, details: UpdateInternalDetailDto) {
-    const {
-      details: { _id: id_detail },
-    } = await this.isEditable(id_procedure);
+  async update(id: string, procedure: UpdateProcedureDto, details: UpdateInternalDetailDto) {
+    const procedureDB = await this.checkIsEditable(id);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       await this.internalModel.updateOne(
         {
-          _id: id_detail,
+          _id: procedureDB.details._id,
         },
         details,
         { session },
       );
       const updatedProcedure = await this.procedureModel
-        .findByIdAndUpdate(id_procedure, procedure, {
+        .findByIdAndUpdate(id, procedure, {
           session,
           new: true,
         })
@@ -163,7 +161,7 @@ export class InternalService implements ValidProcedureService {
     });
     return `${code}-${String(correlative + 1).padStart(5, '0')}`;
   }
-  private async isEditable(id_procedure: string): Promise<Procedure> {
+  private async checkIsEditable(id_procedure: string): Promise<Procedure> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
     if (procedureDB.state !== stateProcedure.INSCRITO)

@@ -184,10 +184,10 @@ export class AccountService {
     return await this.officerService.searchOfficersWithoutAccount(text);
   }
 
-  async getAccountsForSend(id_dependencie: string, id_account: string) {
+  async getAccountsForSend(id_dependency: string, id_account: string) {
     return await this.accountModel
       .find({
-        dependencia: id_dependencie,
+        dependencia: id_dependency,
         isVisible: true,
         activo: true,
         funcionario: { $ne: null },
@@ -226,5 +226,4 @@ export class AccountService {
     if (result.matchedCount === 0) throw new BadRequestException(`La cuenta ${id} no existe`);
     return { message: 'Cuenta desvinculada' };
   }
-
 }

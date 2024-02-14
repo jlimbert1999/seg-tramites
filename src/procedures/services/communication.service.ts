@@ -113,10 +113,10 @@ export class CommunicationService {
     return { mails, length };
   }
 
-  async getOutbox(id_account: string, { limit, offset }: PaginationParamsDto) {
+  async getAccountOutbox(id_account: string, { limit, offset }: PaginationParamsDto) {
     const dataPaginated = await this.communicationModel
       .aggregate()
-      .match({ 'emitter.cuenta': id_account })
+      .match({ 'emitter.cuenta': id_account, status: statusMail.Pending })
       .group({
         _id: {
           account: '$emitter.cuenta',
@@ -152,6 +152,7 @@ export class CommunicationService {
       .aggregate()
       .match({
         'emitter.cuenta': id_account,
+        status: statusMail.Pending,
       })
       .group({
         _id: {
@@ -208,7 +209,7 @@ export class CommunicationService {
     }
   }
 
-  async verifyDuplicateSend(id_procedure: string, receivers: ReceiverDto[]): Promise<void> {
+  private async verifyDuplicateSend(id_procedure: string, receivers: ReceiverDto[]): Promise<void> {
     const existingMails = await this.communicationModel.find({
       procedure: id_procedure,
       $or: [{ status: statusMail.Pending }, { status: statusMail.Received }],
@@ -222,7 +223,7 @@ export class CommunicationService {
     }
   }
 
-  async createCommunicationModel(
+  private async createCommunicationModel(
     emitterAccount: Account,
     communication: CreateCommunicationDto,
   ): Promise<Communication[]> {
