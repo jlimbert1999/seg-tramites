@@ -18,6 +18,15 @@ export class ProcedureController {
     private moduleRef: ModuleRef,
   ) {}
 
+  @Get('workflow/:id')
+  getWorkflow(@Param('id', IsMongoidPipe) id_procedure: string) {
+    return this.communicationService.getWorkflow(id_procedure);
+  }
+
+  @Get('detail/:group/:id')
+  async getDetail(@Param() params: GetProcedureParamsDto) {
+    return await this.getServiceByGroup(params.group).getDetail(params.id);
+  }
   @Get('/:group/:id')
   async getFullProcedure(@Param() params: GetProcedureParamsDto) {
     const procedureService = this.getServiceByGroup(params.group);
@@ -38,11 +47,6 @@ export class ProcedureController {
       default:
         throw new InternalServerErrorException('Group procedure is not defined');
     }
-  }
-
-  @Get('workflow/:id')
-  getWorkflow(@Param('id', IsMongoidPipe) id_procedure: string) {
-    return this.communicationService.getWorkflow(id_procedure);
   }
 
   @Post('/:id_procedure/observation')

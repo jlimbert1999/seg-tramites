@@ -90,7 +90,7 @@ export class CommunicationController {
   }
 
   @Get('/:id_mail')
-  async getMailDetails(@Param('id_mail') id_mail: string) {
+  async getMailDetails(@Param('id_mail', IsMongoidPipe) id_mail: string) {
     return await this.communicationService.getMailDetails(id_mail);
   }
 
