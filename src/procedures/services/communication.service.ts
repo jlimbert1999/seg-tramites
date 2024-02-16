@@ -256,7 +256,7 @@ export class CommunicationService {
 
   async acceptMail(id_mail: string) {
     const mailDB = await this.communicationModel.findById(id_mail).populate('procedure', 'state');
-    if (!mailDB) throw new BadRequestException('El envio del tramite ha sido cancelado');
+    if (!mailDB) throw new NotFoundException('El envio del tramite ha sido cancelado');
     if (mailDB.status !== statusMail.Pending) throw new BadRequestException('El tramite ya ha sido aceptado');
     const session = await this.connection.startSession();
     try {
@@ -267,7 +267,7 @@ export class CommunicationService {
         { status: statusMail.Received, inboundDate: new Date() },
         { session },
       );
-      if (procedure.state !== stateProcedure.OBSERVADO) {
+      if (procedure.state !== stateProcedure.OBSERVADO && procedure.state !== stateProcedure.EN_REVISION) {
         await this.procedureModel.updateOne(
           { _id: procedure._id },
           {

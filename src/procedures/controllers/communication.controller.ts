@@ -69,12 +69,16 @@ export class CommunicationController {
   }
 
   @Put('accept/:id_mail')
-  acceptMail(@Param('id_mail') id_mail: string) {
+  acceptMail(@Param('id_mail', IsMongoidPipe) id_mail: string) {
     return this.communicationService.acceptMail(id_mail);
   }
 
   @Put('reject/:id_mail')
-  rejectMail(@Param('id_mail') id_mail: string, @Body() body: RejectionDetail, @GetUserRequest() account: Account) {
+  rejectMail(
+    @Param('id_mail', IsMongoidPipe) id_mail: string,
+    @Body() body: RejectionDetail,
+    @GetUserRequest() account: Account,
+  ) {
     return this.communicationService.rejectMail(id_mail, body.rejectionReason, account);
   }
 
