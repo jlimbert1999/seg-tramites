@@ -11,10 +11,8 @@ import { ModuleRef } from '@nestjs/core';
 @Controller('procedure')
 export class ProcedureController {
   constructor(
-    // private readonly externalService: ExternalService,
-    // private readonly internalService: InternalService,
-    private readonly communicationService: CommunicationService,
-    private readonly observationService: ObservationService,
+    private communicationService: CommunicationService,
+    private observationService: ObservationService,
     private moduleRef: ModuleRef,
   ) {}
 
@@ -26,16 +24,6 @@ export class ProcedureController {
   @Get('detail/:group/:id')
   async getDetail(@Param() params: GetProcedureParamsDto) {
     return await this.getServiceByGroup(params.group).getDetail(params.id);
-  }
-  @Get('/:group/:id')
-  async getFullProcedure(@Param() params: GetProcedureParamsDto) {
-    const procedureService = this.getServiceByGroup(params.group);
-    const [procedure, workflow, observations] = await Promise.all([
-      procedureService.getDetail(params.id),
-      this.communicationService.getWorkflow(params.id),
-      this.observationService.getObservationsOfProcedure(params.id),
-    ]);
-    return { procedure, workflow, observations };
   }
 
   private getServiceByGroup(group: groupProcedure): ValidProcedureService {
@@ -49,7 +37,7 @@ export class ProcedureController {
     }
   }
 
-  @Post('/:id_procedure/observation')
+  @Post('observation/:id_procedure')
   addObservation(
     @GetUserRequest() account: Account,
     @Param('id_procedure') id_procedure: string,
@@ -61,5 +49,10 @@ export class ProcedureController {
   @Put('observation/:id_observation')
   solveObservation(@Param('id_observation') id_observation: string) {
     return this.observationService.solveObservation(id_observation);
+  }
+
+  @Get('observations/:id')
+  getObservations(@Param('id', IsMongoidPipe) id_procedure: string) {
+    return this.observationService.getObservations(id_procedure);
   }
 }

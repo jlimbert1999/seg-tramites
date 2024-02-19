@@ -1,15 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { InstitutionService, DependencieService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { CommunicationService, ObservationService } from '../services';
+import { CommunicationService } from '../services';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
-import {
-  CancelMailsDto,
-  CreateCommunicationDto,
-  CreateObservationDto,
-  GetInboxParamsDto,
-  RejectionDetail,
-} from '../dto';
+import { CancelMailsDto, CreateCommunicationDto, GetInboxParamsDto, RejectionDetail } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { AccountService } from 'src/users/services/account.service';
 import type { Account } from 'src/users/schemas';
@@ -23,7 +17,6 @@ export class CommunicationController {
     private readonly accountService: AccountService,
     private readonly institutionService: InstitutionService,
     private readonly dependencieService: DependencieService,
-    private readonly observationService: ObservationService,
     private readonly communicationService: CommunicationService,
     private readonly groupwareGateway: GroupwareGateway,
   ) {}
@@ -114,18 +107,5 @@ export class CommunicationController {
     @Query() paginationParamsDto: PaginationParamsDto,
   ) {
     return this.communicationService.searchOutbox(id_account, text, paginationParamsDto);
-  }
-
-  @Post('inbox/observation/:id_procedure')
-  async addObservation(
-    @Param('id_procedure') id_procedure: string,
-    @GetUserRequest() account: Account,
-    @Body() observationDto: CreateObservationDto,
-  ) {
-    // return this.observationService.addObservation(id_procedure, account, observationDto);
-  }
-  @Get('inbox/observations/:id_procedure')
-  async getObservations(@Param('id_procedure') id_procedure: string) {
-    return this.observationService.getObservationsOfProcedure(id_procedure);
   }
 }

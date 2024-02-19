@@ -83,7 +83,7 @@ export const SYSTEM_MENU: Menu[] = [
     resource: VALID_RESOURCES.archived,
     text: 'Archivos',
     icon: 'folder_copy',
-    routerLink: 'tramites/archivados',
+    routerLink: 'archives',
   },
   {
     resource: VALID_RESOURCES.communication,

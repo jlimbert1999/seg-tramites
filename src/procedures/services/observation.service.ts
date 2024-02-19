@@ -16,7 +16,7 @@ export class ObservationService {
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async getObservationsOfProcedure(id_procedure: string) {
+  async getObservations(id_procedure: string) {
     return await this.observationModel.find({ procedure: id_procedure }).sort({ date: -1 });
   }
 
@@ -75,7 +75,6 @@ export class ObservationService {
         undefined,
         { session },
       );
-      console.log(pendingObservation);
       if (!pendingObservation) {
         await this.procedureModel.updateOne(
           { _id: observationDB.procedure._id },

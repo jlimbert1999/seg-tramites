@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Communication, ProcedureEvents, Procedure } from '../schemas';
-import { CreateArchiveDto, EventProcedureDto } from '../dto';
+import { CreateArchiveDto } from '../dto';
 import { stateProcedure, statusMail } from '../interfaces';
 import { createFullName } from 'src/administration/helpers/fullname';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
@@ -11,10 +11,10 @@ import { Account } from 'src/users/schemas';
 @Injectable()
 export class ArchiveService {
   constructor(
+    @InjectConnection() private connection: mongoose.Connection,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectModel(ProcedureEvents.name) private procedureEventModel: Model<ProcedureEvents>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Communication.name)
     private communicationModel: Model<Communication>,
   ) {}
@@ -46,9 +46,9 @@ export class ArchiveService {
   //   }
   // }
 
-  async archiveMail(id: string, event: CreateArchiveDto, account: Account) {
+  async archiveMail(id: string, detail: CreateArchiveDto, account: Account) {
     const mail = await this.communicationModel.findById(id);
-    if (mail.status !== statusMail.Received) throw new BadRequestException(`El tramite ya ha sido desarchivado.`);
+    if (mail.status !== statusMail.Received) throw new BadRequestException(`El tramite no puede archivarse`);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -59,13 +59,13 @@ export class ArchiveService {
           status: statusMail.Archived,
           eventLog: {
             manager: `${funcionario.nombre} ${funcionario.paterno} ${funcionario.materno}`,
-            description: event.description,
+            description: detail.description,
             date: new Date(),
           },
         },
         { session },
       );
-      await this.concludeProcedureIfAppropriate(mail.procedure._id, event.stateProcedure, session);
+      await this.concludeProcedureIfAppropriate(mail.procedure._id, detail.state, session);
       await session.commitTransaction();
       return { message: 'Tramite archivado.' };
     } catch (error) {
@@ -78,7 +78,7 @@ export class ArchiveService {
     }
   }
 
-  async unarchiveMail(id_mail: string, eventDto: EventProcedureDto, account: Account): Promise<{ message: string }> {
+  async unarchiveMail(id_mail: string, account: Account): Promise<{ message: string }> {
     const mailDB = await this.communicationModel.findById(id_mail);
     if (mailDB.status !== statusMail.Archived) throw new BadRequestException('El tramite ya fue desarchivado');
     const session = await this.connection.startSession();
@@ -89,14 +89,18 @@ export class ArchiveService {
         await this.insertPartipantInWokflow(mailDB, account, session);
         newStatus = statusMail.Completed;
       }
-      await this.communicationModel.updateOne({ _id: id_mail }, { status: newStatus });
+      await this.communicationModel.updateOne(
+        { _id: id_mail },
+        { status: newStatus, $unset: { eventLog: 1 } },
+        { session },
+      );
       await this.procedureModel.updateOne(
         { _id: mailDB.procedure._id },
         { state: stateProcedure.EN_REVISION, $unset: { endDate: 1 } },
+        { session },
       );
-
       await session.commitTransaction();
-      return { message: 'Tramite desarchivado.' };
+      return { message: 'Tramite desarchivado' };
     } catch (error) {
       await session.abortTransaction();
       throw new InternalServerErrorException('Error al desarchivar tramite', {
@@ -117,7 +121,6 @@ export class ArchiveService {
       status: statusMail.Archived,
       'receiver.cuenta': { $in: unit.map((acount) => acount._id) },
     };
-    console.log(query);
     const [archives, length] = await Promise.all([
       this.communicationModel
         .find(query)
@@ -131,13 +134,13 @@ export class ArchiveService {
     return { archives, length };
   }
 
-  async search(text: string, { limit, offset }: PaginationParamsDto, account: Account) {
-    const officersInDependency = await this.accountModel
+  async search({ limit, offset }: PaginationParamsDto, text: string, id_dependency: string) {
+    const unit = await this.accountModel
       .find({
-        dependencia: account.dependencia._id,
+        dependencia: id_dependency,
       })
       .select('_id');
-    const ids_officers = officersInDependency.map((officer) => officer._id);
+    const ids_officers = unit.map((officer) => officer._id);
     const regex = new RegExp(text, 'i');
     const data = await this.communicationModel.aggregate([
       {
@@ -235,7 +238,7 @@ export class ArchiveService {
       },
       outboundDate,
       inboundDate,
-      reference: 'Para su continuacion',
+      reference: 'Solicita desarchivo',
       attachmentQuantity: attachmentQuantity,
       internalNumber: internalNumber,
       status: statusMail.Received,

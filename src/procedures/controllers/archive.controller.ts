@@ -1,38 +1,35 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ArchiveService } from '../services/archive.service';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
-import { EventProcedureDto } from '../dto';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/users/schemas';
 import { VALID_RESOURCES } from 'src/auth/constants';
+import { CreateArchiveDto } from '../dto';
+import { IsMongoidPipe } from 'src/common/pipes';
 
 @ResourceProtected(VALID_RESOURCES.archived)
-@Controller('archive')
+@Controller('archives')
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}
 
   @Post('procedure')
-  archiveProcedure(@Body() eventProcedureDto: EventProcedureDto, @GetUserRequest() account: Account) {
+  archiveProcedure(@Body() eventProcedureDto: any, @GetUserRequest() account: Account) {
     // return this.archiveService.archiveProcedure(eventProcedureDto, account);
   }
 
   @Post('mail/:id_mail')
   archiveMail(
-    @Param('id_mail') id_mail: string,
-    @Body() eventDto: EventProcedureDto,
+    @Param('id_mail', IsMongoidPipe) id_mail: string,
+    @Body() detail: CreateArchiveDto,
     @GetUserRequest() account: Account,
   ) {
-    return this.archiveService.archiveMail(id_mail, eventDto, account);
+    return this.archiveService.archiveMail(id_mail, detail, account);
   }
 
   @Post('mail/restore/:id_mail')
-  async unarchiveMail(
-    @Param('id_mail') id_mail: string,
-    @Body() archiveDto: EventProcedureDto,
-    @GetUserRequest() account: Account,
-  ) {
-    const message = await this.archiveService.unarchiveMail(id_mail, archiveDto, account);
+  async unarchiveMail(@Param('id_mail') id_mail: string, @GetUserRequest() account: Account) {
+    const message = await this.archiveService.unarchiveMail(id_mail, account);
     this.groupwareGateway.notifyUnarchive(String(account.dependencia._id), id_mail);
     return { message };
   }
@@ -48,6 +45,6 @@ export class ArchiveController {
     @GetUserRequest() account: Account,
     @Param('text') text: string,
   ) {
-    return this.archiveService.search(text, paginationParams, account);
+    return this.archiveService.search(paginationParams, text, account.dependencia._id);
   }
 }

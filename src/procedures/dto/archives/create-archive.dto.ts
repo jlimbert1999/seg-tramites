@@ -7,5 +7,5 @@ export class CreateArchiveDto {
   description: string;
 
   @IsEnum([stateProcedure.SUSPENDIDO, stateProcedure.CONCLUIDO], { message: 'State procedure is not valid' })
-  stateProcedure: stateProcedure.CONCLUIDO | stateProcedure.SUSPENDIDO;
+  state: stateProcedure.CONCLUIDO | stateProcedure.SUSPENDIDO;
 }

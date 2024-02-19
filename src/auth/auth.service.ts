@@ -77,23 +77,8 @@ export class AuthService {
     const { password } = data;
     const salt = bcrypt.genSaltSync();
     const encryptedPassword = bcrypt.hashSync(password.toString(), salt);
-    return await this.accountModel
-      .findByIdAndUpdate(id_account, { password: encryptedPassword }, { new: true })
-      .populate({
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-        },
-      })
-      .populate({
-        path: 'dependencia',
-        select: 'nombre codigo',
-        populate: {
-          path: 'institucion',
-          select: 'nombre',
-        },
-      })
-      .select('-password -rol');
+    await this.accountModel.updateOne({ _id: id_account }, { password: encryptedPassword });
+    return { message: 'Contraseña actualizada' };
   }
 
   private generateRootToken(account: Account): string {
