@@ -1,12 +1,12 @@
-import { VALID_RESOURCES } from './valid-resources.enum';
+import { VALID_ACTIONS, VALID_RESOURCES } from './valid-resources.enum';
 
 export interface Menu {
-  resource?: VALID_RESOURCES;
+  resource: VALID_RESOURCES;
   text: string;
   icon: string;
   routerLink: string;
   children?: {
-    resource: VALID_RESOURCES;
+    resource: VALID_ACTIONS;
     text: string;
     icon: string;
     routerLink: string;
@@ -86,9 +86,23 @@ export const SYSTEM_MENU: Menu[] = [
     routerLink: 'archives',
   },
   {
-    resource: VALID_RESOURCES.communication,
-    text: 'Publicaciones',
-    icon: 'folder_copy',
-    routerLink: 'posts',
+    text: 'Reportes',
+    icon: 'equalizer',
+    resource: VALID_RESOURCES.reports,
+    routerLink: '',
+    children: [
+      {
+        resource: VALID_ACTIONS.applicant,
+        text: 'Busquedas',
+        icon: 'search',
+        routerLink: 'reports/search',
+      },
+      {
+        resource: VALID_ACTIONS.search,
+        text: 'Solicitante',
+        icon: 'folder_copy',
+        routerLink: 'reports/applicant',
+      },
+    ],
   },
 ];

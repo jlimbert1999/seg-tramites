@@ -43,6 +43,7 @@ export class AuthService {
           path: 'cargo',
         },
       })
+      .populate('dependencia', 'codigo')
       .populate('rol');
     if (!account) throw new UnauthorizedException();
     if (account.rol.permissions.length === 0) throw new UnauthorizedException();
@@ -50,7 +51,12 @@ export class AuthService {
       return { token: this.generateRootToken(account), menu: this.getSystemMenu(account.rol) };
     }
     if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
-    return { token: this.generateToken(account), menu: this.getSystemMenu(account.rol) };
+    console.log(this.getSystemMenu(account.rol));
+    return {
+      token: this.generateToken(account),
+      menu: this.getSystemMenu(account.rol),
+      code: account.dependencia.codigo,
+    };
   }
 
   async getMyAuthDetails(id_account: string) {
@@ -107,10 +113,20 @@ export class AuthService {
   }
 
   private getSystemMenu(role: Role) {
-    const resources = role.permissions.map((permision) => permision.resource);
-    return SYSTEM_MENU.filter((menu) => {
-      if (!menu.children) return resources.includes(menu.resource);
-      return menu.children.filter((submenu) => resources.includes(submenu.resource)).length > 0;
+    const resources: { [key: string]: string[] } = role.permissions.reduce(
+      (acc, item) => ({ ...acc, [item.resource]: item.actions }),
+      {},
+    );
+    return SYSTEM_MENU.map((menu) => {
+      if (menu.children && resources[menu.resource]) {
+        const submenu = menu.children.filter((child) => resources[menu.resource].includes(child.resource));
+        menu.children = submenu;
+      }
+      return menu;
+    }).filter((menu) => {
+      if (!resources[menu.resource]) return false;
+      if (menu.children) return menu.children.length > 0;
+      return true;
     });
   }
 }

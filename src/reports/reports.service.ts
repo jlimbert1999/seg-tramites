@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import {
@@ -29,7 +29,7 @@ export class ReportsService {
     applicantDto: SearchProcedureByApplicantDto,
     { limit, offset }: PaginationParamsDto,
   ) {
-    const query = Object.entries(applicantDto).reduce((acc, [key, value]) => {
+    const query: FilterQuery<ExternalDetail> = Object.entries(applicantDto).reduce((acc, [key, value]) => {
       if (key === 'nombre') value = new RegExp(value, 'i');
       acc[`${type}.${key}`] = value;
       return acc;

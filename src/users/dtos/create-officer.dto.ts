@@ -22,10 +22,6 @@ export class CreateOfficerDto {
   @Type(() => Number)
   telefono: number;
 
-  @IsNotEmpty()
-  @IsString()
-  direccion: string;
-
   @IsMongoId()
   @IsOptional()
   cargo?: string;
