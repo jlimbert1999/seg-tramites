@@ -51,7 +51,6 @@ export class AuthService {
       return { token: this.generateRootToken(account), menu: this.getSystemMenu(account.rol) };
     }
     if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
-    console.log(this.getSystemMenu(account.rol));
     return {
       token: this.generateToken(account),
       menu: this.getSystemMenu(account.rol),
