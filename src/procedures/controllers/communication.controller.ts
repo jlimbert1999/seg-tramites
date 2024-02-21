@@ -27,8 +27,8 @@ export class CommunicationController {
   }
 
   @Get('institutions')
-  async getInstitutions() {
-    return await this.institutionService.searchActiveInstitutions();
+  getInstitutions() {
+    return this.institutionService.searchActiveInstitutions();
   }
 
   @Get('dependencies/:id_institution')

@@ -116,7 +116,7 @@ export class AuthService {
       (acc, item) => ({ ...acc, [item.resource]: item.actions }),
       {},
     );
-    return SYSTEM_MENU.map((menu) => {
+    const s = SYSTEM_MENU.map((menu) => {
       if (menu.children && resources[menu.resource]) {
         const submenu = menu.children.filter((child) => resources[menu.resource].includes(child.resource));
         menu.children = submenu;
@@ -127,5 +127,7 @@ export class AuthService {
       if (menu.children) return menu.children.length > 0;
       return true;
     });
+    console.log(s);
+    return s;
   }
 }
