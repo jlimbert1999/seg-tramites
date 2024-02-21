@@ -15,10 +15,10 @@ import { UsersModule } from 'src/users/users.module';
   providers: [
     AuthService,
     JwtStrategy,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
   ],
   imports: [
     ConfigModule,

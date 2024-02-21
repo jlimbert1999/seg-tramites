@@ -11,7 +11,7 @@ import { VALID_RESOURCES } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
 
 @Controller('communication')
-@ResourceProtected(VALID_RESOURCES.communication)
+// @ResourceProtected(VALID_RESOURCES.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,

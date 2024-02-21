@@ -16,7 +16,8 @@ export class CommunicationService {
   constructor(
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
-    @InjectConnection() private readonly connection: mongoose.Connection, // @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
+    @InjectConnection() private readonly connection: mongoose.Connection,
+    // @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
   ) {}
 
   async repairCollection() {
