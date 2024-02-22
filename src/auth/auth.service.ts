@@ -112,22 +112,17 @@ export class AuthService {
   }
 
   private getSystemMenu(role: Role) {
-    const resources: { [key: string]: string[] } = role.permissions.reduce(
-      (acc, item) => ({ ...acc, [item.resource]: item.actions }),
-      {},
-    );
-    const s = SYSTEM_MENU.map((menu) => {
-      if (menu.children && resources[menu.resource]) {
-        const submenu = menu.children.filter((child) => resources[menu.resource].includes(child.resource));
-        menu.children = submenu;
+    const menu = SYSTEM_MENU;
+    const filteredItems = menu.filter((item) => {
+      if (item.children) {
+        item.children = item.children.filter((child) =>
+          role.permissions.some((permission) => permission.resource === child.resource),
+        );
+        return item.children.length > 0;
+      } else {
+        return role.permissions.some((permission) => permission.resource === item.resource);
       }
-      return menu;
-    }).filter((menu) => {
-      if (!resources[menu.resource]) return false;
-      if (menu.children) return menu.children.length > 0;
-      return true;
     });
-    console.log(s);
-    return s;
+    return filteredItems;
   }
 }
