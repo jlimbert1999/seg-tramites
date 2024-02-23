@@ -33,14 +33,14 @@ export class ReportsController {
     return this.institutionService.searchActiveInstitutions();
   }
 
-  @Post('applicant/:type')
+  @Post('applicant')
   searchProcedureByApplicant(
-    @Param('type') type: 'solicitante' | 'representante',
     @Body() searchDto: SearchProcedureByApplicantDto,
     @Query() paginationParams: PaginationParamsDto,
   ) {
-    return this.reportsService.searchProcedureByApplicant(type, searchDto, paginationParams);
+    return this.reportsService.searchProcedureByApplicant(searchDto, paginationParams);
   }
+
   @Post('procedure')
   searchProcedureByProperties(
     @Body() searchDto: SearchProcedureByPropertiesDto,
@@ -86,7 +86,7 @@ export class ReportsController {
   }
 
   @Get('work/:id_account')
-  getWorkDetails(@Param('id_account') id:string) {
+  getWorkDetails(@Param('id_account') id: string) {
     return this.reportsService.getWorkDetails(id);
   }
 }

@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsIn, IsNotEmpty, IsNotEmptyObject, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
 
-export class SearchProcedureByApplicantDto {
+class ApplicantProps {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
@@ -30,4 +31,15 @@ export class SearchProcedureByApplicantDto {
   @IsNotEmpty()
   @IsOptional()
   tipo?: string;
+}
+
+export class SearchProcedureByApplicantDto {
+  @IsIn(['solicitante', 'representante'])
+  by: 'solicitante' | 'representante';
+
+  @IsNotEmptyObject()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => ApplicantProps)
+  properties: ApplicantProps;
 }

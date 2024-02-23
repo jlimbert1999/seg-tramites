@@ -25,18 +25,14 @@ export class ReportsService {
   ) {}
 
   async searchProcedureByApplicant(
-    type: 'solicitante' | 'representante',
-    applicantDto: SearchProcedureByApplicantDto,
+    { by, properties }: SearchProcedureByApplicantDto,
     { limit, offset }: PaginationParamsDto,
   ) {
-    const query: FilterQuery<ExternalDetail> = Object.entries(applicantDto).reduce((acc, [key, value]) => {
+    const query: FilterQuery<ExternalDetail> = Object.entries(properties).reduce((acc, [key, value]) => {
       if (key === 'nombre') value = new RegExp(value, 'i');
-      acc[`${type}.${key}`] = value;
+      acc[`${by}.${key}`] = value;
       return acc;
     }, {});
-    if (Object.keys(query).length === 0) {
-      throw new BadRequestException('Ingrese al menos un campo para generar el reporte');
-    }
     const [details, length] = await Promise.all([
       this.externalProcedureModel.find(query).lean().limit(limit).skip(offset).select('_id'),
       this.externalProcedureModel.count(query),
@@ -64,6 +60,7 @@ export class ReportsService {
     };
     if (Object.keys(interval).length > 0) query.push({ startDate: interval });
     if (query.length === 0) throw new BadRequestException('Ingrese los parametros para generar el reporte');
+    console.log(query);
     const [procedures, length] = await Promise.all([
       this.procedureModel.find({ $and: query }).lean().limit(limit).skip(offset),
       this.procedureModel.count({ $and: query }),

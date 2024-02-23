@@ -55,6 +55,13 @@ export class AuthService {
       token: this.generateToken(account),
       menu: this.getSystemMenu(account.rol),
       code: account.dependencia.codigo,
+      resources: account.rol.permissions.reduce(
+        (acc, curretn) => ({
+          ...acc,
+          [curretn.resource]: curretn.actions.map((el) => el),
+        }),
+        {},
+      ),
     };
   }
 
