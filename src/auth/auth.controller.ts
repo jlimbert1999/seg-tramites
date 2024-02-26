@@ -1,13 +1,12 @@
 import { Controller, Post, Body, Get, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, UpdateMyAccountDto } from './dto';
-import { GetUserRequest } from './decorators';
+import { GetUserRequest, Public } from './decorators';
 import { Account } from 'src/users/schemas';
-import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
   @Post()
   @Public()
@@ -16,8 +15,8 @@ export class AuthController {
   }
 
   @Get()
-  async checkAuthStatus(@GetUserRequest() account: Account) {
-    return await this.authService.checkAuthStatus(account._id);
+  checkAuthStatus(@GetUserRequest() account: Account) {
+    return this.authService.checkAuthStatus(account._id);
   }
 
   @Get('detail')

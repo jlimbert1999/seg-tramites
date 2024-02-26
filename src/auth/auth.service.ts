@@ -25,8 +25,10 @@ export class AuthService {
         path: 'cargo',
       },
     });
-    if (!account) throw new BadRequestException('login o password incorrectos');
-    if (!bcrypt.compareSync(password, account.password)) throw new BadRequestException('login o password incorrectos');
+    if (!account) throw new BadRequestException('Usuario o Contraseña incorrectos');
+    if (!bcrypt.compareSync(password, account.password)) {
+      throw new BadRequestException('Usuario o Contraseña incorrectos');
+    }
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
       return { token: this.generateRootToken(account) };
     }
@@ -46,22 +48,30 @@ export class AuthService {
       .populate('dependencia', 'codigo')
       .populate('rol');
     if (!account) throw new UnauthorizedException();
-    if (account.rol.permissions.length === 0) throw new UnauthorizedException();
+    const permissions = account.rol.permissions.reduce(
+      (acc, curretn) => ({
+        ...acc,
+        [curretn.resource]: curretn.actions.map((el) => el),
+      }),
+      {},
+    );
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
-      return { token: this.generateRootToken(account), menu: this.getSystemMenu(account.rol) };
+      return {
+        token: this.generateRootToken(account),
+        menu: this.getSystemMenu(account.rol),
+        code: '',
+        permissions: permissions,
+      };
     }
-    if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahanilidata');
+    if (!account.funcionario || !account.activo) {
+      throw new UnauthorizedException('La cuenta ha sido deshanilidata');
+    }
+
     return {
       token: this.generateToken(account),
       menu: this.getSystemMenu(account.rol),
       code: account.dependencia.codigo,
-      resources: account.rol.permissions.reduce(
-        (acc, curretn) => ({
-          ...acc,
-          [curretn.resource]: curretn.actions.map((el) => el),
-        }),
-        {},
-      ),
+      permissions: permissions,
     };
   }
 
