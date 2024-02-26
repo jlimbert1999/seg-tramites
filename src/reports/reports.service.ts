@@ -59,8 +59,7 @@ export class ReportsService {
       ...(end && { $lte: new Date(end) }),
     };
     if (Object.keys(interval).length > 0) query.push({ startDate: interval });
-    if (query.length === 0) throw new BadRequestException('Ingrese los parametros para generar el reporte');
-    console.log(query);
+    if (query.length === 0) throw new BadRequestException('Ingrese los parametros necesarios');
     const [procedures, length] = await Promise.all([
       this.procedureModel.find({ $and: query }).lean().limit(limit).skip(offset),
       this.procedureModel.count({ $and: query }),

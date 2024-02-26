@@ -48,21 +48,28 @@ export class TypeProcedureService {
   }
 
   async getEnabledTypesBySegment(segment: string, type?: 'INTERNO' | 'EXTERNO') {
-    return await this.typeProcedureModel.find({
-      segmento: segment.toUpperCase(),
-      activo: true,
-      ...(type ? { tipo: type } : {}),
-    });
-  }
-
-  async getEnabledTypesByGroup(group: 'INTERNO' | 'EXTERNO') {
-    return await this.typeProcedureModel.find({ activo: true, tipo: group });
-  }
-
-  async getTypesProceduresByText(text: string) {
     return await this.typeProcedureModel
-      .find({ nombre: new RegExp(text, 'i') })
-      .limit(5)
-      .select('nombre');
+      .find({
+        segmento: segment.toUpperCase(),
+        activo: true,
+        ...(type ? { tipo: type } : {}),
+      })
+      .lean();
+  }
+
+  async getEnabledTypesByGroup(group: string) {
+    return await this.typeProcedureModel.find({ activo: true, tipo: group }).lean().limit(10);
+  }
+
+  async getEnabledTypesByText(tern: string, type?: string) {
+    console.log(tern, type);
+    return await this.typeProcedureModel
+      .find({
+        nombre: new RegExp(tern, 'i'),
+        activo: true,
+        ...(type ? { tipo: type } : {}),
+      })
+      .lean()
+      .limit(5);
   }
 }

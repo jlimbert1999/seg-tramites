@@ -12,6 +12,7 @@ import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
 import { join } from 'path';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { join } from 'path';
     ProceduresModule,
     GroupwareModule,
     ReportsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

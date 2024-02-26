@@ -20,9 +20,9 @@ export class ReportsController {
     private institutionService: InstitutionService,
   ) {}
 
-  @Get('types-procedures/:text')
-  async getTypeProceduresByText(@Param('text') text: string) {
-    return await this.typeProcedureService.getTypesProceduresByText(text);
+  @Get('types-procedures/:group/:term')
+  getTypeProceduresByText(@Param('group') group: string, @Param('term') term: string) {
+    return this.typeProcedureService.getEnabledTypesByText(term, group);
   }
   @Get('dependency/accounts')
   getOfficersInMyDependency(@GetUserRequest() account: Account) {
