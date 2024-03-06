@@ -1,3 +1,4 @@
+import { ApplicantModule } from './applicant/applicant.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
@@ -35,6 +36,7 @@ import { FilesModule } from './files/files.module';
     GroupwareModule,
     ReportsModule,
     FilesModule,
+    ApplicantModule,
   ],
   controllers: [AppController],
   providers: [AppService],

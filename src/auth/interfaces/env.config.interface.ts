@@ -4,4 +4,5 @@ export interface EnvConfig {
   year: number;
   port: number;
   id_root: string;
+  jwt_public_key: string;
 }
