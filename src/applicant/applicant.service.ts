@@ -13,14 +13,6 @@ export class ApplicantService {
     private jwtService: JwtService,
   ) {}
   async login({ dni, code }: ApplicantAuthenticacion) {
-    // const detail = await this.externalModel.findOne({ 'solicitante.dni': dni });
-    // if (!detail) throw new BadGatewayException('El tramite no existe');
-    // const procedure = await this.procedureModel.findOne({ details: detail._id, code: code });
-    // if (!procedure) throw new BadGatewayException('El tramite no existe');
-    // const payload = { dni: dni, code: code };
-    // return {
-    //   toke: await this.jwtService.signAsync(payload),
-    // };
     return { token: this.jwtService.sign({ hola: 'ds' }) };
   }
 }

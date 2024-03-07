@@ -15,7 +15,7 @@ import { JwtApplicantStrategy } from './applicant-jwt.strategy';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.getOrThrow('jwt_public_key'),
-        signOptions: { expiresIn: '1h' },
+        signOptions: { expiresIn: '30s' },
       }),
       inject: [ConfigService],
     }),
