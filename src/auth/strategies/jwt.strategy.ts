@@ -21,7 +21,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
   async validate(payload: JwtPayload): Promise<Account> {
-    console.log('dsds');
     const { id_account } = payload;
     const account = await this.accountModel.findById(id_account).select('-password').populate('rol');
     if (!account) throw new UnauthorizedException('Token invalido, vuelva a iniciar sesion');

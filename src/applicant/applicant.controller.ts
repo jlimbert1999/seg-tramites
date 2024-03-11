@@ -1,19 +1,18 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { Public } from 'src/auth/decorators';
 import { ApplicantService } from './applicant.service';
-import { ApplicantAuthenticacion } from './dto/login.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { ApplicantQueryDto } from './dto/query.dto';
 
+@Public()
 @Controller('applicants')
 export class ApplicantController {
   constructor(private applicantService: ApplicantService) {}
+  
   @Post()
-  @Public()
-  login(@Body() data: ApplicantAuthenticacion) {
-    return this.applicantService.login(data);
+  query(@Body() data: ApplicantQueryDto) {
+    return this.applicantService.search(data);
   }
-  @Public()
-  @UseGuards(AuthGuard('jwtapplicants'))
+
   @Get()
   myfuntion() {
     return 'private';
