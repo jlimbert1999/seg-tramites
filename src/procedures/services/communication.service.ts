@@ -16,8 +16,7 @@ export class CommunicationService {
   constructor(
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
-    // @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
+    @InjectConnection() private readonly connection: mongoose.Connection, // @InjectModel(ProcedureEvents.name) private eventModel: Model<ProcedureEvents>,
   ) {}
 
   async repairCollection() {
@@ -411,5 +410,32 @@ export class CommunicationService {
       };
     });
     return stages;
+  }
+
+  async getLocation(id_procedure: string) {
+    const invalidStatus = [statusMail.Completed, statusMail.Rejected];
+    const location = await this.communicationModel
+      .find({ procedure: id_procedure, status: { $nin: invalidStatus } })
+      .select({ 'receiver.cuenta': 1, _id: 0 })
+      .populate({
+        path: 'receiver.cuenta',
+        select: 'funcionario -_id',
+        populate: [
+          {
+            path: 'funcionario',
+            select: 'nombre paterno materno cargo -_id',
+            populate: {
+              path: 'cargo',
+              select: 'nombre -_id',
+            },
+          },
+          {
+            path: 'dependencia',
+            select: 'nombre -_id',
+          },
+        ],
+      })
+      .lean();
+    return location.map((el) => ({ ...el.receiver.cuenta }));
   }
 }

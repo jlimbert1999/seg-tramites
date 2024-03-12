@@ -26,6 +26,11 @@ export class ProcedureController {
     return await this.getServiceByGroup(params.group).getDetail(params.id);
   }
 
+  @Get('location/:id')
+  async getLocation(@Param('id', IsMongoidPipe) id_procedure: string) {
+    return this.communicationService.getLocation(id_procedure);
+  }
+
   private getServiceByGroup(group: groupProcedure): ValidProcedureService {
     switch (group) {
       case groupProcedure.EXTERNAL:
