@@ -34,7 +34,7 @@ export class ObservationService {
       const newObservation = new this.observationModel({
         procedure: id_procedure,
         account: account._id,
-        fullnameOfficer: createFullName(funcionario),
+        fullnameOfficer: [funcionario.nombre, funcionario.paterno, funcionario.materno].filter(Boolean).join(' '),
         description,
       });
       const createdObservation = await newObservation.save({ session });
