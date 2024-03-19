@@ -419,7 +419,7 @@ export class CommunicationService {
       .select({ 'receiver.cuenta': 1, _id: 0 })
       .populate({
         path: 'receiver.cuenta',
-        select: 'funcionario -_id',
+        select: 'funcionario',
         populate: [
           {
             path: 'funcionario',
