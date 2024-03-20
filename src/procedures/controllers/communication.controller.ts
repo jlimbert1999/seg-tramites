@@ -53,12 +53,12 @@ export class CommunicationController {
 
   @Get('inbox')
   getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: GetInboxParamsDto) {
-    return this.communicationService.getAccountInbox(id_account, paginationParams);
+    return this.communicationService.getInbox(id_account, paginationParams);
   }
 
   @Get('outbox')
   getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
-    return this.communicationService.getAccountOutbox(id_account, paginationParams);
+    return this.communicationService.getOutbox(id_account, paginationParams);
   }
 
   @Put('accept/:id_mail')

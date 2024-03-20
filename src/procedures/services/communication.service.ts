@@ -71,22 +71,22 @@ export class CommunicationService {
     return mailDB;
   }
 
-  async getAccountInbox(id: string, { limit, offset, status }: GetInboxParamsDto) {
+  async getInbox(id: string, { limit, offset, status }: GetInboxParamsDto) {
     const query: FilterQuery<Communication> = {
       'receiver.cuenta': id,
     };
     status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
     const [mails, length] = await Promise.all([
-      this.communicationModel.find(query).skip(offset).limit(limit).sort({ outboundDate: -1 }).populate('procedure'),
+      this.communicationModel.find(query).skip(offset).limit(limit).sort({ outboundDate: -1 }).populate('procedure').lean(),
       this.communicationModel.count(query),
     ]);
     return { mails, length };
   }
 
-  async searchInbox(id_account: string, term: string, { limit, offset, status }: GetInboxParamsDto) {
+  async searchInbox(id: string, term: string, { limit, offset, status }: GetInboxParamsDto) {
     const regex = new RegExp(term, 'i');
     const query: mongoose.FilterQuery<Communication> = {
-      'receiver.cuenta': id_account,
+      'receiver.cuenta': id,
     };
     status ? (query.status = status) : (query.$or = [{ status: statusMail.Received }, { status: statusMail.Pending }]);
     const [data] = await this.communicationModel
@@ -113,10 +113,10 @@ export class CommunicationService {
     return { mails, length };
   }
 
-  async getAccountOutbox(id_account: string, { limit, offset }: PaginationParamsDto) {
+  async getOutbox(id: string, { limit, offset }: PaginationParamsDto) {
     const dataPaginated = await this.communicationModel
       .aggregate()
-      .match({ 'emitter.cuenta': id_account, status: statusMail.Pending })
+      .match({ 'emitter.cuenta': id, status: statusMail.Pending })
       .group({
         _id: {
           account: '$emitter.cuenta',
@@ -287,7 +287,7 @@ export class CommunicationService {
     }
   }
 
-  async rejectMail(id: string, rejectionReason: string, account: Account) {
+  async rejectMail(id: string, description: string, account: Account) {
     const mailDB = await this.communicationModel.findById(id);
     if (!mailDB) throw new NotFoundException('El envio del tramite ha sido cancelado');
     if (mailDB.status !== statusMail.Pending) throw new BadRequestException('El tramite ya fue rechazado');
@@ -304,7 +304,7 @@ export class CommunicationService {
           inboundDate: date,
           eventLog: {
             manager: buildFullname(funcionario),
-            description: rejectionReason,
+            description: description,
             date: date,
           },
         },
