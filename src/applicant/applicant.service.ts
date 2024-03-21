@@ -18,10 +18,10 @@ export class ApplicantService {
     const detail = await this.externalModel.findOne({ pin: pin, 'solicitante.dni': dni });
     if (!detail) throw new NotFoundException(`El tramite solicitado no existe`);
     const procedure = await this.procedureModel
-      .findOne({ details: detail._id }, { account: 0, cite: 0, _id: 0 })
+      .findOne({ details: detail._id }, { account: 0, cite: 0 })
       .populate('type', '-_id nombre')
-      .populate('details', '-_id')
-      .lean();
+      .populate('details', '-_id');
+
     const [workflow, observations] = await Promise.all([
       this.getWorkflow(procedure._id),
       this.getObservations(procedure._id),
@@ -30,10 +30,24 @@ export class ApplicantService {
   }
 
   private async getWorkflow(id_procedure: string) {
-    const workflow = await this.communicationModel.find({
-      procedure: id_procedure,
-      status: { $ne: statusMail.Rejected },
-    });
+    const workflow = await this.communicationModel
+      .find({
+        procedure: id_procedure,
+        status: { $ne: statusMail.Rejected },
+      })
+      .select({ emitter: 1, receiver: 1, _id: 0 })
+      .populate([
+        {
+          path: 'emitter.cuenta',
+          select: 'dependencia',
+          populate: { path: 'dependencia', select: 'nombre -_id' },
+        },
+        {
+          path: 'receiver.cuenta',
+          select: 'dependencia',
+          populate: { path: 'dependencia', select: 'nombre -_id' },
+        },
+      ]);
     return workflow;
   }
 
