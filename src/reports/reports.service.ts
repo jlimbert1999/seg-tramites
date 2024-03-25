@@ -10,7 +10,7 @@ import {
   SearchProcedureByPropertiesDto,
   searchProcedureByUnitDto,
 } from './dto';
-import { groupProcedure, statusMail } from 'src/procedures/interfaces';
+import { groupProcedure, StatusMail } from 'src/procedures/interfaces';
 import { Dependency } from 'src/administration/schemas';
 import { Account } from 'src/users/schemas';
 
@@ -73,7 +73,7 @@ export class ReportsService {
       .aggregate()
       .match({
         'receiver.cuenta': { $in: accounts.map((account) => account._id) },
-        status: { $in: [statusMail.Received, statusMail.Pending, statusMail.Rejected, statusMail.Archived] },
+        status: { $in: [StatusMail.Received, StatusMail.Pending, StatusMail.Rejected, StatusMail.Archived] },
       })
       .group({
         _id: {
@@ -232,7 +232,7 @@ export class ReportsService {
   async getTotalInboxByUser() {
     return await this.communicationModel
       .aggregate()
-      .match({ status: { $in: [statusMail.Received, statusMail.Pending] } })
+      .match({ status: { $in: [StatusMail.Received, StatusMail.Pending] } })
       .group({
         _id: {
           account: `$receiver.cuenta`,
@@ -291,7 +291,7 @@ export class ReportsService {
       },
     ]);
     const inbox = await this.communicationModel
-      .find({ 'receiver.cuenta': account._id, status: { $in: [statusMail.Received, statusMail.Pending] } })
+      .find({ 'receiver.cuenta': account._id, status: { $in: [StatusMail.Received, StatusMail.Pending] } })
       .lean()
       .populate('procedure');
     return { account, inbox };

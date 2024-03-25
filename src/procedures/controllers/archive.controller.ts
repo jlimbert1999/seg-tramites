@@ -13,18 +13,9 @@ import { IsMongoidPipe } from 'src/common/pipes';
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}
 
-  @Post('procedure')
-  archiveProcedure(@Body() eventProcedureDto: any, @GetUserRequest() account: Account) {
-    // return this.archiveService.archiveProcedure(eventProcedureDto, account);
-  }
-
-  @Post('mail/:id_mail')
-  archiveMail(
-    @Param('id_mail', IsMongoidPipe) id_mail: string,
-    @Body() detail: CreateArchiveDto,
-    @GetUserRequest() account: Account,
-  ) {
-    return this.archiveService.archiveMail(id_mail, detail, account);
+  @Post('mail/:id')
+  create(@Param('id', IsMongoidPipe) id: string, @Body() data: CreateArchiveDto, @GetUserRequest() account: Account) {
+    return this.archiveService.create(id, account, data);
   }
 
   @Post('mail/restore/:id_mail')

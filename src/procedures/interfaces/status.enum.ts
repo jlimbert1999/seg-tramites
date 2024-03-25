@@ -1,4 +1,4 @@
-export enum statusMail {
+export enum StatusMail {
   Received = 'received',
   Completed = 'completed',
   Rejected = 'rejected',

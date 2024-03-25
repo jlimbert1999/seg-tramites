@@ -3,7 +3,7 @@ import { InstitutionService, DependencieService } from 'src/administration/servi
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { CommunicationService } from '../services';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
-import { CancelMailsDto, CreateCommunicationDto, GetInboxParamsDto, RejectionDetail } from '../dto';
+import { CancelMailsDto, CreateCommunicationDto, GetInboxParamsDto, UpdateCommunicationDto } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { AccountService } from 'src/users/services/account.service';
 import type { Account } from 'src/users/schemas';
@@ -20,11 +20,6 @@ export class CommunicationController {
     private readonly communicationService: CommunicationService,
     private readonly groupwareGateway: GroupwareGateway,
   ) {}
-
-  @Get('generate')
-  generate() {
-    return this.communicationService.repairCollection();
-  }
 
   @Get('institutions')
   getInstitutions() {
@@ -66,13 +61,13 @@ export class CommunicationController {
     return this.communicationService.acceptMail(id_mail);
   }
 
-  @Put('reject/:id_mail')
-  rejectMail(
-    @Param('id_mail', IsMongoidPipe) id_mail: string,
-    @Body() body: RejectionDetail,
+  @Put('reject/:id')
+  reject(
+    @Body() data: UpdateCommunicationDto,
+    @Param('id', IsMongoidPipe) id: string,
     @GetUserRequest() account: Account,
   ) {
-    return this.communicationService.rejectMail(id_mail, body.rejectionReason, account);
+    return this.communicationService.reject(id, account, data);
   }
 
   @Delete('outbox/:id_procedure')

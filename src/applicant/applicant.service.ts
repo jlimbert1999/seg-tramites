@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Communication, ExternalDetail, Observation, Procedure } from 'src/procedures/schemas';
 import { ApplicantQueryDto } from './dto/query.dto';
-import { statusMail } from 'src/procedures/interfaces';
+import { StatusMail } from 'src/procedures/interfaces';
 
 @Injectable()
 export class ApplicantService {
@@ -33,7 +33,7 @@ export class ApplicantService {
     const workflow = await this.communicationModel
       .find({
         procedure: id_procedure,
-        status: { $ne: statusMail.Rejected },
+        status: { $ne: StatusMail.Rejected },
       })
       .select({ emitter: 1, receiver: 1, _id: 0 })
       .populate([

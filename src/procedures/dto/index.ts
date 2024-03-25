@@ -5,10 +5,11 @@ export * from './external-update.dto';
 export * from './internal-create.dto';
 export * from './internal-update.dto';
 export * from './inbox-create.dto';
-export * from './communication-create.dto';
-export * from './communication-update.dto';
+
 export * from './observation-create.dto';
 export * from './params/get-procedure-params.dto';
 
 export * from './params/get-inbox-params.dto';
-export * from './archives/create-archive.dto';
+export * from './communication-create.dto';
+export * from './communications/communication-update.dto';
+export * from './communications/archive-create.dto';

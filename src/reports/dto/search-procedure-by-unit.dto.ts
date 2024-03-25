@@ -1,10 +1,10 @@
 import { IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { statusMail } from 'src/procedures/interfaces';
+import { StatusMail } from 'src/procedures/interfaces';
 
 export class searchProcedureByUnitDto {
-  @IsEnum(Object.values(statusMail))
+  @IsEnum(Object.values(StatusMail))
   @IsOptional()
-  status?: statusMail;
+  status?: StatusMail;
 
   @IsMongoId()
   @IsOptional()

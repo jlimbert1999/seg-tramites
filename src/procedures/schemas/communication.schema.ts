@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Procedure } from './procedure.schema';
-import { statusMail } from '../interfaces/status.interface';
+import { StatusMail } from '../interfaces/status.enum';
 import { Account, Officer } from 'src/users/schemas';
 
 @Schema({ _id: false })
@@ -103,10 +103,10 @@ export class Communication extends Document {
   @Prop({
     type: String,
     required: true,
-    enum: Object.values(statusMail),
-    default: statusMail.Pending,
+    enum: Object.values(StatusMail),
+    default: StatusMail.Pending,
   })
-  status: statusMail;
+  status: StatusMail;
 
   @Prop({
     type: EventLogSchema,
