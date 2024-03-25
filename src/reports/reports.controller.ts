@@ -1,12 +1,6 @@
 import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import {
-  SearchProcedureByApplicantDto,
-  SearchProcedureByPropertiesDto,
-  searchProcedureByUnitDto,
-  GetTotalMailsDto,
-  GetTotalProceduresDto,
-} from './dto';
+import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { InstitutionService, TypeProcedureService } from 'src/administration/services';
@@ -24,10 +18,7 @@ export class ReportsController {
   getTypeProceduresByText(@Param('group') group: string, @Param('term') term: string) {
     return this.typeProcedureService.getEnabledTypesByText(term, group);
   }
-  @Get('dependency/accounts')
-  getOfficersInMyDependency(@GetUserRequest() account: Account) {
-    return this.reportsService.getOfficersInDependency(account.dependencia._id);
-  }
+
   @Get('institutions')
   getInstitutions() {
     return this.institutionService.searchActiveInstitutions();
@@ -48,45 +39,24 @@ export class ReportsController {
   ) {
     return this.reportsService.searchProcedureByProperties(paginationParams, searchDto);
   }
-  @Post('unit')
-  searchProcedureByUnit(
-    @Body() searchDto: searchProcedureByUnitDto,
-    @Query() paginationParams: PaginationParamsDto,
-    @GetUserRequest() account: Account,
-  ) {
-    return this.reportsService.searchProcedureByUnit(account.dependencia._id, searchDto, paginationParams);
-  }
 
-  @Get('dependents')
-  getDetailsDependentsByUnit(@GetUserRequest() accont: Account) {
-    return this.reportsService.getDetailsDependentsByUnit(accont.dependencia._id);
-  }
-
-  @Get('total/communications/:id_institution')
-  getTotalMailsByInstitution(@Param('id_institution') id_procedure: string, @Query() params: GetTotalMailsDto) {
-    return this.reportsService.getTotalMailsByInstitution(id_procedure, params);
-  }
-
-  @Get('total/procedures/:id_institution')
-  getTotalProceduresByInstitution(
-    @Param('id_institution') id_procedure: string,
-    @Query() params: GetTotalProceduresDto,
-  ) {
-    return this.reportsService.getTotalProceduresByInstitution(id_procedure, params);
-  }
-
-  @Get('ranking/accounts')
-  getRankingAccounts() {
-    return this.reportsService.getTotalInboxByUser();
-  }
-
-  @Get('pendings')
+  @Get('unlink/:id_account')
   getAccountInbox(@GetUserRequest() account: Account) {
-    return this.reportsService.getAccountInbox(account);
+    return this.reportsService.getUnlinkData(account);
   }
 
   @Get('work/:id_account')
   getWorkDetails(@Param('id_account') id: string) {
     return this.reportsService.getWorkDetails(id);
+  }
+
+  @Get('unit/pendings')
+  getPendingsByUnit(@GetUserRequest() account: Account) {
+    return this.reportsService.getPendingsByUnit(account);
+  }
+
+  @Get('pending/:id_account')
+  getPendingsByAccount(@Param('id_account') id: string) {
+    return this.reportsService.getPendingsByAccount(id);
   }
 }

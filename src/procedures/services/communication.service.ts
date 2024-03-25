@@ -14,8 +14,8 @@ import { buildFullname } from 'src/users/helpers/fullname';
 @Injectable()
 export class CommunicationService {
   constructor(
-    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
+    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -214,8 +214,8 @@ export class CommunicationService {
     return mails;
   }
 
-  async acceptMail(id_mail: string) {
-    const mailDB = await this.communicationModel.findById(id_mail).populate('procedure', 'state');
+  async accept(id: string) {
+    const mailDB = await this.communicationModel.findById(id).populate('procedure', 'state');
     if (!mailDB) throw new NotFoundException('El envio del tramite ha sido cancelado');
     if (mailDB.status !== StatusMail.Pending) throw new BadRequestException('El tramite ya ha sido aceptado');
     const session = await this.connection.startSession();
@@ -223,7 +223,7 @@ export class CommunicationService {
       session.startTransaction();
       const { procedure } = mailDB;
       await this.communicationModel.updateOne(
-        { _id: id_mail },
+        { _id: id },
         { status: StatusMail.Received, inboundDate: new Date() },
         { session },
       );

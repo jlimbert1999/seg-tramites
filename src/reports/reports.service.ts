@@ -1,18 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
+import { Account } from 'src/users/schemas';
+import { Dependency } from 'src/administration/schemas';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import {
-  GetTotalMailsDto,
-  GetTotalProceduresDto,
-  SearchProcedureByApplicantDto,
-  SearchProcedureByPropertiesDto,
-  searchProcedureByUnitDto,
-} from './dto';
+import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { groupProcedure, StatusMail } from 'src/procedures/interfaces';
-import { Dependency } from 'src/administration/schemas';
-import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class ReportsService {
@@ -67,218 +61,7 @@ export class ReportsService {
     return { procedures, length };
   }
 
-  async getDetailsDependentsByUnit(id_dependency: string) {
-    const accounts = await this.getOfficersInDependency(id_dependency);
-    const results = await this.communicationModel
-      .aggregate()
-      .match({
-        'receiver.cuenta': { $in: accounts.map((account) => account._id) },
-        status: { $in: [StatusMail.Received, StatusMail.Pending, StatusMail.Rejected, StatusMail.Archived] },
-      })
-      .group({
-        _id: {
-          account: '$receiver.cuenta',
-          status: '$status',
-        },
-        count: { $sum: 1 },
-      })
-      .group({
-        _id: '$_id.account',
-        details: {
-          $push: {
-            status: '$_id.status',
-            total: '$count',
-          },
-        },
-        count: { $sum: '$count' },
-      })
-      .sort({ count: -1 });
-    const dependents = results.map((result) => {
-      result['_id'] = accounts.find((account) => String(account._id) == result._id);
-      return result;
-    });
-    return dependents;
-  }
-  async searchProcedureByUnit(
-    id_dependency: string,
-    properties: searchProcedureByUnitDto,
-    { limit, offset }: PaginationParamsDto,
-  ) {
-    const { start, end, status, account } = properties;
-    const query: mongoose.FilterQuery<Communication>[] = [];
-    const interval = {
-      ...(start && { $gte: new Date(start) }),
-      ...(end && { $lte: new Date(end) }),
-    };
-    if (Object.keys(interval).length > 0) query.push({ outboundDate: interval });
-    if (status) query.push({ status });
-    if (!account) {
-      const accounts = await this.accountModel.find({ dependencia: id_dependency });
-      const ids_receivers = accounts.map((account) => account._id);
-      query.push({ 'receiver.cuenta': { $in: ids_receivers } });
-    } else {
-      query.push({ 'receiver.cuenta': account });
-    }
-    if (query.length === 0) throw new BadRequestException('No se ingresaron parametros para la busqueda');
-    const [communications, length] = await Promise.all([
-      this.communicationModel
-        .find({ $and: query })
-        .populate('procedure', 'code reference group state')
-        .limit(limit)
-        .skip(offset),
-      this.communicationModel.count({ $and: query }),
-    ]);
-    return { communications, length };
-  }
-
-  async getOfficersInDependency(id_dependency: string): Promise<Account[]> {
-    return await this.accountModel
-      .find({ dependencia: id_dependency })
-      .select('funcionario')
-      .populate({
-        path: 'funcionario',
-        select: 'nombre paterno materno cargo',
-        populate: { path: 'cargo', select: 'nombre' },
-      });
-  }
-
-  async getTotalMailsByInstitution(id_institution: string, { group, participant }: GetTotalMailsDto) {
-    const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
-    const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
-    const query: mongoose.FilterQuery<Communication> =
-      participant === 'receiver'
-        ? { 'receiver.cuenta': { $in: accounts.map((acc) => acc._id) } }
-        : { 'emitter.cuenta': { $in: accounts.map((acc) => acc._id) } };
-    const data = await this.communicationModel
-      .aggregate()
-      .match(query)
-      .lookup({
-        from: 'cuentas',
-        foreignField: '_id',
-        localField: `${participant}.cuenta`,
-        as: `${participant}.cuenta`,
-      })
-      .lookup({
-        from: 'procedures',
-        foreignField: '_id',
-        localField: `procedure`,
-        as: `procedure`,
-      })
-      .match({ 'procedure.group': group })
-      .group({
-        _id: {
-          account: `$${participant}.cuenta.dependencia`,
-          status: '$status',
-        },
-        count: { $sum: 1 },
-      })
-      .group({
-        _id: '$_id.account',
-        details: {
-          $push: {
-            field: '$_id.status',
-            count: '$count',
-          },
-        },
-        total: { $sum: '$count' },
-      })
-      .unwind('$_id')
-      .sort({ total: -1 });
-    data.map((element) => {
-      const dependency = dependencies.find((dep) => String(dep._id) === String(element._id));
-      element['name'] = dependency ? dependency.nombre : 'Sin nombre';
-      return element;
-    });
-    return data;
-  }
-  async getTotalProceduresByInstitution(id_institution: string, { group }: GetTotalProceduresDto) {
-    const dependencies = await this.dependencyModel.find({ institucion: id_institution }).select('nombre');
-    const accounts = await this.accountModel.find({ dependencia: { $in: dependencies.map((dep) => dep._id) } });
-    const data = await this.procedureModel
-      .aggregate()
-      .match({ group, account: { $in: accounts.map((acc) => acc._id) } })
-      .lookup({
-        from: 'cuentas',
-        localField: 'account',
-        foreignField: '_id',
-        as: 'account',
-      })
-      .group({
-        _id: {
-          dependency: '$account.dependencia',
-          state: '$state',
-        },
-        count: { $sum: 1 },
-      })
-      .group({
-        _id: '$_id.dependency',
-        details: {
-          $push: {
-            field: '$_id.state',
-            count: '$count',
-          },
-        },
-        total: { $sum: '$count' },
-      })
-      .unwind('$_id')
-      .sort({ total: -1 });
-    data.map((element) => {
-      const dependency = dependencies.find((dep) => String(dep._id) === String(element._id));
-      element['name'] = dependency ? dependency.nombre : 'Sin nombre';
-      return element;
-    });
-    return data;
-  }
-  async getTotalInboxByUser() {
-    return await this.communicationModel
-      .aggregate()
-      .match({ status: { $in: [StatusMail.Received, StatusMail.Pending] } })
-      .group({
-        _id: {
-          account: `$receiver.cuenta`,
-          status: '$status',
-        },
-        count: { $sum: 1 },
-      })
-      .group({
-        _id: '$_id.account',
-        details: {
-          $push: {
-            status: '$_id.status',
-            count: '$count',
-          },
-        },
-        total: { $sum: '$count' },
-      })
-      .sort({ total: -1 })
-      .lookup({
-        from: 'cuentas',
-        localField: '_id',
-        foreignField: '_id',
-        as: '_id',
-        pipeline: [{ $project: { funcionario: 1 } }],
-      })
-      .unwind('_id')
-      .lookup({
-        from: 'funcionarios',
-        localField: '_id.funcionario',
-        foreignField: '_id',
-        as: '_id.funcionario',
-        pipeline: [{ $project: { nombre: 1, paterno: 1, materno: 1, cargo: 1 } }],
-      })
-      .unwind({ path: '$_id.funcionario', preserveNullAndEmptyArrays: true })
-      .lookup({
-        from: 'cargos',
-        localField: '_id.funcionario.cargo',
-        foreignField: '_id',
-        as: '_id.funcionario.cargo',
-        pipeline: [{ $project: { nombre: 1 } }],
-      })
-      .unwind({ path: '$_id.funcionario.cargo', preserveNullAndEmptyArrays: true })
-      .limit(100000);
-  }
-
-  async getAccountInbox(account: Account) {
+  async getUnlinkData(account: Account) {
     await account.populate([
       {
         path: 'funcionario',
@@ -307,5 +90,35 @@ export class ReportsService {
         _id: '$status',
         count: { $sum: 1 },
       });
+  }
+
+  async getPendingsByUnit({ dependencia }: Account) {
+    const unit = await this.accountModel.find({ dependencia: dependencia._id }, '_id');
+    const results = await this.communicationModel
+      .aggregate()
+      .match({
+        'receiver.cuenta': { $in: unit.map((account) => account._id) },
+        status: { $in: [StatusMail.Received, StatusMail.Pending] },
+      })
+      .group({
+        _id: '$receiver.cuenta',
+        pendings: { $sum: 1 },
+      })
+      .sort({ pendings: -1 });
+    return await this.accountModel.populate(results, {
+      path: '_id',
+      select: 'funcionario',
+      populate: {
+        path: 'funcionario',
+        select: '-_id nombre paterno materno cargo',
+        populate: { path: 'cargo', select: 'nombre -_id' },
+      },
+    });
+  }
+
+  async getPendingsByAccount(id_account: string) {
+    return await this.communicationModel
+      .find({ 'receiver.cuenta': id_account })
+      .populate('procedure', 'code, reference state');
   }
 }

@@ -7,7 +7,7 @@ class Permissions {
     type: String,
     enum: Object.values(VALID_RESOURCES),
   })
-  resource: string;
+  resource: VALID_RESOURCES;
 
   @Prop({ type: [String], minlength: 1 })
   actions: string[];

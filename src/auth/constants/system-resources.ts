@@ -130,6 +130,7 @@ export const SYSTEM_RESOURCES = [
     actions: [
       { value: VALID_ACTIONS.applicant, label: 'Solicitante', isSelected: false },
       { value: VALID_ACTIONS.search, label: 'Busquedas', isSelected: false },
+      { value: 'dependents', label: 'Dependientes', isSelected: false },
     ],
   },
 ];

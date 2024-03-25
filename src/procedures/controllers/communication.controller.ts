@@ -58,7 +58,7 @@ export class CommunicationController {
 
   @Put('accept/:id_mail')
   acceptMail(@Param('id_mail', IsMongoidPipe) id_mail: string) {
-    return this.communicationService.acceptMail(id_mail);
+    return this.communicationService.accept(id_mail);
   }
 
   @Put('reject/:id')
