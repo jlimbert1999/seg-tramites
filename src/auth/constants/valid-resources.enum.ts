@@ -3,6 +3,7 @@ export enum VALID_RESOURCES {
   communication = 'communication',
   institutions = 'institutions',
   dependencies = 'dependencies',
+  groupware = 'groupware',
   external = 'external',
   internal = 'internal',
   officers = 'officers',
@@ -11,9 +12,4 @@ export enum VALID_RESOURCES {
   reports = 'reports',
   roles = 'roles',
   jobs = 'jobs',
-}
-
-export enum VALID_ACTIONS {
-  applicant = 'applicant',
-  search = 'search',
 }

@@ -32,7 +32,7 @@ export class GroupwareService {
     return this.users[id_account];
   }
 
-  getUsers() {
+  getClients() {
     return Object.values(this.users);
   }
 }

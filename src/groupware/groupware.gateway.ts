@@ -21,15 +21,15 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
       const decoded: JwtPayload = this.jwtService.verify(token);
       if (decoded.id_dependency) client.join(decoded.id_dependency);
       this.groupwareService.addUser(client.id, decoded);
-      this.server.emit('listar', this.groupwareService.getUsers());
+      this.server.emit('listar', this.groupwareService.getClients());
     } catch (error) {
       client.disconnect();
     }
   }
-  
+
   handleDisconnect(client: Socket) {
     this.groupwareService.removeUser(client.id);
-    client.broadcast.emit('listar', this.groupwareService.getUsers());
+    client.broadcast.emit('listar', this.groupwareService.getClients());
   }
 
   sendMails(data: Communication[]) {

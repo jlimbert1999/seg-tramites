@@ -1,4 +1,4 @@
-import { VALID_ACTIONS, VALID_RESOURCES } from './valid-resources.enum';
+import { VALID_RESOURCES } from './valid-resources.enum';
 
 export const SYSTEM_RESOURCES = [
   {
@@ -128,9 +128,15 @@ export const SYSTEM_RESOURCES = [
     label: 'REPORTES',
     isSelected: false,
     actions: [
-      { value: VALID_ACTIONS.applicant, label: 'Solicitante', isSelected: false },
-      { value: VALID_ACTIONS.search, label: 'Busquedas', isSelected: false },
+      { value: 'applicants', label: 'Solicitante', isSelected: false },
+      { value: 'search', label: 'Busquedas', isSelected: false },
       { value: 'dependents', label: 'Dependientes', isSelected: false },
     ],
+  },
+  {
+    value: VALID_RESOURCES.groupware,
+    label: 'GRUPO DE TRABAJO',
+    isSelected: false,
+    actions: [{ value: 'manage', label: 'Administrar', isSelected: false }],
   },
 ];

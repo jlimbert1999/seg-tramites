@@ -1,8 +1,9 @@
 export interface JwtPayload {
   id_account: string;
   id_dependency: string;
-  officer: {
-    fullname: string;
-    jobtitle: string;
-  };
+  officer: officer;
+}
+interface officer {
+  fullname: string;
+  jobtitle: string;
 }

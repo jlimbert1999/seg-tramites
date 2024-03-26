@@ -2,13 +2,13 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
 
 import { AuthDto, UpdateMyAccountDto } from './dto';
-import { EnvConfig, JwtPayload } from './interfaces';
+import { EnvConfig, JwtPayload, Menu } from './interfaces';
 import { Account, Role } from 'src/users/schemas';
-import { SYSTEM_MENU } from './constants';
 
 @Injectable()
 export class AuthService {
@@ -48,30 +48,20 @@ export class AuthService {
       .populate('dependencia', 'codigo')
       .populate('rol');
     if (!account) throw new UnauthorizedException();
-    const permissions = account.rol.permissions.reduce(
-      (acc, curretn) => ({
-        ...acc,
-        [curretn.resource]: curretn.actions.map((el) => el),
-      }),
-      {},
-    );
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
       return {
         token: this.generateRootToken(account),
         menu: this.getSystemMenu(account.rol),
         code: '',
-        permissions: permissions,
       };
     }
     if (!account.funcionario || !account.activo) {
       throw new UnauthorizedException('La cuenta ha sido deshanilidata');
     }
-
     return {
       token: this.generateToken(account),
       menu: this.getSystemMenu(account.rol),
       code: account.dependencia.codigo,
-      permissions: permissions,
     };
   }
 
@@ -128,18 +118,21 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  private getSystemMenu(role: Role) {
-    const menu = SYSTEM_MENU;
-    const filteredItems = menu.filter((item) => {
-      if (item.children) {
-        item.children = item.children.filter((child) =>
-          role.permissions.some((permission) => permission.resource === child.resource),
-        );
-        return item.children.length > 0;
-      } else {
-        return role.permissions.some((permission) => permission.resource === item.resource);
+  private getSystemMenu({ permissions }: Role) {
+    const json = fs.readFileSync('src/config/menu.json', 'utf8');
+    const SystemMenu: Menu[] = JSON.parse(json);
+    return SystemMenu.filter((menu) => {
+      if (!menu.children) {
+        const permission = permissions.find(({ resource }) => resource === menu.resource);
+        menu['actions'] = permission ? permission.actions : [];
+        return permissions.some(({ resource }) => resource === menu.resource);
       }
+      menu.children = menu.children.filter((submenu) => {
+        const permission = permissions.find(({ resource }) => resource === submenu.resource);
+        submenu['actions'] = permission ? permission.actions : [];
+        return permissions.some(({ resource }) => resource === submenu.resource);
+      });
+      return menu.children.length > 0;
     });
-    return filteredItems;
   }
 }
