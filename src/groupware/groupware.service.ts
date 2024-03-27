@@ -4,35 +4,34 @@ import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 
 @Injectable()
 export class GroupwareService {
-  private users: Record<string, userSocket> = {};
+  private clients: Record<string, userSocket> = {};
 
-  addUser(id_socket: string, payloadToken: JwtPayload): void {
-    const { id_account, id_dependency, officer } = payloadToken;
-    if (this.users[id_account]) {
-      this.users[id_account].socketIds.push(id_socket);
+  onClientConnected(id_socket: string, payload: JwtPayload): void {
+    if (this.clients[payload.id_account]) {
+      this.clients[payload.id_account].socketIds.push(id_socket);
       return;
     }
-    this.users[id_account] = {
-      id_dependency,
-      id_account,
-      officer,
-      socketIds: [id_socket],
-    };
+    this.clients[payload.id_account] = { ...payload, socketIds: [id_socket] };
   }
 
-  removeUser(id_socket: string) {
-    const disconnectedUser = Object.values(this.users).find((user) => user.socketIds.includes(id_socket));
-    if (!disconnectedUser) return;
-    const { id_account, socketIds } = disconnectedUser;
-    this.users[id_account].socketIds = socketIds.filter((id) => id !== id_socket);
-    if (this.users[id_account].socketIds.length === 0) delete this.users[id_account];
+  onClientDisconnected(id_socket: string) {
+    const client = Object.values(this.clients).find(({ socketIds }) => socketIds.includes(id_socket));
+    if (!client) return;
+    this.clients[client.id_account].socketIds = client.socketIds.filter((id) => id !== id_socket);
+    if (this.clients[client.id_account].socketIds.length === 0) delete this.clients[client.id_account];
+  }
+
+  remove(id_account: string) {
+    const client = this.clients[id_account];
+    if (client) delete this.clients[id_account];
+    return client;
   }
 
   getUser(id_account: string): userSocket {
-    return this.users[id_account];
+    return this.clients[id_account];
   }
 
   getClients() {
-    return Object.values(this.users);
+    return Object.values(this.clients);
   }
 }

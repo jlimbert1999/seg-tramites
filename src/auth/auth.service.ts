@@ -98,8 +98,8 @@ export class AuthService {
       id_account: account._id,
       id_dependency: '',
       officer: {
-        fullname: 'ADMINISTRADOR',
-        jobtitle: 'Configuraciones',
+        fullname: 'Administrador',
+        jobtitle: 'CONFIGURACIONES',
       },
     };
     return this.jwtService.sign(payload);
