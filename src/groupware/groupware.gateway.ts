@@ -75,6 +75,5 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     const client = this.groupwareService.remove(id_account);
     if (!client) return;
     socket.to(client.socketIds).emit('has-expel', { message });
-    // this.server.except(client.socketIds).emit('listar', this.groupwareService.getClients());
   }
 }
