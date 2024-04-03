@@ -18,19 +18,22 @@ export class AccountController {
     private readonly roleService: RoleService,
     private readonly jobService: JobService,
   ) {}
+
   @Get('roles')
-  async getRoles() {
-    return await this.roleService.getRoles();
+  getRoles() {
+    return this.roleService.getRoles();
+  }
+
+  @Get('institutions')
+  getInstitutions() {
+    return this.institutionService.getActiveInstitutions();
   }
 
   @Get('jobs/:text')
   async getJob(@Param('text') text: string) {
     return await this.jobService.searchJobForUser(text);
   }
-  @Get('institutions')
-  async getInstitutions() {
-    return await this.institutionService.searchActiveInstitutions();
-  }
+
   @Get('dependencie/:id_institucion')
   async getDependencies(@Param('id_institucion', IsMongoidPipe) id_institucion: string, @Query('text') text: string) {
     return await this.dependencieService.getActiveDependenciesOfInstitution(id_institucion, text);
@@ -41,14 +44,14 @@ export class AccountController {
     return this.accountService.searchOfficersWithoutAccount(text);
   }
 
-  @Get('search')
-  async search(@Query() params: FilterAccountsDto) {
-    return await this.accountService.search(params);
+  @Get('search/:term')
+  search(@Param('term') term: string, @Query() params: GetAccountsDto) {
+    return this.accountService.search(term, params);
   }
 
   @Get()
-  async findAll(@Query() params: GetAccountsDto) {
-    return await this.accountService.findAll(params);
+  findAll(@Query() params: GetAccountsDto) {
+    return this.accountService.findAll(params);
   }
 
   @Post()

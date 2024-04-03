@@ -15,7 +15,7 @@ export class DependencyController {
   
   @Get('institutions')
   getInstitutions() {
-    return this.institutionService.searchActiveInstitutions();
+    return this.institutionService.getActiveInstitutions();
   }
 
   @Get()

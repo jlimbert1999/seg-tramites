@@ -42,8 +42,8 @@ export class AccountService {
     return { accounts, length };
   }
 
-  async search({ id_dependency, text, limit, offset }: FilterAccountsDto) {
-    const regex = new RegExp(text, 'i');
+  async search(term: string, { id_dependency, limit, offset }: GetAccountsDto) {
+    const regex = new RegExp(term, 'i');
     const query: FilterQuery<Account> = {
       ...(id_dependency && { dependencia: new mongoose.Types.ObjectId(id_dependency) }),
       $or: [{ 'funcionario.fullname': regex }, { 'funcionario.dni': regex }, { 'funcionario.cargo.nombre': regex }],

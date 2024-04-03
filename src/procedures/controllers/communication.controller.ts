@@ -23,7 +23,7 @@ export class CommunicationController {
 
   @Get('institutions')
   getInstitutions() {
-    return this.institutionService.searchActiveInstitutions();
+    return this.institutionService.getActiveInstitutions();
   }
 
   @Get('dependencies/:id_institution')

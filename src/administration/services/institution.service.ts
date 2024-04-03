@@ -8,7 +8,7 @@ import { CreateInstitutionDto, UpdateInstitutionDto } from '../dto';
 export class InstitutionService {
   constructor(@InjectModel(Institution.name) private institutionModel: Model<Institution>) {}
 
-  public async searchActiveInstitutions() {
+  public async getActiveInstitutions() {
     return await this.institutionModel.find({ activo: true });
   }
 

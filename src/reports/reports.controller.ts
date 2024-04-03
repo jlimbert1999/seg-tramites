@@ -21,7 +21,7 @@ export class ReportsController {
 
   @Get('institutions')
   getInstitutions() {
-    return this.institutionService.searchActiveInstitutions();
+    return this.institutionService.getActiveInstitutions();
   }
 
   @Post('applicant')
