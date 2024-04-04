@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
@@ -123,61 +123,26 @@ export class AccountService {
 
   async update(id: string, account: UpdateAccountDto) {
     const accountDB = await this.accountModel.findById(id);
-    if (!accountDB) throw new BadRequestException(`La cuenta ${id} no existe`);
+    if (!accountDB) throw new NotFoundException(`La cuenta ${id} no existe`);
     if (accountDB.login !== account.login) await this.checkDuplicateLogin(account.login);
-    if (account.password) account.password = this.encryptPassword(account.password);
+    if (account.password) account['password'] = this.encryptPassword(account.password);
     const updated = await this.accountModel
       .findByIdAndUpdate(id, account, { new: true })
       .populate(this.populateOptions);
     return this.removePasswordField(updated);
   }
 
-  async assing(account: CreateAccountDto) {
+  async assign(account: CreateAccountDto) {
     if (account.funcionario) {
       const duplicate = await this.accountModel.findOne({ funcionario: account.funcionario });
-      if (duplicate) throw new BadRequestException('El funcionario seleccionado ya esta asginado a una cuenta');
+      if (duplicate) throw new BadRequestException('El funcionario seleccionado ya esta asignado a una cuenta');
     }
     await this.checkDuplicateLogin(account.login);
-    const createdAccount = new this.accountModel(account);
+    const ecryptedPassword = this.encryptPassword(account.password);
+    const createdAccount = new this.accountModel({ ...account, password: ecryptedPassword });
     await createdAccount.save();
     await createdAccount.populate(this.populateOptions);
     return this.removePasswordField(createdAccount);
-  }
-
-  private get populateOptions(): mongoose.PopulateOptions[] {
-    return [
-      {
-        path: 'dependencia',
-        select: 'nombre institucion',
-        populate: {
-          path: 'institucion',
-          select: 'nombre',
-        },
-      },
-      {
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-          select: 'nombre',
-        },
-      },
-    ];
-  }
-
-  private encryptPassword(password: string): string {
-    const salt = bcrypt.genSaltSync();
-    return bcrypt.hashSync(password, salt);
-  }
-
-  private async checkDuplicateLogin(login: string) {
-    const duplicate = await this.accountModel.findOne({ login });
-    if (duplicate) throw new BadRequestException(`El login ya existre ${login}`);
-  }
-
-  private removePasswordField(account: Account) {
-    const result = { ...account.toObject() };
-    delete result.password;
-    return result;
   }
 
   async searchOfficersWithoutAccount(text: string) {
@@ -221,9 +186,45 @@ export class AccountService {
     return isVisible;
   }
 
-  async unlinkAccount(id: string): Promise<{ message: string }> {
-    const result = await this.accountModel.updateOne({ _id: id }, { $unset: { funcionario: 1 } });
-    if (result.matchedCount === 0) throw new BadRequestException(`La cuenta ${id} no existe`);
+  async unlink(id: string) {
+    const result = await this.accountModel.updateOne({ _id: id }, { activo: false, $unset: { funcionario: 1 } });
+    if (result.matchedCount === 0) throw new NotFoundException(`La cuenta ${id} no existe`);
     return { message: 'Cuenta desvinculada' };
+  }
+
+  private get populateOptions(): mongoose.PopulateOptions[] {
+    return [
+      {
+        path: 'dependencia',
+        select: 'nombre institucion',
+        populate: {
+          path: 'institucion',
+          select: 'nombre',
+        },
+      },
+      {
+        path: 'funcionario',
+        populate: {
+          path: 'cargo',
+          select: 'nombre',
+        },
+      },
+    ];
+  }
+
+  private encryptPassword(password: string): string {
+    const salt = bcrypt.genSaltSync();
+    return bcrypt.hashSync(password, salt);
+  }
+
+  private async checkDuplicateLogin(login: string) {
+    const duplicate = await this.accountModel.findOne({ login });
+    if (duplicate) throw new BadRequestException(`El login ya existre ${login}`);
+  }
+
+  private removePasswordField(account: Account) {
+    const result = { ...account.toObject() };
+    delete result.password;
+    return result;
   }
 }

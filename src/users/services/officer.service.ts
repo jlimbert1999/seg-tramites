@@ -166,7 +166,6 @@ export class OfficerService {
         },
       })
       .match({ fullname: regex, activo: true })
-      .project({ fullname: 0 })
       .lookup({
         from: 'cuentas',
         localField: '_id',
@@ -174,7 +173,7 @@ export class OfficerService {
         as: 'cuenta',
       })
       .match({ cuenta: { $size: 0 } })
-      .project({ cuenta: 0 })
+      .project({ cuenta: 0, fullname: 0 })
       .limit(limit);
     return await this.officerModel.populate(officers, { path: 'cargo' });
   }

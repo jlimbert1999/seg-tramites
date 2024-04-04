@@ -40,7 +40,7 @@ export class AccountController {
   }
 
   @Get('assign/:text')
-  searchOfficersForAssign(@Param('text') text: string) {
+  searchOfficersWithoutAccount(@Param('text') text: string) {
     return this.accountService.searchOfficersWithoutAccount(text);
   }
 
@@ -58,9 +58,10 @@ export class AccountController {
   create(@Body('officer') officer: CreateOfficerDto, @Body('account') account: CreateAccountDto) {
     return this.accountService.create(account, officer);
   }
+
   @Post('assign')
-  assignAccountOfficer(@Body() account: CreateAccountDto) {
-    return this.accountService.assing(account);
+  assign(@Body() account: CreateAccountDto) {
+    return this.accountService.assign(account);
   }
 
   @Put(':id')
@@ -69,8 +70,8 @@ export class AccountController {
   }
 
   @Delete('unlink/:id')
-  unlinkAccount(@Param('id') id: string) {
-    return this.accountService.unlinkAccount(id);
+  unlink(@Param('id') id: string) {
+    return this.accountService.unlink(id);
   }
 
   @Delete(':id')
