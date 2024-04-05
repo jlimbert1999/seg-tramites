@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { InstitutionService } from '../services/institution.service';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { CreateInstitutionDto, UpdateInstitutionDto } from '../dto';
+import { CreateInstitutionDto, UpdateInstitutionDto } from '../dtos';
 
 @Controller('institutions')
 export class InstitutionController {

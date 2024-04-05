@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TypeProcedure } from '../schemas/type-procedure.schema';
-import { CreateTypeProcedureDto, UpdateTypeProcedureDto } from '../dto';
+import { CreateTypeProcedureDto, UpdateTypeProcedureDto } from '../dtos';
 
 @Injectable()
 export class TypeProcedureService {

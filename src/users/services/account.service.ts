@@ -4,9 +4,10 @@ import mongoose, { FilterQuery, Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
-import { CreateAccountDto, CreateOfficerDto, UpdateAccountDto, GetAccountsDto, FilterAccountsDto } from '../dtos';
-import { OfficerService } from './officer.service';
+import { CreateAccountDto, UpdateAccountDto, GetAccountsDto } from '../dtos';
 import { Account } from '../../users/schemas';
+import { CreateOfficerDto } from 'src/administration/dtos';
+import { OfficerService } from 'src/administration/services';
 
 @Injectable()
 export class AccountService {
@@ -187,7 +188,7 @@ export class AccountService {
   }
 
   async unlink(id: string) {
-    const result = await this.accountModel.updateOne({ _id: id }, { activo: false, $unset: { funcionario: 1 } });
+    const result = await this.accountModel.updateOne({ _id: id }, { $unset: { funcionario: 1 } });
     if (result.matchedCount === 0) throw new NotFoundException(`La cuenta ${id} no existe`);
     return { message: 'Cuenta desvinculada' };
   }

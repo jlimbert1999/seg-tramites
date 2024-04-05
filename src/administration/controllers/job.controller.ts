@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { JobService } from '../services';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { CreateJobDto, UpdateJobDto } from '../dtos';
 import { ResourceProtected } from 'src/auth/decorators';
 import { VALID_RESOURCES } from 'src/auth/constants';
+import { CreateJobDto, UpdateJobDto } from '../dtos';
 
 @ResourceProtected(VALID_RESOURCES.jobs)
 @Controller('jobs')

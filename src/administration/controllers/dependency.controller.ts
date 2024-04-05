@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { InstitutionService, DependencieService } from '../services';
-import { UpdateDependencyDto, CreateDependencyDto } from '../dto';
+import { UpdateDependencyDto, CreateDependencyDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { ResourceProtected } from 'src/auth/decorators';
 import { VALID_RESOURCES } from 'src/auth/constants';

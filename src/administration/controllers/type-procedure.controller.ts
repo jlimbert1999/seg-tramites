@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { TypeProcedureService } from '../services/type-procedure.service';
-import { CreateTypeProcedureDto } from '../dto/create-typeProcedure.dto';
-import { UpdateTypeProcedureDto } from '../dto/update-typeProcedure.dto';
+import { CreateTypeProcedureDto, UpdateTypeProcedureDto } from '../dtos';
 
 @Controller('types-procedures')
 export class TypeProcedureController {

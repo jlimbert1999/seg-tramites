@@ -1,12 +1,13 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { AccountService, JobService } from '../services';
-import { CreateAccountDto, CreateOfficerDto, GetAccountsDto, UpdateAccountDto } from '../../users/dtos';
-import { DependencieService, InstitutionService } from 'src/administration/services';
+import { AccountService } from '../services';
+import { CreateAccountDto, GetAccountsDto, UpdateAccountDto } from '../../users/dtos';
+import { DependencieService, InstitutionService, JobService } from 'src/administration/services';
 import { RoleService } from '../../users/services';
 import { FilterAccountsDto } from '../dtos/params/filter-accounts.dto';
 import { ResourceProtected } from 'src/auth/decorators';
 import { VALID_RESOURCES } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
+import { CreateOfficerDto } from 'src/administration/dtos';
 
 @ResourceProtected(VALID_RESOURCES.accounts)
 @Controller('accounts')
@@ -21,7 +22,7 @@ export class AccountController {
 
   @Get('roles')
   getRoles() {
-    return this.roleService.getRoles();
+    return this.roleService.getActiveRoles();
   }
 
   @Get('institutions')

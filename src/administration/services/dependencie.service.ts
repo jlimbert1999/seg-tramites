@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Dependency } from '../schemas/dependencie.schema';
-import { CreateDependencyDto, UpdateDependencyDto } from '../dto';
+import { CreateDependencyDto, UpdateDependencyDto } from '../dtos';
 
 @Injectable()
 export class DependencieService {
