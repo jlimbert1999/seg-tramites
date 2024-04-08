@@ -1,10 +1,10 @@
 import { VALID_RESOURCES } from '../constants';
 
 export interface Menu {
-  resource?: VALID_RESOURCES;
+  resource: string;
   text: string;
   icon: string;
-  routerLink?: string;
+  routerLink: string;
   children?: SubMemu[];
 }
 

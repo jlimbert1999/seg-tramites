@@ -73,7 +73,11 @@ export const SYSTEM_RESOURCES = [
       { value: 'delete', label: 'Eliminar' },
     ],
   },
-
+  {
+    value: VALID_RESOURCES.groupware,
+    label: 'GRUPO DE TRABAJO',
+    actions: [{ value: 'manage', label: 'Administrar' }],
+  },
   {
     value: VALID_RESOURCES.external,
 
@@ -127,11 +131,5 @@ export const SYSTEM_RESOURCES = [
       { value: 'search', label: 'Busquedas' },
       { value: 'dependents', label: 'Dependientes' },
     ],
-  },
-  {
-    value: VALID_RESOURCES.groupware,
-    label: 'GRUPO DE TRABAJO',
-
-    actions: [{ value: 'manage', label: 'Administrar' }],
   },
 ];

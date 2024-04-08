@@ -51,7 +51,8 @@ export class AuthService {
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
       return {
         token: this.generateRootToken(account),
-        menu: this.getSystemMenu(account.rol),
+        menu: this._getFrontMenu(account.rol),
+        permissions: this._getPermissions(account.rol),
         code: '',
       };
     }
@@ -60,7 +61,8 @@ export class AuthService {
     }
     return {
       token: this.generateToken(account),
-      menu: this.getSystemMenu(account.rol),
+      menu: this._getFrontMenu(account.rol),
+      permissions: this._getPermissions(account.rol),
       code: account.dependencia.codigo,
     };
   }
@@ -118,20 +120,18 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  private getSystemMenu({ permissions }: Role) {
+  private _getPermissions({ permissions }: Role) {
+    return permissions.reduce((result, { actions, resource }) => ({ [resource]: actions, ...result }), {});
+  }
+
+  private _getFrontMenu({ permissions }: Role) {
     const json = fs.readFileSync('src/config/menu.json', 'utf8');
     const SystemMenu: Menu[] = JSON.parse(json);
     return SystemMenu.filter((menu) => {
-      if (!menu.children) {
-        const permission = permissions.find(({ resource }) => resource === menu.resource);
-        menu['actions'] = permission ? permission.actions : [];
-        return permissions.some(({ resource }) => resource === menu.resource);
-      }
-      menu.children = menu.children.filter((submenu) => {
-        const permission = permissions.find(({ resource }) => resource === submenu.resource);
-        submenu['actions'] = permission ? permission.actions : [];
-        return permissions.some(({ resource }) => resource === submenu.resource);
-      });
+      if (!menu.children) return permissions.some(({ resource }) => resource === menu.resource);
+      menu.children = menu.children.filter((submenu) =>
+        permissions.some(({ resource }) => resource === submenu.resource),
+      );
       return menu.children.length > 0;
     });
   }
