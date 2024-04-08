@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { VALID_RESOURCES } from 'src/auth/constants';
 
 export class CreateRoleDto {
   @IsNotEmpty()
@@ -14,9 +15,8 @@ export class CreateRoleDto {
 }
 
 class Permissions {
-  @IsString()
-  @IsNotEmpty()
-  resource: string;
+  @IsEnum(VALID_RESOURCES)
+  resource: VALID_RESOURCES;
 
   @IsArray()
   @IsString({ each: true })

@@ -27,8 +27,8 @@ export class RoleService {
     return await createdRole.save();
   }
 
-  async edit(id_role: string, role: UpdateRoleDto) {
-    return await this.roleModel.findByIdAndUpdate(id_role, role, { new: true });
+  async edit(id: string, role: UpdateRoleDto) {
+    return await this.roleModel.findByIdAndUpdate(id, role, { new: true });
   }
 
   async getActiveRoles() {
