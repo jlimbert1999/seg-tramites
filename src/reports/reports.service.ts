@@ -92,6 +92,18 @@ export class ReportsService {
       });
   }
 
+  async getTotalCommunications(id_account: string) {
+    return await this.communicationModel
+      .aggregate()
+      .match({
+        'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
+      })
+      .group({
+        _id: '$status',
+        count: { $sum: 1 },
+      });
+  }
+
   async getPendingsByUnit({ dependencia }: Account) {
     const unit = await this.accountModel.find({ dependencia: dependencia._id }, '_id');
     const results = await this.communicationModel

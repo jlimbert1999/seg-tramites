@@ -45,12 +45,12 @@ export class ReportsController {
     return this.reportsService.getUnlinkData(account);
   }
 
-  @Get('work/:id_account')
-  getWorkDetails(@Param('id_account') id: string) {
-    return this.reportsService.getWorkDetails(id);
+  @Get('communication/total/:id_account')
+  getTotalCommunications(@Param('id_account') id: string) {
+    return this.reportsService.getTotalCommunications(id);
   }
 
-  @Get('unit/pendings')
+  @Get('unit/getTotalCommunicationsendings')
   getPendingsByUnit(@GetUserRequest() account: Account) {
     return this.reportsService.getPendingsByUnit(account);
   }
