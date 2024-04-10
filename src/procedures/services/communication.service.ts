@@ -152,6 +152,7 @@ export class CommunicationService {
       if (id_mail) {
         await this.communicationModel.updateOne({ _id: id_mail }, { status: StatusMail.Completed }, { session });
       } else {
+        // TODO CHECK IS SEND
         await this.procedureModel.updateOne({ _id: id_procedure }, { send: true }, { session });
       }
       const mails = await this.createCommunicationModel(account, communication);
@@ -376,7 +377,7 @@ export class CommunicationService {
     const invalidStatus = [StatusMail.Completed, StatusMail.Rejected];
     const location = await this.communicationModel
       .find({ procedure: id_procedure, status: { $nin: invalidStatus } })
-      .select({ 'receiver.cuenta': 1, _id: 0 })
+      .select({ 'receiver.cuenta': 1, status: 1, _id: 0 })
       .populate({
         path: 'receiver.cuenta',
         select: 'funcionario',
@@ -396,6 +397,6 @@ export class CommunicationService {
         ],
       })
       .lean();
-    return location.map((el) => ({ ...el.receiver.cuenta }));
+    return location.map((el) => ({ ...el.receiver.cuenta, status: el.status }));
   }
 }
