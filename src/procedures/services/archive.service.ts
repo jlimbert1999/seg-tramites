@@ -4,7 +4,7 @@ import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Communication, Procedure } from '../schemas';
 import { CreateArchiveDto } from '../dto';
 import { stateProcedure, StatusMail } from '../interfaces';
-import { createFullName } from 'src/administration/helpers/fullname';
+import { fullname } from 'src/administration/helpers/fullname';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { Account } from 'src/users/schemas';
 
@@ -180,7 +180,7 @@ export class ArchiveService {
       emitter: receiver,
       receiver: {
         cuenta: participant._id,
-        fullname: createFullName(funcionario),
+        fullname: fullname(funcionario),
         ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
       },
       outboundDate,
@@ -199,9 +199,8 @@ export class ArchiveService {
     state: stateProcedure.SUSPENDIDO | stateProcedure.CONCLUIDO,
     session: mongoose.mongo.ClientSession,
   ): Promise<void> {
-    const validStates = [StatusMail.Archived, StatusMail.Completed];
     const isProcessActive = await this.communicationModel.findOne(
-      { procedure: id, status: { $in: validStates } },
+      { procedure: id, status: { $in: [StatusMail.Received, StatusMail.Pending] } },
       undefined,
       { session },
     );

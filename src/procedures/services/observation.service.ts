@@ -4,7 +4,6 @@ import mongoose, { Model } from 'mongoose';
 import { Observation, Procedure } from '../schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
-import { createFullName } from 'src/administration/helpers/fullname';
 import { Account } from 'src/users/schemas';
 
 @Injectable()

@@ -1,6 +1,6 @@
-import { Officer } from "src/users/schemas";
+import { Officer } from 'src/users/schemas';
 
-
-export function createFullName(officer: Officer) {
-    return [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(" ")
+export function fullname(officer: Officer): string {
+  if (!officer) return 'Desvinculado';
+  return [officer.nombre, officer.paterno, officer.materno].filter(Boolean).join(' ');
 }

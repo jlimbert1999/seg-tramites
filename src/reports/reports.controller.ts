@@ -50,7 +50,7 @@ export class ReportsController {
     return this.reportsService.getTotalCommunications(id);
   }
 
-  @Get('unit/getTotalCommunicationsendings')
+  @Get('unit/pendings')
   getPendingsByUnit(@GetUserRequest() account: Account) {
     return this.reportsService.getPendingsByUnit(account);
   }

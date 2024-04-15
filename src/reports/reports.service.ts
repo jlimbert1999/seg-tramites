@@ -15,7 +15,7 @@ export class ReportsService {
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
     @InjectModel(Communication.name) private communicationModel: Model<Communication>,
-    @InjectModel(ExternalDetail.name) private externalProcedureModel: Model<ExternalDetail>,
+    @InjectModel(ExternalDetail.name) private externalModel: Model<ExternalDetail>,
   ) {}
 
   async searchProcedureByApplicant(
@@ -28,8 +28,8 @@ export class ReportsService {
       return acc;
     }, {});
     const [details, length] = await Promise.all([
-      this.externalProcedureModel.find(query).lean().limit(limit).skip(offset).select('_id'),
-      this.externalProcedureModel.count(query),
+      this.externalModel.find(query).lean().limit(limit).skip(offset).select('_id'),
+      this.externalModel.count(query),
     ]);
     const procedures = await this.procedureModel
       .find({ details: { $in: details.map((detail) => detail._id) }, group: groupProcedure.EXTERNAL })
