@@ -4,7 +4,7 @@ import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from '.
 import { GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { InstitutionService, TypeProcedureService } from 'src/administration/services';
-import { Account } from 'src/users/schemas';
+import type { Account } from 'src/users/schemas';
 
 @Controller('reports')
 export class ReportsController {
@@ -14,9 +14,9 @@ export class ReportsController {
     private institutionService: InstitutionService,
   ) {}
 
-  @Get('types-procedures/:group/:term')
-  getTypeProceduresByText(@Param('group') group: string, @Param('term') term: string) {
-    return this.typeProcedureService.getEnabledTypesByText(term, group);
+  @Get('types-procedures/:term')
+  getTypeProceduresByText(@Param('term') term: string, @Query('type') type: string | undefined) {
+    return this.typeProcedureService.getEnabledTypesByText(term, type);
   }
 
   @Get('institutions')

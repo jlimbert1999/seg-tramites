@@ -61,11 +61,10 @@ export class TypeProcedureService {
     return await this.typeProcedureModel.find({ activo: true, tipo: group }).lean().limit(10);
   }
 
-  async getEnabledTypesByText(tern: string, type?: string) {
-    console.log(tern, type);
+  async getEnabledTypesByText(term: string, type?: string) {
     return await this.typeProcedureModel
       .find({
-        nombre: new RegExp(tern, 'i'),
+        nombre: new RegExp(term, 'i'),
         activo: true,
         ...(type ? { tipo: type } : {}),
       })

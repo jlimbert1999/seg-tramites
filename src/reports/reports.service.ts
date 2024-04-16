@@ -27,13 +27,13 @@ export class ReportsService {
       acc[`${by}.${key}`] = value;
       return acc;
     }, {});
+    if (query.length === 0) throw new BadRequestException('No se ingreso ningun parametro');
     const [details, length] = await Promise.all([
       this.externalModel.find(query).lean().limit(limit).skip(offset).select('_id'),
       this.externalModel.count(query),
     ]);
     const procedures = await this.procedureModel
       .find({ details: { $in: details.map((detail) => detail._id) }, group: groupProcedure.EXTERNAL })
-      .lean()
       .populate('details')
       .lean();
     return { procedures, length };
@@ -53,7 +53,7 @@ export class ReportsService {
       ...(end && { $lte: new Date(end) }),
     };
     if (Object.keys(interval).length > 0) query.push({ startDate: interval });
-    if (query.length === 0) throw new BadRequestException('Ingrese los parametros necesarios');
+    if (query.length === 0) throw new BadRequestException('No se ingreso ningun parametro');
     const [procedures, length] = await Promise.all([
       this.procedureModel.find({ $and: query }).lean().limit(limit).skip(offset),
       this.procedureModel.count({ $and: query }),
