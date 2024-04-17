@@ -108,15 +108,23 @@ export class ReportsService {
     const unit = await this.accountModel.find({ dependencia: dependencia._id }, '_id');
     const results = await this.communicationModel
       .aggregate()
-      .match({
-        'receiver.cuenta': { $in: unit.map((account) => account._id) },
-        status: { $in: [StatusMail.Received, StatusMail.Pending] },
+      .match({ 'receiver.cuenta': { $in: unit.map((account) => account._id) } })
+      .group({
+        _id: {
+          account: '$receiver.cuenta',
+          status: '$status',
+        },
+        count: { $sum: 1 },
       })
       .group({
-        _id: '$receiver.cuenta',
-        pendings: { $sum: 1 },
-      })
-      .sort({ pendings: -1 });
+        _id: '$_id.account',
+        details: {
+          $push: {
+            status: '$_id.status',
+            total: '$count',
+          },
+        },
+      });
     return await this.accountModel.populate(results, {
       path: '_id',
       select: 'funcionario',

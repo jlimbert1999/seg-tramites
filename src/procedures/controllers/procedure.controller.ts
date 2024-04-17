@@ -1,12 +1,12 @@
 import { Body, Controller, Get, InternalServerErrorException, Param, Post, Put } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+
 import { GetUserRequest } from 'src/auth/decorators';
-import { CommunicationService, ObservationService } from '../services';
+import { CommunicationService, ObservationService, ExternalService, InternalService } from '../services';
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
 import { Account } from 'src/users/schemas';
 import { IsMongoidPipe } from 'src/common/pipes';
-import { ExternalService, InternalService } from '../services';
-import { ModuleRef } from '@nestjs/core';
 
 @Controller('procedure')
 export class ProcedureController {
