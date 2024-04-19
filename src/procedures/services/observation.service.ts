@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Connection, Model } from 'mongoose';
 import { Observation, Procedure } from '../schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
@@ -12,7 +12,7 @@ export class ObservationService {
     @InjectModel(Observation.name) private observationModel: Model<Observation>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Account.name) private accountModel: Model<Account>,
-    @InjectConnection() private readonly connection: mongoose.Connection,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async getObservations(id_procedure: string) {

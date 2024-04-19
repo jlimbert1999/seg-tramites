@@ -2,7 +2,7 @@ import { Body, Controller, Get, InternalServerErrorException, Param, Post, Put }
 import { ModuleRef } from '@nestjs/core';
 
 import { GetUserRequest } from 'src/auth/decorators';
-import { CommunicationService, ObservationService, ExternalService, InternalService } from '../services';
+import { ObservationService, ExternalService, InternalService, OutboxService } from '../services';
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
 import { Account } from 'src/users/schemas';
@@ -11,14 +11,14 @@ import { IsMongoidPipe } from 'src/common/pipes';
 @Controller('procedure')
 export class ProcedureController {
   constructor(
-    private communicationService: CommunicationService,
+    private outboxService: OutboxService,
     private observationService: ObservationService,
     private moduleRef: ModuleRef,
   ) {}
 
   @Get('workflow/:id')
   getWorkflow(@Param('id', IsMongoidPipe) id_procedure: string) {
-    return this.communicationService.getWorkflow(id_procedure);
+    return this.outboxService.getWorkflow(id_procedure);
   }
 
   @Get('detail/:group/:id')
@@ -28,7 +28,7 @@ export class ProcedureController {
 
   @Get('location/:id')
   async getLocation(@Param('id', IsMongoidPipe) id_procedure: string) {
-    return this.communicationService.getLocation(id_procedure);
+    return this.outboxService.getLocation(id_procedure);
   }
 
   private getServiceByGroup(group: groupProcedure): ValidProcedureService {

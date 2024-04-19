@@ -10,7 +10,14 @@ import {
   ProcedureController,
   CommunicationController,
 } from './controllers';
-import { ExternalService, InternalService, CommunicationService, ObservationService, ArchiveService } from './services';
+import {
+  ExternalService,
+  InternalService,
+  InboxService,
+  ObservationService,
+  ArchiveService,
+  OutboxService,
+} from './services';
 import {
   ExternalDetail,
   ExternalDetailSchema,
@@ -47,7 +54,7 @@ import { UsersModule } from 'src/users/users.module';
     CommunicationController,
     ArchiveController,
   ],
-  providers: [ExternalService, InternalService, CommunicationService, ObservationService, ArchiveService],
+  providers: [ExternalService, InternalService, InboxService, ObservationService, ArchiveService, OutboxService],
   exports: [MongooseModule],
 })
 export class ProceduresModule {}

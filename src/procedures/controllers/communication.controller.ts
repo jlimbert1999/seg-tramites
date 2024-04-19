@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { InstitutionService, DependencieService } from 'src/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { CommunicationService } from '../services';
+import { InboxService, OutboxService } from '../services';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { CancelMailsDto, CreateCommunicationDto, GetInboxParamsDto, UpdateCommunicationDto } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
@@ -17,8 +17,9 @@ export class CommunicationController {
     private readonly accountService: AccountService,
     private readonly institutionService: InstitutionService,
     private readonly dependencieService: DependencieService,
-    private readonly communicationService: CommunicationService,
     private readonly groupwareGateway: GroupwareGateway,
+    private readonly inboxService: InboxService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   @Get('institutions')
@@ -41,33 +42,33 @@ export class CommunicationController {
 
   @Post()
   async create(@GetUserRequest() account: Account, @Body() communication: CreateCommunicationDto) {
-    const mails = await this.communicationService.create(communication, account);
+    const mails = await this.inboxService.create(communication, account);
     this.groupwareGateway.sendMails(mails);
     return { message: 'Tramite enviado' };
   }
 
   @Get('inbox')
-  getInbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: GetInboxParamsDto) {
-    return this.communicationService.getInbox(id_account, paginationParams);
+  getInbox(@GetUserRequest('_id') id_account: string, @Query() params: GetInboxParamsDto) {
+    return this.inboxService.findAll(id_account, params);
   }
 
   @Get('outbox')
   getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
-    return this.communicationService.getOutbox(id_account, paginationParams);
+    return this.outboxService.findAll(id_account, paginationParams);
   }
 
   @Put('accept/:id_mail')
   acceptMail(@Param('id_mail', IsMongoidPipe) id_mail: string) {
-    return this.communicationService.accept(id_mail);
+    return this.inboxService.accept(id_mail);
   }
 
   @Put('reject/:id')
   reject(
-    @Body() data: UpdateCommunicationDto,
     @Param('id', IsMongoidPipe) id: string,
+    @Body() data: UpdateCommunicationDto,
     @GetUserRequest() account: Account,
   ) {
-    return this.communicationService.reject(id, account, data);
+    return this.inboxService.reject(id, account, data);
   }
 
   @Delete('outbox/:id_procedure')
@@ -76,23 +77,23 @@ export class CommunicationController {
     @Param('id_procedure') id_procedure: string,
     @Body() body: CancelMailsDto,
   ) {
-    const { message, mails } = await this.communicationService.cancelMails(body.ids_mails, id_procedure, id_account);
+    const { message, mails } = await this.inboxService.cancelMails(body.ids_mails, id_procedure, id_account);
     this.groupwareGateway.cancelMails(mails);
     return { message };
   }
 
   @Get('/:id_mail')
   async getMailDetails(@Param('id_mail', IsMongoidPipe) id_mail: string) {
-    return await this.communicationService.getMailDetails(id_mail);
+    return await this.inboxService.getMailDetails(id_mail);
   }
 
   @Get('inbox/search/:text')
   searchInbox(
     @GetUserRequest('_id') id_account: string,
     @Param('text') text: string,
-    @Query() paginationParamsDto: GetInboxParamsDto,
+    @Query() params: GetInboxParamsDto,
   ) {
-    return this.communicationService.searchInbox(id_account, text, paginationParamsDto);
+    return this.inboxService.search(id_account, text, params);
   }
 
   @Get('outbox/search/:text')
@@ -101,6 +102,6 @@ export class CommunicationController {
     @Param('text') text: string,
     @Query() paginationParamsDto: PaginationParamsDto,
   ) {
-    return this.communicationService.searchOutbox(id_account, text, paginationParamsDto);
+    return this.outboxService.search(id_account, text, paginationParamsDto);
   }
 }
