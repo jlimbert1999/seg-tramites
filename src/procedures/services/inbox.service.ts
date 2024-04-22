@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Connection, FilterQuery, Model } from 'mongoose';
+import { ClientSession, Connection, FilterQuery, Model, UpdateQuery } from 'mongoose';
 
 import { Account } from 'src/users/schemas';
 import { Procedure, Communication } from '../schemas';
@@ -76,7 +76,7 @@ export class InboxService {
       } else {
         const result = await this.procedureModel.updateOne(
           { _id: communication.id_procedure, send: false },
-          { send: true },
+          { send: true, state: stateProcedure.EN_REVISION },
           { session },
         );
         if (result.modifiedCount === 0) {
@@ -127,36 +127,11 @@ export class InboxService {
   }
 
   async accept(id: string) {
-    const mailDB = await this.commModel.findById(id).populate('procedure', 'state');
+    const mailDB = await this.commModel.findById(id);
     if (!mailDB) throw new NotFoundException('El envio del tramite ha sido cancelado');
     if (mailDB.status !== StatusMail.Pending) throw new BadRequestException('El tramite ya ha sido aceptado');
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      const { procedure } = mailDB;
-      await this.commModel.updateOne(
-        { _id: id },
-        { status: StatusMail.Received, inboundDate: new Date() },
-        { session },
-      );
-      if (procedure.state !== stateProcedure.OBSERVADO && procedure.state !== stateProcedure.EN_REVISION) {
-        await this.procedureModel.updateOne(
-          { _id: procedure._id },
-          {
-            state: stateProcedure.EN_REVISION,
-          },
-          { session },
-        );
-        procedure.state = stateProcedure.EN_REVISION;
-      }
-      await session.commitTransaction();
-      return { state: procedure.state, message: 'Tramite aceptado correctamente.' };
-    } catch (error) {
-      await session.abortTransaction();
-      throw new InternalServerErrorException('Ha ocurrido un error al aceptar el tramite');
-    } finally {
-      await session.endSession();
-    }
+    await this.commModel.updateOne({ _id: id }, { status: StatusMail.Received, inboundDate: new Date() });
+    return { message: 'Tramite aceptado correctamente.' };
   }
 
   async reject(id: string, account: Account, { description }: UpdateCommunicationDto) {
@@ -209,6 +184,7 @@ export class InboxService {
       };
     } catch (error) {
       await session.abortTransaction();
+      console.log(error);
       throw new InternalServerErrorException('Ha ocurrido un error al cancelar un envio');
     } finally {
       await session.endSession();
@@ -255,8 +231,16 @@ export class InboxService {
       { session, sort: { _id: -1 }, new: true },
     );
     if (!lastStage) {
-
-      await this.procedureModel.updateOne({ _id: id_procedure }, { send: false }, { session });
+      const isProcessStarted = await this.commModel.findOne(
+        { procedure: id_procedure, status: { $ne: StatusMail.Rejected } },
+        null,
+        { session },
+      );
+      await this.procedureModel.updateOne(
+        { _id: id_procedure },
+        { send: false, ...(!isProcessStarted && { state: stateProcedure.INSCRITO }) },
+        { session },
+      );
     }
     return lastStage;
   }

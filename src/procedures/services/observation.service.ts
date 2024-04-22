@@ -5,6 +5,7 @@ import { Observation, Procedure } from '../schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
 import { Account } from 'src/users/schemas';
+import { fullname } from 'src/administration/helpers/fullname';
 
 @Injectable()
 export class ObservationService {
@@ -33,7 +34,7 @@ export class ObservationService {
       const newObservation = new this.observationModel({
         procedure: id_procedure,
         account: account._id,
-        fullnameOfficer: [funcionario.nombre, funcionario.paterno, funcionario.materno].filter(Boolean).join(' '),
+        fullnameOfficer: fullname(funcionario),
         description,
       });
       const createdObservation = await newObservation.save({ session });
@@ -55,7 +56,7 @@ export class ObservationService {
     return procedureDB.state;
   }
 
-  async solveObservation(id_observation: string) {
+  async solve(id_observation: string) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
