@@ -184,7 +184,6 @@ export class InboxService {
       };
     } catch (error) {
       await session.abortTransaction();
-      console.log(error);
       throw new InternalServerErrorException('Ha ocurrido un error al cancelar un envio');
     } finally {
       await session.endSession();

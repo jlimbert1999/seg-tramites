@@ -45,7 +45,6 @@ export class JobService {
       const newjob = await this.jobModel.create({ nombre: officer.oldcargo });
       await this.officerModel.findByIdAndUpdate(officer._id, { cargo: newjob._id });
     }
-    console.log('end');
   }
   async searchJobForUser(text: string) {
     const regex = new RegExp(text, 'i');

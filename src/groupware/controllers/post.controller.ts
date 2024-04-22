@@ -16,6 +16,5 @@ export class PostController {
     }),
   )
   create(@Body() body: any, @UploadedFile() file: Express.Multer.File) {
-    console.log(body, file);
   }
 }

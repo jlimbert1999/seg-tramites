@@ -40,7 +40,7 @@ export class ReportsController {
     return this.reportsService.searchProcedureByProperties(paginationParams, searchDto);
   }
 
-  @Get('unlink/:id_account')
+  @Get('unlink')
   getAccountInbox(@GetUserRequest() account: Account) {
     return this.reportsService.getUnlinkData(account);
   }

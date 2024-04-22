@@ -53,7 +53,7 @@ export class ProcedureController {
 
   @Put('observation/:id_observation')
   solveObservation(@Param('id_observation') id_observation: string) {
-    return this.observationService.solveObservation(id_observation);
+    return this.observationService.solve(id_observation);
   }
 
   @Get('observations/:id')

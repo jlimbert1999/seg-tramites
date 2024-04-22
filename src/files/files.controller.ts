@@ -18,7 +18,5 @@ export class FilesController {
       }),
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-  }
+  uploadFile(@UploadedFile() file: Express.Multer.File) { }
 }

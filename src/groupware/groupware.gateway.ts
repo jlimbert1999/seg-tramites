@@ -31,7 +31,6 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     try {
       const token = client.handshake.auth.token;
       const decoded: JwtPayload = this.jwtService.verify(token);
-      console.log(decoded.officer.fullname, client.handshake.address);
       if (decoded.id_dependency) client.join(decoded.id_dependency);
       this.groupwareService.onClientConnected(client.id, decoded);
       this.server.emit('listar', this.groupwareService.getClients());
