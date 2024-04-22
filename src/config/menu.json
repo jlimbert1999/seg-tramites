@@ -12,7 +12,7 @@
       "routerLink": "dependencies"
     },
     {
-      "resource": "typeProcedures",
+      "resource": "types-procedures",
       "text": "Tipos de tramite",
       "icon": "summarize",
       "routerLink": "types-procedures"
