@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import mongoose, { Model } from 'mongoose';
+import { Connection, Model, Types } from 'mongoose';
 import { ExternalDetail, Procedure } from '../schemas';
 
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
@@ -13,7 +13,7 @@ import { Account } from 'src/users/schemas';
 @Injectable()
 export class ExternalService implements ValidProcedureService {
   constructor(
-    @InjectConnection() private connection: mongoose.Connection,
+    @InjectConnection() private connection: Connection,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(ExternalDetail.name) private externalDetailModel: Model<ExternalDetail>,
     private configService: ConfigService,
@@ -25,7 +25,7 @@ export class ExternalService implements ValidProcedureService {
       .aggregate()
       .match({
         group: groupProcedure.EXTERNAL,
-        account: new mongoose.Types.ObjectId(id_account),
+        account: new Types.ObjectId(id_account),
         state: { $ne: stateProcedure.ANULADO },
       })
       .lookup({
@@ -116,13 +116,7 @@ export class ExternalService implements ValidProcedureService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.externalDetailModel.updateOne(
-        {
-          _id: procedureDB.details._id,
-        },
-        details,
-        { session },
-      );
+      await this.externalDetailModel.updateOne({ _id: procedureDB.details._id }, details, { session });
       const updatedProcedure = await this.procedureModel
         .findByIdAndUpdate(id, procedure, {
           session,
@@ -162,7 +156,7 @@ export class ExternalService implements ValidProcedureService {
 
   private async checkIsEditable(id_procedure: string): Promise<Procedure> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
-    if (!procedureDB) throw new BadRequestException('El tramite solicitado no existe');
+    if (!procedureDB) throw new NotFoundException('El tramite solicitado no existe');
     if (procedureDB.state !== stateProcedure.INSCRITO) {
       throw new BadRequestException('El tramite ya esta en proceso de evaluacion');
     }

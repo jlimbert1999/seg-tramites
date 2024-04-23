@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Connection, FilterQuery, Model, UpdateQuery } from 'mongoose';
+import { ClientSession, Connection, FilterQuery, Model } from 'mongoose';
 
 import { Account } from 'src/users/schemas';
 import { Procedure, Communication } from '../schemas';
