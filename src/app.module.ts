@@ -3,6 +3,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -12,7 +13,7 @@ import { ProceduresModule } from './procedures/procedures.module';
 import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
-import { join } from 'path';
+
 import { FilesModule } from './files/files.module';
 
 @Module({

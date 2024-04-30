@@ -27,7 +27,7 @@ export class ArchiveController {
 
   @Get()
   findAll(@Query() paginationParams: PaginationParamsDto, @GetUserRequest() account: Account) {
-    return this.archiveService.findAll(paginationParams, account.dependencia._id);
+    return this.archiveService.findAll(paginationParams, account);
   }
 
   @Get('search/:text')

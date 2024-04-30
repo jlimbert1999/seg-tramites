@@ -29,7 +29,7 @@ export class ArchiveService {
         {
           status: StatusMail.Archived,
           eventLog: {
-            manager: `${funcionario.nombre} ${funcionario.paterno} ${funcionario.materno}`,
+            manager: fullname(funcionario),
             description: description,
             date: new Date(),
           },
@@ -82,12 +82,8 @@ export class ArchiveService {
     }
   }
 
-  async findAll({ limit, offset }: PaginationParamsDto, id_dependency: string) {
-    const unit = await this.accountModel
-      .find({
-        dependencia: id_dependency,
-      })
-      .select('_id');
+  async findAll({ limit, offset }: PaginationParamsDto, account: Account) {
+    const unit = await this.accountModel.find({ dependencia: account.dependencia._id }).select('_id');
     const query: FilterQuery<Communication> = {
       status: StatusMail.Archived,
       'receiver.cuenta': { $in: unit.map((acount) => acount._id) },

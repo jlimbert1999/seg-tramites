@@ -82,9 +82,9 @@ export class CommunicationController {
     return { message };
   }
 
-  @Get('/:id_mail')
-  async getMailDetails(@Param('id_mail', IsMongoidPipe) id_mail: string) {
-    return await this.inboxService.getMailDetails(id_mail);
+  @Get('/:id')
+  getMailDetails(@Param('id', IsMongoidPipe) id_mail: string, @GetUserRequest() account: Account) {
+    return this.inboxService.getMailDetails(id_mail, account);
   }
 
   @Get('inbox/search/:text')
