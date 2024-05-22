@@ -178,7 +178,7 @@ export class OfficerService {
     return await this.officerModel.populate(officers, { path: 'cargo' });
   }
 
-  private async verifyDuplicateDni(dni: number): Promise<void> {
+  private async verifyDuplicateDni(dni: string): Promise<void> {
     const officer = await this.officerModel.findOne({ dni });
     if (officer) throw new BadRequestException('El dni introducido ya existe');
   }

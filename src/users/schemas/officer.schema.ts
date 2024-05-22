@@ -30,23 +30,17 @@ export class Officer extends Document {
   telefono: number;
 
   @Prop({
-    type: Number,
+    type: String,
     required: true,
     unique: true,
   })
-  dni: number;
+  dni: string;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: Job.name,
   })
   cargo?: Job;
-
-  @Prop({
-    type: String,
-  })
-  //   ! DELETE AFTER UPDATE
-  oldcargo: string;
 
   @Prop({
     type: Boolean,

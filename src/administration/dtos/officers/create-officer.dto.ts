@@ -14,9 +14,9 @@ export class CreateOfficerDto {
   @IsString()
   materno?: string;
 
-  @IsNumber()
-  @Type(() => Number)
-  dni: number;
+  @IsString()
+  @IsNotEmpty()
+  dni: string;
 
   @IsNumber()
   @Type(() => Number)
