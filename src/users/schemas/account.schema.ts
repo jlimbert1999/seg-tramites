@@ -48,6 +48,12 @@ export class Account extends Document {
     default: true,
   })
   isVisible: boolean;
+
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  updatedPassword: boolean;
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);

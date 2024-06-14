@@ -67,6 +67,11 @@ export class AuthService {
     };
   }
 
+  async checkUpdatedPassword(id_account: string) {
+    const account = await this.accountModel.findById(id_account);
+    return account.updatedPassword;
+  }
+
   async getMyAuthDetails(id_account: string) {
     return await this.accountModel
       .findById(id_account)
@@ -91,7 +96,7 @@ export class AuthService {
     const { password } = data;
     const salt = bcrypt.genSaltSync();
     const encryptedPassword = bcrypt.hashSync(password.toString(), salt);
-    await this.accountModel.updateOne({ _id: id_account }, { password: encryptedPassword });
+    await this.accountModel.updateOne({ _id: id_account }, { password: encryptedPassword, updatedPassword: true });
     return { message: 'Contraseña actualizada' };
   }
 
