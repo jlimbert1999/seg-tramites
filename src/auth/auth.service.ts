@@ -19,21 +19,24 @@ export class AuthService {
   ) {}
 
   async login({ login, password }: AuthDto) {
-    const account = await this.accountModel.findOne({ login }).populate({
-      path: 'funcionario',
-      populate: {
-        path: 'cargo',
-      },
-    });
+    const account = await this.accountModel
+      .findOne({ login })
+      .populate('rol')
+      .populate({
+        path: 'funcionario',
+        populate: {
+          path: 'cargo',
+        },
+      });
     if (!account) throw new BadRequestException('Usuario o Contraseña incorrectos');
     if (!bcrypt.compareSync(password, account.password)) {
       throw new BadRequestException('Usuario o Contraseña incorrectos');
     }
     if (String(account._id) === this.configService.getOrThrow('id_root')) {
-      return { token: this.generateRootToken(account) };
+      return { token: this.generateRootToken(account), url: '/home' };
     }
     if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahabilidata');
-    return { token: this.generateToken(account) };
+    return { token: this.generateToken(account), url: this._getInitialRoute(account) };
   }
 
   async checkAuthStatus(id_account: string) {
@@ -64,12 +67,8 @@ export class AuthService {
       menu: this._getFrontMenu(account.rol),
       permissions: this._getPermissions(account.rol),
       code: account.dependencia.codigo,
+      updatedPassword: account.updatedPassword,
     };
-  }
-
-  async checkUpdatedPassword(id_account: string) {
-    const account = await this.accountModel.findById(id_account);
-    return account.updatedPassword;
   }
 
   async getMyAuthDetails(id_account: string) {
@@ -139,5 +138,10 @@ export class AuthService {
       );
       return menu.children.length > 0;
     });
+  }
+
+  private _getInitialRoute({ rol, updatedPassword }: Account): string {
+    if (!updatedPassword) return '/home/settings';
+    return '/home/main';
   }
 }

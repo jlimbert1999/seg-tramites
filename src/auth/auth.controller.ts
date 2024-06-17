@@ -19,11 +19,6 @@ export class AuthController {
     return this.authService.checkAuthStatus(account._id);
   }
 
-  @Get('security')
-  checkUpdatedPassword(@GetUserRequest() account: Account) {
-    return this.authService.checkUpdatedPassword(account._id);
-  }
-
   @Get('detail')
   getAuthDetails(@GetUserRequest('_id') id: string) {
     return this.authService.getMyAuthDetails(id);
