@@ -3,6 +3,7 @@
 /public
 /node_modules
 /.env
+/mongodb
 # Logs
 logs
 *.log
