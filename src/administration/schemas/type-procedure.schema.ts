@@ -6,7 +6,6 @@ export class Requirement extends Document {
   @Prop({
     type: String,
     required: true,
-    uppercase: true,
   })
   nombre: string;
 

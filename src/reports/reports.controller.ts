@@ -16,7 +16,7 @@ export class ReportsController {
 
   @Get('types-procedures/:term')
   getTypeProceduresByText(@Param('term') term: string, @Query('type') type: string | undefined) {
-    return this.typeProcedureService.getEnabledTypesByText(term, type);
+    return this.typeProcedureService.getTypesByText(term, type, true);
   }
 
   @Get('institutions')

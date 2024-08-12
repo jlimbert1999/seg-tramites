@@ -4,8 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { join } from 'path';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AdministrationModule } from './administration/administration.module';
 import { GroupwareModule } from './groupware/groupware.module';
@@ -39,7 +37,7 @@ import { FilesModule } from './files/files.module';
     FilesModule,
     ApplicantModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

@@ -105,8 +105,8 @@ export class AccountService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      const { _id } = await this.officerService.createOfficerForAccount(officer, session);
       await this.checkDuplicateLogin(account.login);
+      const { _id } = await this.officerService.createOfficerForAccount(officer, session);
       account.password = this.encryptPassword(account.password);
       const createdAccount = new this.accountModel({ ...account, funcionario: _id });
       await createdAccount.save({ session });
