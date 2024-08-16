@@ -3,8 +3,9 @@ import { ReportsService } from './reports.service';
 import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { InstitutionService, TypeProcedureService } from 'src/administration/services';
+import { DependencieService, InstitutionService, TypeProcedureService } from 'src/administration/services';
 import type { Account } from 'src/users/schemas';
+import { IsMongoidPipe } from 'src/common/pipes';
 
 @Controller('reports')
 export class ReportsController {
@@ -12,6 +13,7 @@ export class ReportsController {
     private reportsService: ReportsService,
     private typeProcedureService: TypeProcedureService,
     private institutionService: InstitutionService,
+    private dependencyService: DependencieService,
   ) {}
 
   @Get('types-procedures/:term')
@@ -22,6 +24,11 @@ export class ReportsController {
   @Get('institutions')
   getInstitutions() {
     return this.institutionService.getActiveInstitutions();
+  }
+
+  @Get('dependencies/:id_institution')
+  async getDependencies(@Param('id_institution', IsMongoidPipe) id_institution: string) {
+    return await this.dependencyService.getActiveDependenciesOfInstitution(id_institution);
   }
 
   @Post('applicant')
@@ -50,13 +57,18 @@ export class ReportsController {
     return this.reportsService.getTotalCommunications(id);
   }
 
-  @Get('unit/pendings')
-  getPendingsByUnit(@GetUserRequest() account: Account) {
-    return this.reportsService.getPendingsByUnit(account);
+  @Get('unit/pendings/:dependencyId')
+  getPendingsByUnit(@Param('dependencyId') dependencyId: string) {
+    return this.reportsService.getPendingsByUnit(dependencyId);
   }
 
   @Get('pending/:id_account')
   getPendingsByAccount(@Param('id_account') id: string) {
     return this.reportsService.getPendingsByAccount(id);
+  }
+
+  @Get('inbox/:accountId')
+  getInbox(@Param('accountId') id: string) {
+    return this.reportsService.getImboxByAccount(id);
   }
 }

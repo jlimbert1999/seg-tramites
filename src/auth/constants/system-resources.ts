@@ -130,6 +130,7 @@ export const SYSTEM_RESOURCES = [
       { value: 'applicants', label: 'Solicitante' },
       { value: 'search', label: 'Busquedas' },
       { value: 'dependents', label: 'Dependientes' },
+      { value: 'unit', label: 'Unidades' },
     ],
   },
 ];

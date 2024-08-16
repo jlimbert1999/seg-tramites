@@ -104,8 +104,8 @@ export class ReportsService {
       });
   }
 
-  async getPendingsByUnit({ dependencia }: Account) {
-    const unit = await this.accountModel.find({ dependencia: dependencia._id }, '_id');
+  async getPendingsByUnit(dependencyId: string) {
+    const unit = await this.accountModel.find({ dependencia: dependencyId }, '_id');
     const results = await this.communicationModel
       .aggregate()
       .match({ 'receiver.cuenta': { $in: unit.map((account) => account._id) } })
@@ -140,5 +140,13 @@ export class ReportsService {
     return await this.communicationModel
       .find({ 'receiver.cuenta': id_account })
       .populate('procedure', 'code, reference state');
+  }
+
+  async getImboxByAccount(accountId: string) {
+    const inbox = await this.communicationModel
+      .find({ 'receiver.cuenta': accountId, status: { $in: [StatusMail.Received, StatusMail.Pending] } })
+      .lean()
+      .populate('procedure');
+    return inbox;
   }
 }
