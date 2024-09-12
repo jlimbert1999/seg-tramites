@@ -1,9 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Account } from 'src/users/schemas';
+export enum PostPriority {
+  HIGH = 'high',
+  MEDIUM = 'medium',
+  Low = 'low',
+}
 
-@Schema()
-export class Post extends Document {
+@Schema({ timestamps: true })
+export class Publication extends Document {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: Account.name,
@@ -29,8 +34,8 @@ export class Post extends Document {
   })
   files: string[];
 
-  @Prop({ type: Date, default: Date.now })
-  publicationDate: Date;
+  @Prop({ enum: PostPriority })
+  priority: PostPriority;
 }
 
-export const PostSchema = SchemaFactory.createForClass(Post);
+export const PublicationSchema = SchemaFactory.createForClass(Publication);

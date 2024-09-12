@@ -12,7 +12,8 @@ import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
 
-import { FilesModule } from './files/files.module';
+import { FilesModule } from './modules/files/files.module';
+import { PostsModule } from './modules/posts/posts.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { FilesModule } from './files/files.module';
     ReportsModule,
     FilesModule,
     ApplicantModule,
+    PostsModule,
   ],
   controllers: [],
   providers: [],
