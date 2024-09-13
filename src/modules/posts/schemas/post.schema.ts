@@ -1,11 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Account } from 'src/users/schemas';
+
 export enum PostPriority {
   HIGH = 'high',
   MEDIUM = 'medium',
   Low = 'low',
 }
+
+@Schema({ _id: false })
+class Attachment extends Document {
+  @Prop({ type: String, required: true })
+  title: string;
+
+  @Prop({ type: String, required: true })
+  filename: string;
+}
+const AttachmentSchema = SchemaFactory.createForClass(Attachment);
 
 @Schema({ timestamps: true })
 export class Publication extends Document {
@@ -29,10 +40,10 @@ export class Publication extends Document {
   content: string;
 
   @Prop({
-    type: [String],
+    type: [AttachmentSchema],
     default: [],
   })
-  files: string[];
+  attachments: Attachment[];
 
   @Prop({ enum: PostPriority })
   priority: PostPriority;

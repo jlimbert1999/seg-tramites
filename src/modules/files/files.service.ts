@@ -17,9 +17,11 @@ export class FilesService {
   };
   constructor(private configService: ConfigService) {}
 
-  async savePostFile(file: Express.Multer.File): Promise<{ filename: string }> {
+  async savePostFile(
+    file: Express.Multer.File,
+  ): Promise<{ filename: string; title: string }> {
     const fileExtension = file.mimetype.split('/')[1];
-    const fileName = `${uuid()}.${fileExtension}`;
+    const savedFileName = `${uuid()}.${fileExtension}`;
     const folder = this._getUploadFileFolder(fileExtension);
     const path = join(
       __dirname,
@@ -30,11 +32,11 @@ export class FilesService {
       'uploads',
       'posts',
       folder,
-      fileName,
+      savedFileName,
     );
     try {
       await writeFile(path, file.buffer);
-      return { filename: fileName };
+      return { filename: savedFileName, title: file.originalname };
     } catch (error) {
       throw new InternalServerErrorException('Error saving file');
     }

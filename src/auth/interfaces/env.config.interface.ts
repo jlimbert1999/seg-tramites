@@ -5,4 +5,5 @@ export interface EnvConfig {
   port: number;
   id_root: string;
   jwt_public_key: string;
+  host: string;
 }

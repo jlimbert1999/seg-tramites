@@ -6,22 +6,28 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePublicationDto } from './dtos/post.dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { GetUserRequest } from 'src/auth/decorators';
+import { Account } from 'src/users/schemas';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  create(@Body() publicationDto: CreatePublicationDto) {
-    return this.postsService.create(publicationDto);
+  create(
+    @Body() publicationDto: CreatePublicationDto,
+    @GetUserRequest() user: Account,
+  ) {
+    return this.postsService.create(publicationDto, user);
   }
 
   @Get()
-  findAll(@Param() params: PaginationParamsDto) {
+  findAll(@Query() params: PaginationParamsDto) {
     return this.postsService.findAll(params);
   }
 

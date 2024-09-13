@@ -2,11 +2,22 @@ import {
   IsArray,
   IsEnum,
   IsNotEmpty,
-  IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { PostPriority } from '../schemas/post.schema';
 import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
+
+export class AttachmentDto {
+  @IsNotEmpty()
+  @IsString()
+  title: string;
+
+  @IsNotEmpty()
+  @IsString()
+  filename: string;
+}
 
 export class CreatePublicationDto {
   @IsString()
@@ -18,10 +29,9 @@ export class CreatePublicationDto {
   content: string;
 
   @IsArray()
-  @IsOptional()
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  files: string[];
+  @ValidateNested({ each: true })
+  @Type(() => AttachmentDto)
+  attachments: AttachmentDto[];
 
   @IsEnum(PostPriority)
   priority: PostPriority;

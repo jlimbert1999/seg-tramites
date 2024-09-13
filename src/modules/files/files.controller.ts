@@ -12,10 +12,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
 import { FilesService } from './files.service';
-import { Public } from 'src/auth/decorators';
 import { CustomUploadFileTypeValidator } from './validators/upload-file-type.validator';
 
-@Public()
 @Controller('files')
 export class FilesController {
   constructor(private filesService: FilesService) {}
