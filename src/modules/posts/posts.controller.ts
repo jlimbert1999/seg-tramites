@@ -26,6 +26,14 @@ export class PostsController {
     return this.postsService.create(publicationDto, user);
   }
 
+  @Get('user')
+  findByUser(
+    @GetUserRequest() user: Account,
+    @Query() pagination: PaginationParamsDto,
+  ) {
+    return this.postsService.findByUser(user._id, pagination);
+  }
+
   @Get()
   findAll(@Query() params: PaginationParamsDto) {
     return this.postsService.findAll(params);

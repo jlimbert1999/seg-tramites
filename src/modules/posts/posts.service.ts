@@ -24,12 +24,28 @@ export class PostsService {
     return this._plainPublication(createdPublications);
   }
 
+  async findByUser(userId: string, { limit, offset }: PaginationParamsDto) {
+    const [publications, length] = await Promise.all([
+      this.publicationModel
+        .find({ user: userId })
+        .skip(offset)
+        .limit(limit)
+        .sort({ _id: -1 }),
+      this.publicationModel.count({ user: userId }),
+    ]);
+    return {
+      publications: publications.map((post) => this._plainPublication(post)),
+      length,
+    };
+  }
+
   async findAll({ limit, offset }: PaginationParamsDto) {
-    return await this.publicationModel
+    const posts = await this.publicationModel
       .find({})
       .skip(offset)
       .limit(limit)
       .sort({ _id: -1 });
+    return posts.map((post) => this._plainPublication(post));
   }
 
   private _plainPublication(publication: Publication) {
@@ -40,7 +56,7 @@ export class PostsService {
     return {
       attachments: attachments.map((file) => ({
         title: file.title,
-        filename: this.fileService.buildFileUrl(file.filename, 'posts'),
+        filename: this.fileService.buildFileUrl(file.filename, 'post'),
       })),
       ...props,
     };

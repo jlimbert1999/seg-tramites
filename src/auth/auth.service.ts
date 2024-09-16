@@ -40,6 +40,7 @@ export class AuthService {
   }
 
   async checkAuthStatus(id_account: string) {
+    console.log(id_account);
     const account = await this.accountModel
       .findById(id_account)
       .populate({

@@ -13,6 +13,7 @@ import { Response } from 'express';
 
 import { FilesService } from './files.service';
 import { CustomUploadFileTypeValidator } from './validators/upload-file-type.validator';
+import { Public } from 'src/auth/decorators';
 
 @Controller('files')
 export class FilesController {
