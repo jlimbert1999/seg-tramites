@@ -26,6 +26,11 @@ export class PostsController {
     return this.postsService.create(publicationDto, user);
   }
 
+  @Get()
+  findAll(@Query() params: PaginationParamsDto) {
+    return this.postsService.findAll(params);
+  }
+
   @Get('user')
   findByUser(
     @GetUserRequest() user: Account,
@@ -34,9 +39,9 @@ export class PostsController {
     return this.postsService.findByUser(user._id, pagination);
   }
 
-  @Get()
-  findAll(@Query() params: PaginationParamsDto) {
-    return this.postsService.findAll(params);
+  @Get('news')
+  getNews(@Query() pagination: PaginationParamsDto) {
+    return this.postsService.getNews(pagination);
   }
 
   // @Get(':id')

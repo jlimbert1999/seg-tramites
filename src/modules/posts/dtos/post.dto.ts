@@ -1,11 +1,12 @@
 import {
   IsArray,
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { PostPriority } from '../schemas/post.schema';
+import { PublicationPriority } from '../schemas/post.schema';
 import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 
@@ -33,8 +34,13 @@ export class CreatePublicationDto {
   @Type(() => AttachmentDto)
   attachments: AttachmentDto[];
 
-  @IsEnum(PostPriority)
-  priority: PostPriority;
+  @IsEnum(PublicationPriority)
+  priority: PublicationPriority;
+
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  expirationDate: Date;
 }
 
 export class UpdatePublicationDto extends PartialType(CreatePublicationDto) {}

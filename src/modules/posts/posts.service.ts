@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Document } from 'mongoose';
 
-import { CreatePublicationDto } from './dtos/post.dto';
-import { Publication } from './schemas/post.schema';
-import { FilesService } from '../files/files.service';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { CreatePublicationDto } from './dtos/post.dto';
+import { FilesService } from '../files/files.service';
+import { Publication, PublicationPriority } from './schemas/post.schema';
 import { Account } from 'src/users/schemas';
 
 @Injectable()
@@ -30,7 +30,8 @@ export class PostsService {
         .find({ user: userId })
         .skip(offset)
         .limit(limit)
-        .sort({ _id: -1 }),
+        .sort({ _id: -1 })
+        .lean(),
       this.publicationModel.count({ user: userId }),
     ]);
     return {
@@ -46,6 +47,20 @@ export class PostsService {
       .limit(limit)
       .sort({ _id: -1 });
     return posts.map((post) => this._plainPublication(post));
+  }
+
+  async getNews({ limit, offset }: PaginationParamsDto) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const news = await this.publicationModel
+      .find({
+        priority: { $ne: PublicationPriority.Low },
+        expirationDate: { $gte: today },
+      })
+      .skip(offset)
+      .limit(limit)
+      .sort({ _id: -1, priority: -1 });
+    return news.map((publication) => this._plainPublication(publication));
   }
 
   private _plainPublication(publication: Publication) {
