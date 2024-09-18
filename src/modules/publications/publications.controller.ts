@@ -1,14 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
-import { PostsService } from './posts.service';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dtos/post.dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { GetUserRequest } from 'src/auth/decorators';
@@ -16,7 +7,7 @@ import { Account } from 'src/users/schemas';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(private readonly postsService: PublicationsService) {}
 
   @Post()
   create(
@@ -43,19 +34,4 @@ export class PostsController {
   getNews(@Query() pagination: PaginationParamsDto) {
     return this.postsService.getNews(pagination);
   }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.postsService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-  //   return this.postsService.update(+id, updatePostDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.postsService.remove(+id);
-  // }
 }

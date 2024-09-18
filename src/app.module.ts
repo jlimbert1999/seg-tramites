@@ -13,7 +13,7 @@ import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
 
 import { FilesModule } from './modules/files/files.module';
-import { PostsModule } from './modules/posts/posts.module';
+import { PublicationsModule } from './modules/publications/publications.module';
 
 @Module({
   imports: [
@@ -37,7 +37,7 @@ import { PostsModule } from './modules/posts/posts.module';
     ReportsModule,
     FilesModule,
     ApplicantModule,
-    PostsModule,
+    PublicationsModule,
   ],
   controllers: [],
   providers: [],

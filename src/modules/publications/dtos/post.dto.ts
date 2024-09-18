@@ -6,7 +6,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { PublicationPriority } from '../schemas/post.schema';
+import { PublicationPriority } from '../schemas/publication.schema';
 import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 

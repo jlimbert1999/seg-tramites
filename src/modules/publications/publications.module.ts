@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { PostsService } from './posts.service';
-import { PostsController } from './posts.controller';
-import { Publication, PublicationSchema } from './schemas/post.schema';
+import { PublicationsService } from './publications.service';
+
+import { Publication, PublicationSchema } from './schemas/publication.schema';
+import { PostsController } from './publications.controller';
 import { FilesModule } from '../files/files.module';
 
 @Module({
   controllers: [PostsController],
-  providers: [PostsService],
+  providers: [PublicationsService],
   imports: [
     FilesModule,
     MongooseModule.forFeature([
@@ -15,4 +16,4 @@ import { FilesModule } from '../files/files.module';
     ]),
   ],
 })
-export class PostsModule {}
+export class PublicationsModule {}
