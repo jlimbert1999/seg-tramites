@@ -29,6 +29,12 @@ import {
   ObservationSchema,
   Communication,
   CommunicationSchema,
+  ProcedureBase,
+  ProcedureBaseSchema,
+  InternalProcedure,
+  InternalProcedureSchema,
+  ExternalProcedure,
+  ExternalProcedureSchema,
 } from './schemas/index';
 import { GroupwareModule } from 'src/groupware/groupware.module';
 import { UsersModule } from 'src/users/users.module';
@@ -42,6 +48,14 @@ import { UsersModule } from 'src/users/users.module';
       { name: ExternalDetail.name, schema: ExternalDetailSchema },
       { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
+      {
+        name: ProcedureBase.name,
+        schema: ProcedureBaseSchema,
+        discriminators: [
+          { name: InternalProcedure.name, schema: InternalProcedureSchema },
+          { name: ExternalProcedure.name, schema: ExternalProcedureSchema },
+        ],
+      },
     ]),
     UsersModule,
     AdministrationModule,
@@ -54,7 +68,14 @@ import { UsersModule } from 'src/users/users.module';
     CommunicationController,
     ArchiveController,
   ],
-  providers: [ExternalService, InternalService, InboxService, ObservationService, ArchiveService, OutboxService],
+  providers: [
+    ExternalService,
+    InternalService,
+    InboxService,
+    ObservationService,
+    ArchiveService,
+    OutboxService,
+  ],
   exports: [MongooseModule],
 })
 export class ProceduresModule {}
