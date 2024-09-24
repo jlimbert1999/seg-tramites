@@ -8,6 +8,12 @@ import { Account } from 'src/users/schemas';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Get('repair')
+  @Public()
+  repair() {
+    return this.authService.repairColection();
+  }
+
   @Post()
   @Public()
   login(@Body() body: AuthDto) {
@@ -25,7 +31,10 @@ export class AuthController {
   }
 
   @Put()
-  updateMyAccount(@GetUserRequest('_id') id: string, @Body() data: UpdateMyAccountDto) {
+  updateMyAccount(
+    @GetUserRequest('_id') id: string,
+    @Body() data: UpdateMyAccountDto,
+  ) {
     return this.authService.updateMyAccount(id, data);
   }
 }

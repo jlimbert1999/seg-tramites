@@ -13,7 +13,7 @@ class Permissions {
   actions: string[];
 }
 
-@Schema({ collection: 'roles' })
+@Schema()
 export class Role extends Document {
   @Prop({
     type: String,

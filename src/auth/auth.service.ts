@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
@@ -8,35 +12,62 @@ import * as fs from 'fs';
 
 import { AuthDto, UpdateMyAccountDto } from './dto';
 import { EnvConfig, JwtPayload, Menu } from './interfaces';
-import { Account, Role } from 'src/users/schemas';
+import { Account, AccountDocument, Role } from 'src/users/schemas';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService<EnvConfig>,
-    @InjectModel(Account.name) private accountModel: Model<Account>,
+    @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
   ) {}
 
+  async repairColection() {
+    // const accounts = await this.accountModel.find({}).populate({
+    //   path: 'funcionario',
+    //   populate: {
+    //     path: 'cargo',
+    //   },
+    // });
+    // for (const account of accounts) {
+    //   let newJob = '';
+    //   if (!account.funcionario) {
+    //     newJob = 'SIN DESIGNAR';
+    //   } else {
+    //     if (!account.funcionario.cargo) {
+    //       newJob = 'SIN DESIGNAR';
+    //     } else {
+    //       newJob = account.funcionario.cargo.nombre;
+    //     }
+    //   }
+    //   await this.accountModel.updateOne(
+    //     { _id: account._id },
+    //     { jobtitle: newJob },
+    //   );
+    // }
+  }
+
   async login({ login, password }: AuthDto) {
-    const account = await this.accountModel
-      .findOne({ login })
-      .populate('rol')
-      .populate({
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-        },
-      });
-    if (!account) throw new BadRequestException('Usuario o Contraseña incorrectos');
+    const account = await this.accountModel.findOne({ login }).lean();
+    if (!account) {
+      throw new BadRequestException('Usuario o Contraseña incorrectos');
+    }
     if (!bcrypt.compareSync(password, account.password)) {
       throw new BadRequestException('Usuario o Contraseña incorrectos');
     }
-    if (String(account._id) === this.configService.getOrThrow('id_root')) {
-      return { token: this.generateRootToken(account), url: '/home' };
-    }
-    if (!account.funcionario || !account.activo) throw new BadRequestException('La cuenta ha sido desahabilidata');
-    return { token: this.generateToken(account), url: this._getInitialRoute(account) };
+    // if (!account.funcionario || !account.activo) {
+    //   throw new BadRequestException('La cuenta ha sido deshabilidata');
+    // }
+
+    // if (String(account._id) === this.configService.getOrThrow('id_root')) {
+    //   return { token: this.generateRootToken(account), url: '/home' };
+    // }
+    if (!account.funcionario || !account.activo)
+      throw new BadRequestException('La cuenta ha sido desahabilidata');
+    return {
+      token: this.generateToken(account),
+      url: this._getInitialRoute(account),
+    };
   }
 
   async checkAuthStatus(id_account: string) {
@@ -95,7 +126,10 @@ export class AuthService {
     const { password } = data;
     const salt = bcrypt.genSaltSync();
     const encryptedPassword = bcrypt.hashSync(password.toString(), salt);
-    await this.accountModel.updateOne({ _id: id_account }, { password: encryptedPassword, updatedPassword: true });
+    await this.accountModel.updateOne(
+      { _id: id_account },
+      { password: encryptedPassword, updatedPassword: true },
+    );
     return { message: 'Contraseña actualizada' };
   }
 
@@ -117,7 +151,9 @@ export class AuthService {
       id_account: account._id,
       id_dependency: dependencia._id,
       officer: {
-        fullname: [funcionario.nombre, funcionario.paterno, funcionario.materno].filter(Boolean).join(' '),
+        fullname: [funcionario.nombre, funcionario.paterno, funcionario.materno]
+          .filter(Boolean)
+          .join(' '),
         jobtitle: funcionario.cargo ? funcionario.cargo.nombre : '',
       },
     };
@@ -125,14 +161,18 @@ export class AuthService {
   }
 
   private _getPermissions({ permissions }: Role) {
-    return permissions.reduce((result, { actions, resource }) => ({ [resource]: actions, ...result }), {});
+    return permissions.reduce(
+      (result, { actions, resource }) => ({ [resource]: actions, ...result }),
+      {},
+    );
   }
 
   private _getFrontMenu({ permissions }: Role) {
     const json = fs.readFileSync('src/config/menu.json', 'utf8');
     const SystemMenu: Menu[] = JSON.parse(json);
     return SystemMenu.filter((menu) => {
-      if (!menu.children) return permissions.some(({ resource }) => resource === menu.resource);
+      if (!menu.children)
+        return permissions.some(({ resource }) => resource === menu.resource);
       menu.children = menu.children.filter((submenu) =>
         permissions.some(({ resource }) => resource === submenu.resource),
       );

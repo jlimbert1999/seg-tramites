@@ -139,6 +139,7 @@ export class ExternalService {
       session.endSession();
     }
   }
+  
   async update(
     id: string,
     procedure: UpdateProcedureDto,
