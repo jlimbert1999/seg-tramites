@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { GroupwareService } from './groupware.service';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { Communication } from 'src/procedures/schemas';
+import { Publication } from 'src/modules/publications/schemas/publication.schema';
 
 interface expelClientProps {
   id_account: string;
@@ -22,10 +23,15 @@ interface expelClientProps {
     origin: '*',
   },
 })
-export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class GroupwareGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
 
-  constructor(private groupwareService: GroupwareService, private jwtService: JwtService) {}
+  constructor(
+    private groupwareService: GroupwareService,
+    private jwtService: JwtService,
+  ) {}
 
   handleConnection(client: Socket) {
     try {
@@ -46,7 +52,9 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   sendMails(data: Communication[]) {
     data.forEach((mail) => {
-      const user = this.groupwareService.getUser(String(mail.receiver.cuenta._id));
+      const user = this.groupwareService.getUser(
+        String(mail.receiver.cuenta._id),
+      );
       if (user) {
         user.socketIds.forEach((socketId) => {
           this.server.to(socketId).emit('new-mail', mail);
@@ -70,8 +78,15 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     this.server.to(id_dependency).emit('unarchive-mail', id_mail);
   }
 
+  notifyNew(publication: any) {
+    this.server.emit('news', publication);
+  }
+
   @SubscribeMessage('expel')
-  handleExpel(@ConnectedSocket() socket: Socket, @MessageBody() { id_account, message }: expelClientProps) {
+  handleExpel(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() { id_account, message }: expelClientProps,
+  ) {
     const client = this.groupwareService.remove(id_account);
     if (!client) return;
     socket.to(client.socketIds).emit('has-expel', message);

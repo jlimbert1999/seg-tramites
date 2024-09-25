@@ -57,6 +57,13 @@ export class PublicationsService {
         priority: { $ne: PublicationPriority.Low },
         expirationDate: { $gte: today },
       })
+      .populate({
+        path: 'user',
+        populate: {
+          path: 'funcionario',
+          select: 'nombre paterno materno',
+        },
+      })
       .skip(offset)
       .limit(limit)
       .sort({ _id: -1, priority: -1 });

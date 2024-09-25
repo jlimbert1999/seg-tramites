@@ -79,6 +79,11 @@ export const SYSTEM_RESOURCES = [
     actions: [{ value: 'manage', label: 'Administrar' }],
   },
   {
+    value: VALID_RESOURCES.publications,
+    label: 'PUBLICACIONES',
+    actions: [{ value: 'manage', label: 'Administrar' }],
+  },
+  {
     value: VALID_RESOURCES.external,
 
     label: 'TRAMITES EXTERNOS',
@@ -113,7 +118,6 @@ export const SYSTEM_RESOURCES = [
   },
   {
     value: VALID_RESOURCES.communication,
-
     label: 'BANDEJAS',
     actions: [
       { value: 'create', label: 'Crear' },

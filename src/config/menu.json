@@ -83,14 +83,14 @@
     "children": [
       {
         "resource": "groupware",
-        "text": "Grupo de trabajo",
+        "text": "Usuarios activos",
         "icon": "equalizer",
         "routerLink": "groupware/users"
       },
       {
-        "resource": "groupware",
+        "resource": "publications",
         "text": "Publicaciones",
-        "icon": "equalizer",
+        "icon": "newspaper",
         "routerLink": "posts/manage"
       }
     ]

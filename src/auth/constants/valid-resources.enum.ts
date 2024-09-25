@@ -12,4 +12,5 @@ export enum VALID_RESOURCES {
   reports = 'reports',
   roles = 'roles',
   jobs = 'jobs',
+  publications = 'publications',
 }

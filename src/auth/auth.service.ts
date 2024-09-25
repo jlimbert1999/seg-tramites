@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import { AuthDto, UpdateMyAccountDto } from './dto';
 import { EnvConfig, JwtPayload, Menu } from './interfaces';
 import { Account, AccountDocument, Role } from 'src/users/schemas';
+import { logger } from 'src/config/logger';
 
 @Injectable()
 export class AuthService {
@@ -47,23 +48,29 @@ export class AuthService {
     // }
   }
 
-  async login({ login, password }: AuthDto) {
-    const account = await this.accountModel.findOne({ login }).lean();
+  async login({ login, password }: AuthDto, ip: string) {
+    const account = await this.accountModel
+      .findOne({ login })
+      .populate('funcionario')
+      
+      .lean();
     if (!account) {
       throw new BadRequestException('Usuario o Contraseña incorrectos');
     }
     if (!bcrypt.compareSync(password, account.password)) {
       throw new BadRequestException('Usuario o Contraseña incorrectos');
     }
-    // if (!account.funcionario || !account.activo) {
-    //   throw new BadRequestException('La cuenta ha sido deshabilidata');
-    // }
-
-    // if (String(account._id) === this.configService.getOrThrow('id_root')) {
-    //   return { token: this.generateRootToken(account), url: '/home' };
-    // }
+    if (String(account._id) === this.configService.getOrThrow('id_root')) {
+      return { token: this.generateRootToken(account), url: '/home' };
+    }
     if (!account.funcionario || !account.activo)
       throw new BadRequestException('La cuenta ha sido desahabilidata');
+    if (account.funcionario) {
+      logger.info(
+        `Ingreso de usuario (${login}) ${account.funcionario.nombre} ${account.funcionario.paterno} ${account.funcionario.materno}  / IP: ${ip}`,
+      );
+    }
+
     return {
       token: this.generateToken(account),
       url: this._getInitialRoute(account),
