@@ -2,8 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Procedure } from './procedure.schema';
 import { StatusMail } from '../interfaces/status.enum';
-import { Account, Officer } from 'src/users/schemas';
-
+import { Officer } from 'src/administration/schemas';
+import { Account } from 'src/modules/users/schemas';
 @Schema({ _id: false })
 class Participant extends Document {
   @Prop({

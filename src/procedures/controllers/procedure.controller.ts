@@ -5,8 +5,8 @@ import { GetUserRequest } from 'src/auth/decorators';
 import { ObservationService, ExternalService, InternalService, OutboxService } from '../services';
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
-import { Account } from 'src/users/schemas';
 import { IsMongoidPipe } from 'src/common/pipes';
+import { Account } from 'src/modules/users/schemas';
 
 @Controller('procedure')
 export class ProcedureController {

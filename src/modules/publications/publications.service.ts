@@ -6,7 +6,7 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreatePublicationDto } from './dtos/post.dto';
 import { FilesService } from '../files/files.service';
 import { Publication, PublicationPriority } from './schemas/publication.schema';
-import { Account } from 'src/users/schemas';
+import { Account } from '../users/schemas';
 
 @Injectable()
 export class PublicationsService {

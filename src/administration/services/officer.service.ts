@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Officer, JobChanges } from '../../users/schemas';
 import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
+import { JobChanges, Officer } from '../schemas';
 
 @Injectable()
 export class OfficerService {
@@ -112,7 +112,7 @@ export class OfficerService {
   async edit(id_officer: string, data: UpdateOfficerDto) {
     const officerDB = await this.officerModel.findById(id_officer);
     if (!officerDB) throw new NotFoundException(`El funcionario ${id_officer} no existe`);
-    if (data.dni && data.dni !== officerDB.dni) await this.verifyDuplicateDni(data.dni);
+    // if (data.dni && data.dni !== officerDB.dni) await this.verifyDuplicateDni(data.dni);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();

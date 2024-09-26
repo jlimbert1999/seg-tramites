@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Account } from 'src/users/schemas';
+import { Account } from 'src/modules/users/schemas';
+
 
 export enum PublicationPriority {
   HIGH = 2,

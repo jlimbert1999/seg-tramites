@@ -6,19 +6,24 @@ import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 export class GroupwareService {
   private clients: Record<string, userSocket> = {};
 
-  onClientConnected(id_socket: string, payload: JwtPayload): void {
-    if (this.clients[payload.id_account]) {
-      this.clients[payload.id_account].socketIds.push(id_socket);
+  onClientConnected(sockerId: string, payload: JwtPayload): void {
+    if (this.clients[payload.userId]) {
+      this.clients[payload.userId].socketIds.push(sockerId);
       return;
     }
-    this.clients[payload.id_account] = { ...payload, socketIds: [id_socket] };
+    this.clients[payload.userId] = { ...payload, socketIds: [sockerId] };
   }
 
   onClientDisconnected(id_socket: string) {
-    const client = Object.values(this.clients).find(({ socketIds }) => socketIds.includes(id_socket));
+    const client = Object.values(this.clients).find(({ socketIds }) =>
+      socketIds.includes(id_socket),
+    );
     if (!client) return;
-    this.clients[client.id_account].socketIds = client.socketIds.filter((id) => id !== id_socket);
-    if (this.clients[client.id_account].socketIds.length === 0) delete this.clients[client.id_account];
+    this.clients[client.userId].socketIds = client.socketIds.filter(
+      (id) => id !== id_socket,
+    );
+    if (this.clients[client.userId].socketIds.length === 0)
+      delete this.clients[client.userId];
   }
 
   remove(id_account: string) {

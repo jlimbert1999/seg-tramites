@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Job } from '../schemas/job.schema';
 
-import { Officer } from '../../users/schemas';
 import { CreateJobDto, UpdateJobDto } from '../dtos';
+import { Officer } from '../schemas';
 
 export interface organizationData {
   _id: string;

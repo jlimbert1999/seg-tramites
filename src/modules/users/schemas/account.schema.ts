@@ -3,6 +3,7 @@ import mongoose, { Document, HydratedDocument } from 'mongoose';
 import { Dependency } from 'src/administration/schemas';
 import { Officer } from './officer.schema';
 import { Role } from './role.schema';
+import { User } from './user.schema';
 
 export type AccountDocument = HydratedDocument<Account>;
 @Schema()
@@ -42,7 +43,7 @@ export class Account extends Document {
     type: mongoose.Schema.Types.ObjectId,
     ref: Dependency.name,
   })
-  dependencia: Dependency 
+  dependencia: Dependency;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
@@ -61,6 +62,12 @@ export class Account extends Document {
 
   @Prop()
   isRoot?: boolean;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: User.name,
+  })
+  user: User;
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);

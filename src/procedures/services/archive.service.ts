@@ -1,12 +1,15 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Communication, Procedure } from '../schemas';
 import { CreateArchiveDto } from '../dto';
 import { stateProcedure, StatusMail } from '../interfaces';
-import { fullname } from 'src/administration/helpers/fullname';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { Account } from 'src/users/schemas';
+import { Account } from 'src/modules/users/schemas';
 
 @Injectable()
 export class ArchiveService {
@@ -14,29 +17,41 @@ export class ArchiveService {
     @InjectConnection() private connection: mongoose.Connection,
     @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
-    @InjectModel(Communication.name) private communicationModel: Model<Communication>,
+    @InjectModel(Communication.name)
+    private communicationModel: Model<Communication>,
   ) {}
 
-  async create(id: string, account: Account, { description, state }: CreateArchiveDto) {
+  async create(
+    id: string,
+    account: Account,
+    { description, state }: CreateArchiveDto,
+  ) {
     const mail = await this.communicationModel.findById(id);
-    if (mail.status !== StatusMail.Received) throw new BadRequestException(`El tramite no puede archivarse`);
+    if (mail.status !== StatusMail.Received)
+      throw new BadRequestException(`El tramite no puede archivarse`);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       const { funcionario } = await account.populate('funcionario');
+
+      // TODO repair fullname officer
       await this.communicationModel.updateOne(
         { _id: id },
         {
           status: StatusMail.Archived,
           eventLog: {
-            manager: fullname(funcionario),
+            manager: '',
             description: description,
             date: new Date(),
           },
         },
         { session },
       );
-      await this.concludeProcedureIfAppropriate(mail.procedure._id, state, session);
+      await this.concludeProcedureIfAppropriate(
+        mail.procedure._id,
+        state,
+        session,
+      );
       await session.commitTransaction();
       return { message: 'Tramite archivado.' };
     } catch (error) {
@@ -49,9 +64,13 @@ export class ArchiveService {
     }
   }
 
-  async unarchiveMail(id_mail: string, account: Account): Promise<{ message: string }> {
+  async unarchiveMail(
+    id_mail: string,
+    account: Account,
+  ): Promise<{ message: string }> {
     const mailDB = await this.communicationModel.findById(id_mail);
-    if (mailDB.status !== StatusMail.Archived) throw new BadRequestException('El tramite ya fue desarchivado');
+    if (mailDB.status !== StatusMail.Archived)
+      throw new BadRequestException('El tramite ya fue desarchivado');
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -83,7 +102,9 @@ export class ArchiveService {
   }
 
   async findAll({ limit, offset }: PaginationParamsDto, account: Account) {
-    const unit = await this.accountModel.find({ dependencia: account.dependencia._id }).select('_id');
+    const unit = await this.accountModel
+      .find({ dependencia: account.dependencia._id })
+      .select('_id');
     const query: FilterQuery<Communication> = {
       status: StatusMail.Archived,
       'receiver.cuenta': { $in: unit.map((acount) => acount._id) },
@@ -101,7 +122,11 @@ export class ArchiveService {
     return { archives, length };
   }
 
-  async search({ limit, offset }: PaginationParamsDto, text: string, id_dependency: string) {
+  async search(
+    { limit, offset }: PaginationParamsDto,
+    text: string,
+    id_dependency: string,
+  ) {
     const unit = await this.accountModel
       .find({
         dependencia: id_dependency,
@@ -151,12 +176,17 @@ export class ArchiveService {
   async checkIfProcedureCanBeCompleted(id_procedure: string): Promise<void> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (procedureDB.state === stateProcedure.CONCLUIDO) {
-      throw new BadRequestException(`El tramite ${procedureDB.code} ya fue concluido.`);
+      throw new BadRequestException(
+        `El tramite ${procedureDB.code} ya fue concluido.`,
+      );
     }
     const isProcessStarted = await this.communicationModel.findOne({
       procedure: id_procedure,
     });
-    if (isProcessStarted) throw new BadRequestException('Solo puede concluir tramites que no hayan sido remitidos');
+    if (isProcessStarted)
+      throw new BadRequestException(
+        'Solo puede concluir tramites que no hayan sido remitidos',
+      );
   }
 
   async insertPartipantInWokflow(
@@ -176,7 +206,8 @@ export class ArchiveService {
       emitter: receiver,
       receiver: {
         cuenta: participant._id,
-        fullname: fullname(funcionario),
+        // TODO repair user fullane
+        fullname: '',
         ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
       },
       outboundDate,
@@ -196,11 +227,18 @@ export class ArchiveService {
     session: mongoose.mongo.ClientSession,
   ): Promise<void> {
     const isProcessActive = await this.communicationModel.findOne(
-      { procedure: id, status: { $in: [StatusMail.Received, StatusMail.Pending] } },
+      {
+        procedure: id,
+        status: { $in: [StatusMail.Received, StatusMail.Pending] },
+      },
       undefined,
       { session },
     );
     if (isProcessActive) return;
-    await this.procedureModel.updateOne({ _id: id }, { state: state, endDate: new Date() }, { session });
+    await this.procedureModel.updateOne(
+      { _id: id },
+      { state: state, endDate: new Date() },
+      { session },
+    );
   }
 }

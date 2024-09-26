@@ -4,8 +4,8 @@ import { TypeProcedureService } from 'src/administration/services/type-procedure
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
 import { ExternalService } from '../services';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { Account } from 'src/users/schemas';
 import { VALID_RESOURCES } from 'src/auth/constants';
+import { Account } from 'src/modules/users/schemas';
 
 @Controller('external')
 @ResourceProtected(VALID_RESOURCES.external)

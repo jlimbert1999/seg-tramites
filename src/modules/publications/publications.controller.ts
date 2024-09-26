@@ -3,9 +3,9 @@ import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dtos/post.dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { GetUserRequest } from 'src/auth/decorators';
-import { Account } from 'src/users/schemas';
 import { PublicationPriority } from './schemas/publication.schema';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
+import { Account } from '../users/schemas';
 
 @Controller('posts')
 export class PostsController {

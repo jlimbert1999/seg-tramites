@@ -6,13 +6,13 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Model } from 'mongoose';
 
 import { EnvConfig, JwtPayload } from '../interfaces';
-import { Account } from 'src/users/schemas';
+import { User } from 'src/modules/users/schemas';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService<EnvConfig>,
-    @InjectModel(Account.name) private accountModel: Model<Account>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -20,16 +20,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       secretOrKey: configService.getOrThrow('jwt_key'),
     });
   }
-  async validate(payload: JwtPayload): Promise<Account> {
-    const { id_account } = payload;
-    const account = await this.accountModel.findById(id_account).select('-password').populate('rol');
-    if (!account) throw new UnauthorizedException('Token invalido, vuelva a iniciar sesion');
-    if (account.rol.permissions.length === 0) {
-      throw new UnauthorizedException('La cuenta no tiene ningun permiso asignado');
-    }
-    if (String(account._id) === this.configService.get('id_root')) return account;
-    if (!account.activo || !account.funcionario) throw new UnauthorizedException('La cuenta ha sido deshablitada');
-  
-    return account;
+  async validate(payload: JwtPayload): Promise<User> {
+    const user = await this.userModel
+      .findById(payload.userId)
+      .select('-password')
+      .populate('role');
+    if (!user) throw new UnauthorizedException();
+    return user;
   }
 }

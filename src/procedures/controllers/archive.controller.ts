@@ -3,10 +3,11 @@ import { ArchiveService } from '../services/archive.service';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { Account } from 'src/users/schemas';
+
 import { VALID_RESOURCES } from 'src/auth/constants';
 import { CreateArchiveDto } from '../dto';
 import { IsMongoidPipe } from 'src/common/pipes';
+import { Account } from 'src/modules/users/schemas';
 
 @ResourceProtected(VALID_RESOURCES.archived)
 @Controller('archives')

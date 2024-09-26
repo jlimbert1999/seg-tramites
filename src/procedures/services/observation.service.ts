@@ -1,11 +1,14 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { Observation, Procedure } from '../schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
-import { Account } from 'src/users/schemas';
-import { fullname } from 'src/administration/helpers/fullname';
+import { Account } from 'src/modules/users/schemas';
 
 @Injectable()
 export class ObservationService {
@@ -17,24 +20,36 @@ export class ObservationService {
   ) {}
 
   async getObservations(id_procedure: string) {
-    return await this.observationModel.find({ procedure: id_procedure }).sort({ date: -1 });
+    return await this.observationModel
+      .find({ procedure: id_procedure })
+      .sort({ date: -1 });
   }
 
-  async add(id_procedure: string, account: Account, { description }: CreateObservationDto) {
+  async add(
+    id_procedure: string,
+    account: Account,
+    { description }: CreateObservationDto,
+  ) {
     const state = await this.checkIfStateProcedureIsValid(id_procedure);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       if (state !== stateProcedure.OBSERVADO) {
-        await this.procedureModel.findByIdAndUpdate(id_procedure, { state: stateProcedure.OBSERVADO }, { session });
+        await this.procedureModel.findByIdAndUpdate(
+          id_procedure,
+          { state: stateProcedure.OBSERVADO },
+          { session },
+        );
       }
       const { funcionario } = await this.accountModel.populate(account, {
         path: 'funcionario',
       });
+
+      // TODO repair fullname officer
       const newObservation = new this.observationModel({
         procedure: id_procedure,
         account: account._id,
-        fullnameOfficer: fullname(funcionario),
+        fullnameOfficer: 'user',
         description,
       });
       const createdObservation = await newObservation.save({ session });
@@ -42,17 +57,26 @@ export class ObservationService {
       return createdObservation;
     } catch (error) {
       await session.abortTransaction();
-      throw new InternalServerErrorException('No se puede registrar la observacion');
+      throw new InternalServerErrorException(
+        'No se puede registrar la observacion',
+      );
     } finally {
       session.endSession();
     }
   }
 
-  async checkIfStateProcedureIsValid(id_procedure: string): Promise<stateProcedure> {
+  async checkIfStateProcedureIsValid(
+    id_procedure: string,
+  ): Promise<stateProcedure> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (!procedureDB) throw new BadRequestException('El tramite no existe');
-    const invalidStates = [stateProcedure.ANULADO, stateProcedure.CONCLUIDO, stateProcedure.SUSPENDIDO];
-    if (invalidStates.includes(procedureDB.state)) throw new BadRequestException('El tramite ya ha sido finalizado');
+    const invalidStates = [
+      stateProcedure.ANULADO,
+      stateProcedure.CONCLUIDO,
+      stateProcedure.SUSPENDIDO,
+    ];
+    if (invalidStates.includes(procedureDB.state))
+      throw new BadRequestException('El tramite ya ha sido finalizado');
     return procedureDB.state;
   }
 
@@ -65,7 +89,8 @@ export class ObservationService {
         { isSolved: true },
         { session, new: true },
       );
-      if (!observationDB) throw new BadRequestException('La observacion no existe');
+      if (!observationDB)
+        throw new BadRequestException('La observacion no existe');
       let state = stateProcedure.OBSERVADO;
       const pendingObservation = await this.observationModel.findOne(
         {
@@ -87,7 +112,9 @@ export class ObservationService {
       return { state };
     } catch (error) {
       await session.abortTransaction();
-      throw new InternalServerErrorException('No se puede registrar la observacion');
+      throw new InternalServerErrorException(
+        'No se puede registrar la observacion',
+      );
     } finally {
       session.endSession();
     }

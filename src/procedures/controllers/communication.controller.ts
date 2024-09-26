@@ -5,10 +5,11 @@ import { InboxService, OutboxService } from '../services';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { CancelMailsDto, CreateCommunicationDto, GetInboxParamsDto, UpdateCommunicationDto } from '../dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { AccountService } from 'src/users/services/account.service';
-import type { Account } from 'src/users/schemas';
+
 import { VALID_RESOURCES } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
+import { Account } from 'src/modules/users/schemas';
+import { AccountService } from 'src/modules/users/services';
 
 @Controller('communication')
 @ResourceProtected(VALID_RESOURCES.communication)

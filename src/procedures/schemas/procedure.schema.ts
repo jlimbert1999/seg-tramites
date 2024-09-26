@@ -4,7 +4,8 @@ import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema'
 import { ExternalDetail } from './external-detail.schema';
 import { InternalDetail } from './internal-detail.schema';
 import { stateProcedure } from '../interfaces';
-import { Account } from 'src/users/schemas';
+import { Account } from 'src/modules/users/schemas';
+
 
 @Schema()
 export class Procedure extends Document {

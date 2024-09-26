@@ -4,8 +4,9 @@ import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from '.
 import { GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { DependencieService, InstitutionService, TypeProcedureService } from 'src/administration/services';
-import type { Account } from 'src/users/schemas';
+
 import { IsMongoidPipe } from 'src/common/pipes';
+import { Account } from 'src/modules/users/schemas';
 
 @Controller('reports')
 export class ReportsController {

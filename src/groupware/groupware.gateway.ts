@@ -12,7 +12,6 @@ import { Server, Socket } from 'socket.io';
 import { GroupwareService } from './groupware.service';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { Communication } from 'src/procedures/schemas';
-import { Publication } from 'src/modules/publications/schemas/publication.schema';
 
 interface expelClientProps {
   id_account: string;
@@ -37,7 +36,6 @@ export class GroupwareGateway
     try {
       const token = client.handshake.auth.token;
       const decoded: JwtPayload = this.jwtService.verify(token);
-      if (decoded.id_dependency) client.join(decoded.id_dependency);
       this.groupwareService.onClientConnected(client.id, decoded);
       this.server.emit('listar', this.groupwareService.getClients());
     } catch (error) {

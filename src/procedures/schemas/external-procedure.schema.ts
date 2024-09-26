@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { TypeProcedure } from 'src/administration/schemas';
-import { Account } from 'src/users/schemas';
 import { stateProcedure } from '../interfaces';
+import { Account } from 'src/modules/users/schemas';
 
 @Schema({ _id: false })
 class Applicant {

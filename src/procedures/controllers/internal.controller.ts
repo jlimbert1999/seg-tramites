@@ -4,8 +4,8 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
 import { InternalService } from '../services';
 import { OfficerService, TypeProcedureService } from 'src/administration/services';
-import { Account } from 'src/users/schemas';
 import { VALID_RESOURCES } from 'src/auth/constants';
+import { Account } from 'src/modules/users/schemas';
 
 @ResourceProtected(VALID_RESOURCES.internal)
 @Controller('internal')

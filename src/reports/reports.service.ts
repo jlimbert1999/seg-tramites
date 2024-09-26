@@ -1,12 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
-import { Account } from 'src/users/schemas';
+
 import { Dependency } from 'src/administration/schemas';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { groupProcedure, StatusMail } from 'src/procedures/interfaces';
+import { Account } from 'src/modules/users/schemas';
 
 @Injectable()
 export class ReportsService {
