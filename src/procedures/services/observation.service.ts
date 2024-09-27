@@ -8,7 +8,8 @@ import { Connection, Model } from 'mongoose';
 import { Observation, Procedure } from '../schemas';
 import { CreateObservationDto } from '../dto';
 import { stateProcedure } from '../interfaces';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
+
 
 @Injectable()
 export class ObservationService {

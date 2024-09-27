@@ -22,7 +22,7 @@ import {
   groupProcedure,
   stateProcedure,
 } from '../interfaces';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
 
 @Injectable()
 export class ExternalService {

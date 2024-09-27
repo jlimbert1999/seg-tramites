@@ -1,13 +1,17 @@
-import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
-import { CreateAccountDto, UpdateAccountDto, GetAccountsDto } from '../dtos';
-import { Account } from '../../users/schemas';
-import { CreateOfficerDto } from 'src/administration/dtos';
-import { OfficerService } from 'src/administration/services';
+import { OfficerService } from './officer.service';
+import { Account } from '../schemas';
+import { CreateAccountDto, CreateOfficerDto, UpdateAccountDto } from '../dtos';
 
 @Injectable()
 export class AccountService {
@@ -18,7 +22,7 @@ export class AccountService {
     @InjectConnection() private connection: mongoose.Connection,
   ) {}
 
-  async findAll({ id_dependency, limit, offset }: GetAccountsDto) {
+  async findAll({ id_dependency, limit, offset }: any) {
     const query: FilterQuery<Account> = {
       _id: { $ne: this.configService.get('id_root') },
       ...(id_dependency && { dependencia: id_dependency }),
@@ -43,11 +47,17 @@ export class AccountService {
     return { accounts, length };
   }
 
-  async search(term: string, { id_dependency, limit, offset }: GetAccountsDto) {
+  async search(term: string, { id_dependency, limit, offset }: any) {
     const regex = new RegExp(term, 'i');
     const query: FilterQuery<Account> = {
-      ...(id_dependency && { dependencia: new mongoose.Types.ObjectId(id_dependency) }),
-      $or: [{ 'funcionario.fullname': regex }, { 'funcionario.dni': regex }, { 'funcionario.cargo.nombre': regex }],
+      ...(id_dependency && {
+        dependencia: new mongoose.Types.ObjectId(id_dependency),
+      }),
+      $or: [
+        { 'funcionario.fullname': regex },
+        { 'funcionario.dni': regex },
+        { 'funcionario.cargo.nombre': regex },
+      ],
     };
     const data = await this.accountModel
       .aggregate()
@@ -96,7 +106,10 @@ export class AccountService {
         ],
       });
     const accounts = data[0].paginatedResults;
-    await this.accountModel.populate(accounts, { path: 'dependencia', select: 'nombre' });
+    await this.accountModel.populate(accounts, {
+      path: 'dependencia',
+      select: 'nombre',
+    });
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { accounts, length };
   }
@@ -106,9 +119,15 @@ export class AccountService {
     try {
       session.startTransaction();
       await this.checkDuplicateLogin(account.login);
-      const { _id } = await this.officerService.createOfficerForAccount(officer, session);
+      const { _id } = await this.officerService.createOfficerForAccount(
+        officer,
+        session,
+      );
       account.password = this.encryptPassword(account.password);
-      const createdAccount = new this.accountModel({ ...account, funcionario: _id });
+      const createdAccount = new this.accountModel({
+        ...account,
+        funcionario: _id,
+      });
       await createdAccount.save({ session });
       await createdAccount.populate(this.populateOptions);
       await session.commitTransaction();
@@ -125,8 +144,10 @@ export class AccountService {
   async update(id: string, account: UpdateAccountDto) {
     const accountDB = await this.accountModel.findById(id);
     if (!accountDB) throw new NotFoundException(`La cuenta ${id} no existe`);
-    if (accountDB.login !== account.login) await this.checkDuplicateLogin(account.login);
-    if (account.password) account['password'] = this.encryptPassword(account.password);
+    if (accountDB.login !== account.login)
+      await this.checkDuplicateLogin(account.login);
+    if (account.password)
+      account['password'] = this.encryptPassword(account.password);
     const updated = await this.accountModel
       .findByIdAndUpdate(id, account, { new: true })
       .populate(this.populateOptions);
@@ -135,12 +156,20 @@ export class AccountService {
 
   async assign(account: CreateAccountDto) {
     if (account.funcionario) {
-      const duplicate = await this.accountModel.findOne({ funcionario: account.funcionario });
-      if (duplicate) throw new BadRequestException('El funcionario seleccionado ya esta asignado a una cuenta');
+      const duplicate = await this.accountModel.findOne({
+        funcionario: account.funcionario,
+      });
+      if (duplicate)
+        throw new BadRequestException(
+          'El funcionario seleccionado ya esta asignado a una cuenta',
+        );
     }
     await this.checkDuplicateLogin(account.login);
     const ecryptedPassword = this.encryptPassword(account.password);
-    const createdAccount = new this.accountModel({ ...account, password: ecryptedPassword });
+    const createdAccount = new this.accountModel({
+      ...account,
+      password: ecryptedPassword,
+    });
     await createdAccount.save();
     await createdAccount.populate(this.populateOptions);
     return this.removePasswordField(createdAccount);
@@ -188,8 +217,12 @@ export class AccountService {
   }
 
   async unlink(id: string) {
-    const result = await this.accountModel.updateOne({ _id: id }, { $unset: { funcionario: 1 } });
-    if (result.matchedCount === 0) throw new NotFoundException(`La cuenta ${id} no existe`);
+    const result = await this.accountModel.updateOne(
+      { _id: id },
+      { $unset: { funcionario: 1 } },
+    );
+    if (result.matchedCount === 0)
+      throw new NotFoundException(`La cuenta ${id} no existe`);
     return { message: 'Cuenta desvinculada' };
   }
 
@@ -220,7 +253,8 @@ export class AccountService {
 
   private async checkDuplicateLogin(login: string) {
     const duplicate = await this.accountModel.findOne({ login });
-    if (duplicate) throw new BadRequestException(`El login ya existre ${login}`);
+    if (duplicate)
+      throw new BadRequestException(`El login ya existre ${login}`);
   }
 
   private removePasswordField(account: Account) {

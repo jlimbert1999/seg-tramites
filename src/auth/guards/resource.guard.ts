@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { META_RESOURCE } from '../decorators';
 import { VALID_RESOURCES } from '../constants';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
 
 @Injectable()
 export class ResourceGuard implements CanActivate {

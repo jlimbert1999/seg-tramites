@@ -1,5 +1,13 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateOfficerDto {
   @IsNotEmpty()
@@ -30,3 +38,5 @@ export class CreateOfficerDto {
   @IsOptional()
   cuenta: boolean;
 }
+
+export class UpdateOfficerDto extends PartialType(CreateOfficerDto) {}

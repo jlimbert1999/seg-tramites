@@ -1,5 +1,13 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { VALID_RESOURCES } from 'src/auth/constants';
 
 export class CreateRoleDto {
@@ -13,6 +21,8 @@ export class CreateRoleDto {
   @Type(() => Permissions)
   permissions: Permissions[];
 }
+
+export class UpdateRoleDto extends PartialType(CreateRoleDto) {}
 
 class Permissions {
   @IsEnum(VALID_RESOURCES)

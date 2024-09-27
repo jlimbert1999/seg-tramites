@@ -5,7 +5,7 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { GetUserRequest } from 'src/auth/decorators';
 import { PublicationPriority } from './schemas/publication.schema';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { Account } from '../users/schemas';
+import { User } from '../users/schemas';
 
 @Controller('posts')
 export class PostsController {
@@ -17,7 +17,7 @@ export class PostsController {
   @Post()
   async create(
     @Body() publicationDto: CreatePublicationDto,
-    @GetUserRequest() user: Account,
+    @GetUserRequest() user: User,
   ) {
     const publication = await this.postsService.create(publicationDto, user);
     if (publication.priority === PublicationPriority.HIGH) {
@@ -33,7 +33,7 @@ export class PostsController {
 
   @Get('user')
   findByUser(
-    @GetUserRequest() user: Account,
+    @GetUserRequest() user: User,
     @Query() pagination: PaginationParamsDto,
   ) {
     return this.postsService.findByUser(user._id, pagination);

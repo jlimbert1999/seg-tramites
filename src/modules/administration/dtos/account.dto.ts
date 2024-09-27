@@ -1,4 +1,6 @@
 import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { OmitType, PartialType } from '@nestjs/mapped-types';
+
 
 export class CreateAccountDto {
   @IsNotEmpty()
@@ -18,3 +20,5 @@ export class CreateAccountDto {
   @IsMongoId()
   funcionario?: string;
 }
+
+export class UpdateAccountDto extends PartialType(OmitType(CreateAccountDto, ['dependencia'] as const)) {}

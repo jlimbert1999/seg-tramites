@@ -9,7 +9,7 @@ import { Communication, Procedure } from '../schemas';
 import { CreateArchiveDto } from '../dto';
 import { stateProcedure, StatusMail } from '../interfaces';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
 
 @Injectable()
 export class ArchiveService {

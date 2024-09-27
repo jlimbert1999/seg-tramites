@@ -6,6 +6,7 @@ import {
   DependencyController,
   InstitutionController,
   TypeProcedureController,
+  AccountController,
 } from './controllers';
 
 import {
@@ -19,25 +20,54 @@ import {
   InstitutionSchema,
   TypeProcedure,
   TypeProcedureSchema,
-  JobChanges,
-  JobChangesSchema,
-} from './schemas/index';
+  Account,
+  AccountSchema,
+} from './schemas';
 
-import { DependencieService, InstitutionService, JobService, OfficerService, TypeProcedureService } from './services';
+import {
+  AccountService,
+  DependencieService,
+  InstitutionService,
+  JobService,
+  OfficerService,
+  TypeProcedureService,
+} from './services';
 
 @Module({
-  controllers: [DependencyController, InstitutionController, TypeProcedureController, OfficerController, JobController],
-  providers: [DependencieService, InstitutionService, TypeProcedureService, OfficerService, JobService],
+  controllers: [
+    DependencyController,
+    InstitutionController,
+    TypeProcedureController,
+    OfficerController,
+    JobController,
+    AccountController,
+  ],
+  providers: [
+    DependencieService,
+    InstitutionService,
+    TypeProcedureService,
+    OfficerService,
+    JobService,
+    AccountService,
+  ],
   imports: [
     MongooseModule.forFeature([
       { name: Job.name, schema: JobSchema },
+      { name: Account.name, schema: AccountSchema },
       { name: Officer.name, schema: OfficerSchema },
-      { name: JobChanges.name, schema: JobChangesSchema },
       { name: Dependency.name, schema: DependencySchema },
       { name: Institution.name, schema: InstitutionSchema },
       { name: TypeProcedure.name, schema: TypeProcedureSchema },
     ]),
   ],
-  exports: [MongooseModule, TypeProcedureService, InstitutionService, DependencieService, OfficerService, JobService],
+  exports: [
+    MongooseModule,
+    TypeProcedureService,
+    InstitutionService,
+    DependencieService,
+    OfficerService,
+    JobService,
+    AccountService,
+  ],
 })
 export class AdministrationModule {}

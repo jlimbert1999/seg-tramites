@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Procedure } from './procedure.schema';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
+
 
 @Schema()
 export class Observation extends Document {

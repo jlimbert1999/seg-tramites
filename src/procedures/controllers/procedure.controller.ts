@@ -6,7 +6,7 @@ import { ObservationService, ExternalService, InternalService, OutboxService } f
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
 import { IsMongoidPipe } from 'src/common/pipes';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
 
 @Controller('procedure')
 export class ProcedureController {

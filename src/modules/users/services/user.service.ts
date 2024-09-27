@@ -8,8 +8,10 @@ import { Document, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { Account, User, UserDocument } from '../schemas';
+import { User, UserDocument } from '../schemas';
 import { CreateUserDto, UpdateUserDto } from '../dtos';
+
+import { Account } from 'src/modules/administration/schemas';
 
 @Injectable()
 export class UserService {
@@ -54,12 +56,7 @@ export class UserService {
 
   async findAll({ limit, offset }: PaginationParamsDto) {
     const [users, length] = await Promise.all([
-      this.userModel
-        .find({})
-        .lean()
-        .skip(offset)
-        .limit(limit)
-        .sort({ _id: -1 }),
+      this.userModel.find({}).skip(offset).limit(limit).sort({ _id: -1 }),
       this.userModel.count({}),
     ]);
     return { users: users.map((user) => this._plainUser(user)), length };

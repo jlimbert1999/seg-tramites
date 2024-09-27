@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { Account } from 'src/modules/users/schemas';
-
+import { User } from 'src/modules/users/schemas';
 
 export enum PublicationPriority {
   HIGH = 2,
@@ -23,10 +22,10 @@ const AttachmentSchema = SchemaFactory.createForClass(Attachment);
 export class Publication extends Document {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: Account.name,
+    ref: User.name,
     required: true,
   })
-  user: Account;
+  user: User;
 
   @Prop({
     type: String,

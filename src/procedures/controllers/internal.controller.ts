@@ -3,9 +3,9 @@ import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
 import { InternalService } from '../services';
-import { OfficerService, TypeProcedureService } from 'src/administration/services';
+import { OfficerService, TypeProcedureService } from 'src/modules/administration/services';
 import { VALID_RESOURCES } from 'src/auth/constants';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
 
 @ResourceProtected(VALID_RESOURCES.internal)
 @Controller('internal')

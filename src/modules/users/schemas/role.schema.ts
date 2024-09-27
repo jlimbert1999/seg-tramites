@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
+import { Document } from 'mongoose';
 import { VALID_RESOURCES } from 'src/auth/constants';
-
-class Permissions {
+@Schema({ _id: false })
+export class Permission {
   @Prop({
     type: String,
     enum: Object.values(VALID_RESOURCES),
@@ -13,6 +13,8 @@ class Permissions {
   actions: string[];
 }
 
+const PermissionSchema = SchemaFactory.createForClass(Permission);
+
 @Schema()
 export class Role extends Document {
   @Prop({
@@ -21,8 +23,8 @@ export class Role extends Document {
   })
   name: string;
 
-  @Prop({ _id: false, type: mongoose.Types.Array })
-  permissions: Permissions[];
+  @Prop({ type: [PermissionSchema], default: [] })
+  permissions: Permission[];
 }
 
 export const RoleSchema = SchemaFactory.createForClass(Role);

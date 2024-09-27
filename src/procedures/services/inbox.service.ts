@@ -9,7 +9,6 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Connection, FilterQuery, Model } from 'mongoose';
 
-import { Account } from 'src/modules/users/schemas';
 import { Procedure, Communication } from '../schemas';
 import { stateProcedure, StatusMail } from '../interfaces';
 import {
@@ -18,6 +17,7 @@ import {
   ReceiverDto,
   UpdateCommunicationDto,
 } from '../dto';
+import { Account } from 'src/modules/administration/schemas';
 
 @Injectable()
 export class InboxService {

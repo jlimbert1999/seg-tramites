@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { InstitutionService, DependencieService } from 'src/administration/services';
+import { InstitutionService, DependencieService } from 'src/modules/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { InboxService, OutboxService } from '../services';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
@@ -8,8 +8,9 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 
 import { VALID_RESOURCES } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
-import { Account } from 'src/modules/users/schemas';
-import { AccountService } from 'src/modules/users/services';
+import { AccountService } from 'src/modules/administration/services/account.service';
+import { Account } from 'src/modules/administration/schemas';
+
 
 @Controller('communication')
 @ResourceProtected(VALID_RESOURCES.communication)

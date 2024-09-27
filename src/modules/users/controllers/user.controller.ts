@@ -9,13 +9,16 @@ import {
 } from '@nestjs/common';
 import { Public } from 'src/auth/decorators';
 
-import { UserService } from '../services';
+import { RoleService, UserService } from '../services';
 import { CreateUserDto, UpdateUserDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common';
 
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private roleService: RoleService,
+  ) {}
 
   @Get('generate')
   @Public()
@@ -31,6 +34,8 @@ export class UserController {
   //   return this.jobService.search(limit, offset, term);
   // }
 
+  
+
   @Get()
   findAll(@Query() params: PaginationParamsDto) {
     return this.userService.findAll(params);
@@ -44,5 +49,11 @@ export class UserController {
   @Patch(':id')
   update(@Param('id') userId: string, @Body() job: UpdateUserDto) {
     return this.userService.update(userId, job);
+  }
+
+
+  @Get('roles')
+  getRoles() {
+    return this.roleService.getActiveRoles();
   }
 }

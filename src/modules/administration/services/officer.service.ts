@@ -1,14 +1,18 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
-import { JobChanges, Officer } from '../schemas';
+import { Officer } from '../schemas';
 
 @Injectable()
 export class OfficerService {
   constructor(
     @InjectModel(Officer.name) private officerModel: Model<Officer>,
-    @InjectModel(JobChanges.name) private jobChangesModel: Model<JobChanges>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -19,7 +23,8 @@ export class OfficerService {
     await this.verifyDuplicateDni(officer.dni);
     const createdOfficer = new this.officerModel(officer);
     const officerDB = await createdOfficer.save({ session });
-    if (officerDB.cargo) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+    if (officerDB.cargo)
+      await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
     return officerDB;
   }
 
@@ -30,7 +35,13 @@ export class OfficerService {
       .match({ activo: true })
       .addFields({
         fullname: {
-          $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
+          $concat: [
+            '$nombre',
+            ' ',
+            { $ifNull: ['$paterno', ''] },
+            ' ',
+            { $ifNull: ['$materno', ''] },
+          ],
         },
       })
       .match({ fullname: regex })
@@ -64,10 +75,18 @@ export class OfficerService {
       })
       .addFields({
         fullname: {
-          $concat: ['$nombre', ' ', { $ifNull: ['$paterno', ''] }, ' ', { $ifNull: ['$materno', ''] }],
+          $concat: [
+            '$nombre',
+            ' ',
+            { $ifNull: ['$paterno', ''] },
+            ' ',
+            { $ifNull: ['$materno', ''] },
+          ],
         },
       })
-      .match({ $or: [{ fullname: regex }, { dni: regex }, { 'cargo.nombre': regex }] })
+      .match({
+        $or: [{ fullname: regex }, { dni: regex }, { 'cargo.nombre': regex }],
+      })
       .sort({ _id: -1 })
       .facet({
         paginatedResults: [{ $skip: offset }, { $limit: limit }],
@@ -78,13 +97,21 @@ export class OfficerService {
         ],
       });
     const officers = dataPaginated[0].paginatedResults;
-    const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
+    const length = dataPaginated[0].totalCount[0]
+      ? dataPaginated[0].totalCount[0].count
+      : 0;
     return { officers, length };
   }
 
   async get(limit: number, offset: number) {
     const [officers, length] = await Promise.all([
-      this.officerModel.find({}).lean().sort({ _id: -1 }).skip(offset).limit(limit).populate('cargo', 'nombre'),
+      this.officerModel
+        .find({})
+        .lean()
+        .sort({ _id: -1 })
+        .skip(offset)
+        .limit(limit)
+        .populate('cargo', 'nombre'),
       this.officerModel.count(),
     ]);
     return { officers, length };
@@ -97,7 +124,12 @@ export class OfficerService {
       session.startTransaction();
       const createdOfficer = new this.officerModel(officer);
       const officerDB = await createdOfficer.save({ session });
-      if (officerDB.cargo) await this.createLogRotation(officerDB._id, officerDB.cargo._id, session);
+      if (officerDB.cargo)
+        await this.createLogRotation(
+          officerDB._id,
+          officerDB.cargo._id,
+          session,
+        );
       await session.commitTransaction();
       await this.officerModel.populate(officerDB, 'cargo');
       return officerDB;
@@ -111,12 +143,15 @@ export class OfficerService {
 
   async edit(id_officer: string, data: UpdateOfficerDto) {
     const officerDB = await this.officerModel.findById(id_officer);
-    if (!officerDB) throw new NotFoundException(`El funcionario ${id_officer} no existe`);
+    if (!officerDB)
+      throw new NotFoundException(`El funcionario ${id_officer} no existe`);
     // if (data.dni && data.dni !== officerDB.dni) await this.verifyDuplicateDni(data.dni);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      const currentJob = officerDB.cargo ? String(officerDB.cargo._id) : undefined;
+      const currentJob = officerDB.cargo
+        ? String(officerDB.cargo._id)
+        : undefined;
       if (data.cargo !== currentJob) {
         await this.createLogRotation(id_officer, data.cargo, session);
       }
@@ -134,26 +169,27 @@ export class OfficerService {
   }
 
   async unlinkOfficerJob(id_officer: string) {
-    const queryResult = await this.officerModel.updateOne({ _id: id_officer }, { $unset: { cargo: 1 } });
-    if (queryResult.modifiedCount === 0) throw new BadRequestException('El cargo del funcionario ya ha sido removido');
+    const queryResult = await this.officerModel.updateOne(
+      { _id: id_officer },
+      { $unset: { cargo: 1 } },
+    );
+    if (queryResult.modifiedCount === 0)
+      throw new BadRequestException(
+        'El cargo del funcionario ya ha sido removido',
+      );
     return { message: 'El cargo del funcionario se ha removido' };
   }
 
   async changeOfficerStatus(id_officer: string) {
-    const { activo } = await this.officerModel.findOneAndUpdate({ _id: id_officer }, [
-      { $set: { activo: { $eq: [false, '$activo'] } } },
-    ]);
+    const { activo } = await this.officerModel.findOneAndUpdate(
+      { _id: id_officer },
+      [{ $set: { activo: { $eq: [false, '$activo'] } } }],
+    );
     return { activo: !activo };
   }
 
   async getOfficerWorkHistory(id_officer: string, offset: number) {
-    return await this.jobChangesModel
-      .find({ officer: id_officer })
-      .lean()
-      .limit(5)
-      .skip(offset)
-      .sort({ date: -1 })
-      .populate('job', 'nombre');
+    
   }
 
   async searchOfficersWithoutAccount(text: string, limit = 7) {
@@ -162,7 +198,13 @@ export class OfficerService {
       .aggregate()
       .addFields({
         fullname: {
-          $concat: ['$nombre', ' ', '$paterno', ' ', { $ifNull: ['$materno', ''] }],
+          $concat: [
+            '$nombre',
+            ' ',
+            '$paterno',
+            ' ',
+            { $ifNull: ['$materno', ''] },
+          ],
         },
       })
       .match({ fullname: regex, activo: true })
@@ -188,7 +230,6 @@ export class OfficerService {
     id_job: string,
     session: mongoose.mongo.ClientSession,
   ): Promise<void> {
-    const createdEvent = new this.jobChangesModel({ officer: id_officer, job: id_job });
-    await createdEvent.save({ session });
+ 
   }
 }

@@ -1,23 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Role } from '../../users/schemas';
-import { CreateRoleDto, UpdateRoleDto } from '../../users/dtos';
+import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from '../dtos';
 
 @Injectable()
 export class RoleService {
   constructor(@InjectModel(Role.name) private roleModel: Model<Role>) {}
 
-  async findAll() {
-    const [roles, length] = await Promise.all([this.roleModel.find({}).sort({ _id: -1 }), this.roleModel.count({})]);
-    return { roles, length };
-  }
-
-  async search(text: string) {
-    const regex = new RegExp(text, 'i');
+  async findAll({ limit, offset, term }: FilterRoleDto) {
+    const query: FilterQuery<Role> = {
+      ...(term && { name: new RegExp(term, 'i') }),
+    };
     const [roles, length] = await Promise.all([
-      this.roleModel.find({ role: regex }),
-      this.roleModel.count({ role: regex }),
+      this.roleModel.find(query).limit(limit).skip(offset).sort({ _id: -1 }),
+      this.roleModel.count(query),
     ]);
     return { roles, length };
   }

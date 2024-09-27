@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, HydratedDocument } from 'mongoose';
-import { Dependency } from 'src/administration/schemas';
+import { Role, User } from 'src/modules/users/schemas';
+import { Dependency } from './dependencie.schema';
 import { Officer } from './officer.schema';
-import { Role } from './role.schema';
-import { User } from './user.schema';
+
 
 export type AccountDocument = HydratedDocument<Account>;
 @Schema()
@@ -47,12 +47,6 @@ export class Account extends Document {
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: Role.name,
-  })
-  rol: Role;
-
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
     ref: Officer.name,
   })
   funcionario?: Officer;
@@ -62,6 +56,12 @@ export class Account extends Document {
 
   @Prop()
   isRoot?: boolean;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Role.name,
+  })
+  rol: Role;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

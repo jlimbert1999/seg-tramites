@@ -3,10 +3,10 @@ import { ReportsService } from './reports.service';
 import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { GetUserRequest } from 'src/auth/decorators';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { DependencieService, InstitutionService, TypeProcedureService } from 'src/administration/services';
+import { DependencieService, InstitutionService, TypeProcedureService } from 'src/modules/administration/services';
 
 import { IsMongoidPipe } from 'src/common/pipes';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
 
 @Controller('reports')
 export class ReportsController {

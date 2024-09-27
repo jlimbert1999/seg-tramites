@@ -6,7 +6,8 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { CreatePublicationDto } from './dtos/post.dto';
 import { FilesService } from '../files/files.service';
 import { Publication, PublicationPriority } from './schemas/publication.schema';
-import { Account } from '../users/schemas';
+import { User } from '../users/schemas';
+
 
 @Injectable()
 export class PublicationsService {
@@ -15,7 +16,7 @@ export class PublicationsService {
     private fileService: FilesService,
   ) {}
 
-  async create(publicationDto: CreatePublicationDto, user: Account) {
+  async create(publicationDto: CreatePublicationDto, user: User) {
     const createdPublications = new this.publicationModel({
       ...publicationDto,
       user,

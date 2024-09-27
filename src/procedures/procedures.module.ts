@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
-import { AdministrationModule } from 'src/administration/administration.module';
+import { AdministrationModule } from 'src/modules/administration/administration.module';
 
 import {
   InternalController,

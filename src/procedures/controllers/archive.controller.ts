@@ -7,7 +7,7 @@ import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
 import { VALID_RESOURCES } from 'src/auth/constants';
 import { CreateArchiveDto } from '../dto';
 import { IsMongoidPipe } from 'src/common/pipes';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
 
 @ResourceProtected(VALID_RESOURCES.archived)
 @Controller('archives')

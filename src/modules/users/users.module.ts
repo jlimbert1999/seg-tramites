@@ -1,30 +1,21 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AdministrationModule } from 'src/administration/administration.module';
-import {
-  Account,
-  AccountSchema,
-  Role,
-  RoleSchema,
-  User,
-  UserSchema,
-} from './schemas';
-import { AccountController, RoleController } from './controllers';
-import { AccountService, RoleService } from './services';
-import { UserService } from './services/user.service';
-import { UserController } from './controllers/user.controller';
+import { Role, RoleSchema, User, UserSchema } from './schemas';
+import { RoleController, UserController } from './controllers';
+import { RoleService, UserService } from './services';
 
+import { AdministrationModule } from 'src/modules/administration/administration.module';
 @Module({
-  controllers: [AccountController, RoleController, UserController],
-  providers: [AccountService, RoleService, UserService],
+  controllers: [RoleController, UserController],
+  providers: [RoleService, UserService],
   imports: [
+    // TODO delete after update
     AdministrationModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Role.name, schema: RoleSchema },
-      { name: Account.name, schema: AccountSchema },
     ]),
   ],
-  exports: [MongooseModule, AccountService],
+  exports: [MongooseModule],
 })
 export class UsersModule {}

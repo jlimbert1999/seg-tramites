@@ -1,10 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { TypeProcedure } from 'src/administration/schemas/type-procedure.schema';
+import { TypeProcedure } from 'src/modules/administration/schemas/type-procedure.schema';
 import { ExternalDetail } from './external-detail.schema';
 import { InternalDetail } from './internal-detail.schema';
 import { stateProcedure } from '../interfaces';
-import { Account } from 'src/modules/users/schemas';
+import { Account } from 'src/modules/administration/schemas';
+
 
 
 @Schema()
