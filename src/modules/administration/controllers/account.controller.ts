@@ -18,7 +18,13 @@ import {
 import { Public, ResourceProtected } from 'src/auth/decorators';
 import { SystemResource } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
-import { CreateAccountDto, CreateOfficerDto, FilterAccountDto, UpdateAccountDto } from 'src/modules/administration/dtos';
+import {
+  CreateAccountDto,
+  CreateOfficerDto,
+  FilterAccountDto,
+  UpdateAccountDto,
+} from 'src/modules/administration/dtos';
+import { CreateUserDto } from 'src/modules/users/dtos';
 
 // @ResourceProtected(SystemResource.accounts)
 @Controller('accounts')
@@ -70,15 +76,16 @@ export class AccountController {
   @Get()
   @Public()
   findAll(@Query() params: FilterAccountDto) {
-    return this.accountService.search(params);
+    return this.accountService.findAll(params);
   }
 
   @Post()
   create(
     @Body('officer') officer: CreateOfficerDto,
     @Body('account') account: CreateAccountDto,
+    @Body('user') user: CreateUserDto,
   ) {
-    // return this.accountService.create(account, officer);
+    return this.accountService.create(account, officer);
   }
 
   @Post('assign')

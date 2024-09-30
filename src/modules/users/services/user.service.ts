@@ -4,55 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Document, FilterQuery, Model } from 'mongoose';
+import { Document, FilterQuery, Model, ClientSession } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { User, UserDocument } from '../schemas';
 import { CreateUserDto, UpdateUserDto } from '../dtos';
 
-import { Account } from 'src/modules/administration/schemas';
-
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectModel(Account.name) private accountModel: Model<Account>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
-
-  // ! Delete after update
-  async generate() {
-    const accounts = await this.accountModel.find({}).populate('funcionario');
-    for (const element of accounts) {
-      const { login, password, updatedPassword, activo, rol } = element;
-      const fullname = element.funcionario
-        ? [
-            element.funcionario.nombre,
-            element.funcionario.paterno,
-            element.funcionario.materno,
-          ]
-            .filter(Boolean)
-            .join(' ')
-        : 'Unknown';
-      const user = new this.userModel({
-        fullname,
-        login,
-        password,
-        updatedPassword,
-        isActive: activo,
-        role: rol,
-      });
-      await user.save();
-      if (!element.isRoot) {
-        await this.accountModel.updateOne(
-          { _id: element._id },
-          { user: user._id },
-        );
-      } else {
-        console.log('un usuario root', element);
-      }
-    }
-  }
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async findAll({ limit, offset, term }: PaginationDto) {
     const query: FilterQuery<User> = {
@@ -65,15 +26,15 @@ export class UserService {
     return { users: users.map((user) => this._plainUser(user)), length };
   }
 
-  async create(userDto: CreateUserDto) {
+  async create(userDto: CreateUserDto, session?: ClientSession) {
     const createdUser = new this.userModel(userDto);
     await this._checkDuplicateLogin(userDto.login);
     userDto.password = this._encryptPassword(userDto.password);
-    await createdUser.save();
+    await createdUser.save({ session });
     return this._plainUser(createdUser);
   }
 
-  async update(id: string, userDto: UpdateUserDto) {
+  async update(id: string, userDto: UpdateUserDto, session?: ClientSession) {
     const userDb = await this.userModel.findById(id);
     if (!userDb) throw new NotFoundException(`El usuario ${id} no existe`);
     if (userDb.login !== userDto.login) {
@@ -84,6 +45,7 @@ export class UserService {
     }
     const updatedUser = await this.userModel.findByIdAndUpdate(id, userDto, {
       new: true,
+      session,
     });
     return this._plainUser(updatedUser);
   }
@@ -100,7 +62,7 @@ export class UserService {
     return bcrypt.hashSync(password, salt);
   }
 
-  private _plainUser(user: User) {
+  private _plainUser(user: User): User {
     const result = user instanceof Document ? user.toObject() : user;
     delete result.password;
     return result;

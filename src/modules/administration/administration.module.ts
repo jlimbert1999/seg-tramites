@@ -32,6 +32,7 @@ import {
   OfficerService,
   TypeProcedureService,
 } from './services';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   controllers: [
@@ -51,6 +52,7 @@ import {
     AccountService,
   ],
   imports: [
+    UsersModule,
     MongooseModule.forFeature([
       { name: Job.name, schema: JobSchema },
       { name: Account.name, schema: AccountSchema },

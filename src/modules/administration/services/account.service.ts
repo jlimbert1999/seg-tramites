@@ -3,6 +3,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  HttpException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
@@ -16,13 +17,19 @@ import {
   FilterAccountDto,
   UpdateAccountDto,
 } from '../dtos';
+import { User, UserDocument } from 'src/modules/users/schemas';
+import { CreateUserDto } from 'src/modules/users/dtos';
+import { UserService } from 'src/modules/users/services';
 
 @Injectable()
 export class AccountService {
   constructor(
-    private officerService: OfficerService,
     @InjectModel(Account.name) private accountModel: Model<Account>,
+
+    // !Delete after update
     @InjectConnection() private connection: mongoose.Connection,
+    private userService: UserService,
+    private officerService: OfficerService,
   ) {}
 
   async repairColection() {
@@ -50,31 +57,40 @@ export class AccountService {
     // }
   }
 
-  // async findAll({ dependency, limit, offset }: FilterAccountDto) {
-  //   const query: FilterQuery<Account> = {
-  //     ...(id_dependency && { dependencia: id_dependency }),
-  //   };
-  //   const [accounts, length] = await Promise.all([
-  //     this.accountModel
-  //       .find(query, { password: 0 })
-  //       .lean()
-  //       .skip(offset)
-  //       .limit(limit)
-  //       .sort({ _id: -1 })
-  //       .populate('dependencia', 'nombre')
-  //       .populate({
-  //         path: 'funcionario',
-  //         populate: {
-  //           path: 'cargo',
-  //           select: 'nombre',
-  //         },
-  //       }),
-  //     this.accountModel.count(query),
-  //   ]);
-  //   return { accounts, length };
-  // }
+  async generate() {
+    const accounts = await this.accountModel.find({}).populate('funcionario');
+    for (const element of accounts) {
+      const { login, password, updatedPassword, activo, rol } = element;
+      const fullname = element.funcionario
+        ? [
+            element.funcionario.nombre,
+            element.funcionario.paterno,
+            element.funcionario.materno,
+          ]
+            .filter(Boolean)
+            .join(' ')
+        : 'Unknown';
+      const user = new this.userModel({
+        fullname,
+        login,
+        password,
+        updatedPassword,
+        isActive: activo,
+        role: rol,
+      });
+      await user.save();
+      if (!element.isRoot) {
+        await this.accountModel.updateOne(
+          { _id: element._id },
+          { user: user._id },
+        );
+      } else {
+        console.log('un usuario root', element);
+      }
+    }
+  }
 
-  async search({ dependency, limit, offset, term }: FilterAccountDto) {
+  async findAll({ dependency, limit, offset, term }: FilterAccountDto) {
     const regex = new RegExp(term, 'i');
     const query: FilterQuery<Account> = {
       ...(dependency && {
@@ -82,7 +98,7 @@ export class AccountService {
       }),
       ...(term && {
         $or: [
-          { 'funcionario.fullname': regex },
+          { fullname: regex },
           { 'funcionario.dni': regex },
           { jobtitle: regex },
         ],
@@ -90,7 +106,6 @@ export class AccountService {
     };
     const data = await this.accountModel
       .aggregate()
-      // .match({ ...(term && { funcionario: { $ne: null } }) })
       .lookup({
         from: 'funcionarios',
         localField: 'funcionario',
@@ -113,6 +128,7 @@ export class AccountService {
         },
       })
       .match(query)
+      .sort({ _id: -1 })
       .facet({
         paginatedResults: [{ $skip: offset }, { $limit: limit }],
         totalCount: [
@@ -130,19 +146,20 @@ export class AccountService {
     return { accounts, length };
   }
 
-  async create(account: CreateAccountDto, officer: CreateOfficerDto) {
+  async create(
+    accountDto: CreateAccountDto,
+    officerDto: CreateOfficerDto,
+    userDto: CreateUserDto,
+  ) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.checkDuplicateLogin(account.login);
-      const { _id } = await this.officerService.createOfficerForAccount(
-        officer,
-        session,
-      );
-      account.password = this.encryptPassword(account.password);
+      const user = await this.userService.create(userDto, session);
+      const officer = await this.officerService.create(officerDto, session);
+
       const createdAccount = new this.accountModel({
-        ...account,
-        funcionario: _id,
+        user: user._id,
+        funcionario: officer._id,
       });
       await createdAccount.save({ session });
       await createdAccount.populate(this.populateOptions);
@@ -150,7 +167,7 @@ export class AccountService {
       return this.removePasswordField(createdAccount);
     } catch (error) {
       await session.abortTransaction();
-      if (error instanceof BadRequestException) throw error;
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Error al crear cuenta');
     } finally {
       session.endSession();
@@ -268,9 +285,10 @@ export class AccountService {
   }
 
   private async checkDuplicateLogin(login: string) {
-    const duplicate = await this.accountModel.findOne({ login });
-    if (duplicate)
+    const duplicate = await this.userModel.findOne({ login });
+    if (duplicate) {
       throw new BadRequestException(`El login ya existre ${login}`);
+    }
   }
 
   private removePasswordField(account: Account) {
