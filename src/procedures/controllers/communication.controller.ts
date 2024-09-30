@@ -4,16 +4,16 @@ import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { InboxService, OutboxService } from '../services';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { CancelMailsDto, CreateCommunicationDto, GetInboxParamsDto, UpdateCommunicationDto } from '../dto';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { SystemResource } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
 import { AccountService } from 'src/modules/administration/services/account.service';
 import { Account } from 'src/modules/administration/schemas';
 
 
 @Controller('communication')
-@ResourceProtected(VALID_RESOURCES.communication)
+@ResourceProtected(SystemResource.communication)
 export class CommunicationController {
   constructor(
     private readonly accountService: AccountService,
@@ -55,7 +55,7 @@ export class CommunicationController {
   }
 
   @Get('outbox')
-  getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationParamsDto) {
+  getOutbox(@GetUserRequest('_id') id_account: string, @Query() paginationParams: PaginationDto) {
     return this.outboxService.findAll(id_account, paginationParams);
   }
 
@@ -102,8 +102,8 @@ export class CommunicationController {
   searchOutbox(
     @GetUserRequest('_id') id_account: string,
     @Param('text') text: string,
-    @Query() paginationParamsDto: PaginationParamsDto,
+    @Query() PaginationDto: PaginationDto,
   ) {
-    return this.outboxService.search(id_account, text, paginationParamsDto);
+    return this.outboxService.search(id_account, text, PaginationDto);
   }
 }

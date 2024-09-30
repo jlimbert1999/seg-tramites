@@ -1,8 +1,8 @@
 import { Type } from 'class-transformer';
 import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
-export class FilterPublications extends PaginationParamsDto {
+export class FilterPublications extends PaginationDto {
   @Type(() => Number)
   @IsNumber()
   @IsOptional()

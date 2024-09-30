@@ -3,12 +3,12 @@ import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { TypeProcedureService } from 'src/modules/administration/services/type-procedure.service';
 import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
 import { ExternalService } from '../services';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { SystemResource } from 'src/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
 
 @Controller('external')
-@ResourceProtected(VALID_RESOURCES.external)
+@ResourceProtected(SystemResource.external)
 export class ExternalController {
   constructor(
     private readonly externalService: ExternalService,
@@ -27,15 +27,15 @@ export class ExternalController {
   @Get('search/:text')
   async search(
     @GetUserRequest('_id') id_account: string,
-    @Query() paginationParamsDto: PaginationParamsDto,
+    @Query() PaginationDto: PaginationDto,
     @Param('text') text: string,
   ) {
-    return await this.externalService.search(paginationParamsDto, id_account, text);
+    return await this.externalService.search(PaginationDto, id_account, text);
   }
 
   @Get()
-  async get(@GetUserRequest('_id') id_account: string, @Query() paginationParamsDto: PaginationParamsDto) {
-    return await this.externalService.findAll(paginationParamsDto, id_account);
+  async get(@GetUserRequest('_id') id_account: string, @Query() PaginationDto: PaginationDto) {
+    return await this.externalService.findAll(PaginationDto, id_account);
   }
 
   @Post()

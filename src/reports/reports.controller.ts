@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { GetUserRequest } from 'src/auth/decorators';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { DependencieService, InstitutionService, TypeProcedureService } from 'src/modules/administration/services';
 
 import { IsMongoidPipe } from 'src/common/pipes';
@@ -35,7 +35,7 @@ export class ReportsController {
   @Post('applicant')
   searchProcedureByApplicant(
     @Body() searchDto: SearchProcedureByApplicantDto,
-    @Query() paginationParams: PaginationParamsDto,
+    @Query() paginationParams: PaginationDto,
   ) {
     return this.reportsService.searchProcedureByApplicant(searchDto, paginationParams);
   }
@@ -43,7 +43,7 @@ export class ReportsController {
   @Post('procedure')
   searchProcedureByProperties(
     @Body() searchDto: SearchProcedureByPropertiesDto,
-    @Query() paginationParams: PaginationParamsDto,
+    @Query() paginationParams: PaginationDto,
   ) {
     return this.reportsService.searchProcedureByProperties(paginationParams, searchDto);
   }

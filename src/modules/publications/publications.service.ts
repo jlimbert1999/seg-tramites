@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Document } from 'mongoose';
 
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { CreatePublicationDto } from './dtos/post.dto';
 import { FilesService } from '../files/files.service';
 import { Publication, PublicationPriority } from './schemas/publication.schema';
@@ -25,7 +25,7 @@ export class PublicationsService {
     return this._plainPublication(createdPublications);
   }
 
-  async findByUser(userId: string, { limit, offset }: PaginationParamsDto) {
+  async findByUser(userId: string, { limit, offset }: PaginationDto) {
     const [publications, length] = await Promise.all([
       this.publicationModel
         .find({ user: userId })
@@ -41,7 +41,7 @@ export class PublicationsService {
     };
   }
 
-  async findAll({ limit, offset }: PaginationParamsDto) {
+  async findAll({ limit, offset }: PaginationDto) {
     const posts = await this.publicationModel
       .find({})
       .skip(offset)
@@ -50,7 +50,7 @@ export class PublicationsService {
     return posts.map((post) => this._plainPublication(post));
   }
 
-  async getNews({ limit, offset }: PaginationParamsDto) {
+  async getNews({ limit, offset }: PaginationDto) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const news = await this.publicationModel

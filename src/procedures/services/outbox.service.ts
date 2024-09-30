@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Communication, Procedure } from '../schemas';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { StatusMail, workflow } from '../interfaces';
 import { HumanizeTime } from 'src/common/helpers';
 
@@ -13,7 +13,7 @@ export class OutboxService {
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
   ) {}
 
-  async findAll(id_account: string, { limit, offset }: PaginationParamsDto) {
+  async findAll(id_account: string, { limit, offset }: PaginationDto) {
     const dataPaginated = await this.commModel
       .aggregate()
       .match({ 'emitter.cuenta': id_account, status: StatusMail.Pending })
@@ -46,7 +46,7 @@ export class OutboxService {
     return { mails, length };
   }
 
-  async search(id_account: string, text: string, { limit, offset }: PaginationParamsDto) {
+  async search(id_account: string, text: string, { limit, offset }: PaginationDto) {
     const regex = new RegExp(text, 'i');
     const dataPaginated = await this.commModel
       .aggregate()

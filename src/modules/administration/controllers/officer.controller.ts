@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { JobService, OfficerService } from '../services';
 import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { ResourceProtected } from 'src/auth/decorators';
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { SystemResource } from 'src/auth/constants';
 
-@ResourceProtected(VALID_RESOURCES.officers)
+@ResourceProtected(SystemResource.officers)
 @Controller('officers')
 export class OfficerController {
   constructor(private readonly officerService: OfficerService, private readonly jobService: JobService) {}
@@ -20,7 +20,7 @@ export class OfficerController {
   }
 
   @Get()
-  async get(@Query() { limit, offset }: PaginationParamsDto) {
+  async get(@Query() { limit, offset }: PaginationDto) {
     return await this.officerService.get(limit, offset);
   }
 

@@ -8,7 +8,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { SystemResource } from 'src/auth/constants';
 
 export class CreateRoleDto {
   @IsNotEmpty()
@@ -25,8 +25,8 @@ export class CreateRoleDto {
 export class UpdateRoleDto extends PartialType(CreateRoleDto) {}
 
 class Permissions {
-  @IsEnum(VALID_RESOURCES)
-  resource: VALID_RESOURCES;
+  @IsEnum(SystemResource)
+  resource: SystemResource;
 
   @IsArray()
   @IsString({ each: true })

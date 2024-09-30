@@ -1,28 +1,45 @@
-import { VALID_RESOURCES } from './valid-resources.enum';
+
+
+export enum SystemResource {
+  INSTITUTIONS = 'institutions',
+  DEPENDENCIES = 'dependencies',
+  USERS = 'user',
+  ROLES = 'roles',
+
+  communication = 'communication',
+  typeProcedures = 'types-procedures',
+  groupware = 'groupware',
+  external = 'external',
+  internal = 'internal',
+  officers = 'officers',
+  archived = 'archived',
+  accounts = 'accounts',
+  reports = 'reports',
+  jobs = 'jobs',
+  publications = 'publications',
+}
 
 export const SYSTEM_RESOURCES = [
   {
-    value: VALID_RESOURCES.institutions,
-    label: 'INSTITUCIONES',
+    value: SystemResource.INSTITUTIONS,
+    label: 'Instituciones',
+    actions: [
+      { value: 'read', label: 'Ver' },
+      { value: 'create', label: 'Crear' },
+      { value: 'update', label: 'Editar' },
+    ],
+  },
+  {
+    value: SystemResource.DEPENDENCIES,
+    label: 'Dependencias',
     actions: [
       { value: 'create', label: 'Crear' },
       { value: 'read', label: 'Ver' },
       { value: 'update', label: 'Editar' },
-      { value: 'delete', label: 'Eliminar' },
     ],
   },
   {
-    value: VALID_RESOURCES.dependencies,
-    label: 'DEPENDENCIAS',
-    actions: [
-      { value: 'create', label: 'Crear' },
-      { value: 'read', label: 'Ver' },
-      { value: 'update', label: 'Editar' },
-      { value: 'delete', label: 'Eliminar' },
-    ],
-  },
-  {
-    value: VALID_RESOURCES.accounts,
+    value: SystemResource.accounts,
     label: 'CUENTAS',
     actions: [
       { value: 'create', label: 'Crear' },
@@ -32,7 +49,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.roles,
+    value: SystemResource.ROLES,
     label: 'ROLES',
     actions: [
       { value: 'create', label: 'Crear' },
@@ -42,7 +59,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.officers,
+    value: SystemResource.officers,
     label: 'FUNCIONARIOS',
     actions: [
       { value: 'create', label: 'Crear' },
@@ -52,7 +69,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.jobs,
+    value: SystemResource.jobs,
 
     label: 'CARGOS',
     actions: [
@@ -63,7 +80,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.typeProcedures,
+    value: SystemResource.typeProcedures,
 
     label: 'TIPOS DE TRAMITES',
     actions: [
@@ -74,17 +91,17 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.groupware,
+    value: SystemResource.groupware,
     label: 'GRUPO DE TRABAJO',
     actions: [{ value: 'manage', label: 'Administrar' }],
   },
   {
-    value: VALID_RESOURCES.publications,
+    value: SystemResource.publications,
     label: 'PUBLICACIONES',
     actions: [{ value: 'manage', label: 'Administrar' }],
   },
   {
-    value: VALID_RESOURCES.external,
+    value: SystemResource.external,
 
     label: 'TRAMITES EXTERNOS',
     actions: [
@@ -95,7 +112,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.internal,
+    value: SystemResource.internal,
 
     label: 'TRAMITES INTERNOS',
     actions: [
@@ -106,7 +123,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.archived,
+    value: SystemResource.archived,
 
     label: 'ARCHIVOS',
     actions: [
@@ -117,7 +134,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.communication,
+    value: SystemResource.communication,
     label: 'BANDEJAS',
     actions: [
       { value: 'create', label: 'Crear' },
@@ -127,7 +144,7 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
-    value: VALID_RESOURCES.reports,
+    value: SystemResource.reports,
     label: 'REPORTES',
 
     actions: [

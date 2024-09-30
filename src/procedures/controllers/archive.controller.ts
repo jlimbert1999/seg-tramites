@@ -2,14 +2,14 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ArchiveService } from '../services/archive.service';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { SystemResource } from 'src/auth/constants';
 import { CreateArchiveDto } from '../dto';
 import { IsMongoidPipe } from 'src/common/pipes';
 import { Account } from 'src/modules/administration/schemas';
 
-@ResourceProtected(VALID_RESOURCES.archived)
+@ResourceProtected(SystemResource.archived)
 @Controller('archives')
 export class ArchiveController {
   constructor(private readonly archiveService: ArchiveService, private readonly groupwareGateway: GroupwareGateway) {}
@@ -27,13 +27,13 @@ export class ArchiveController {
   }
 
   @Get()
-  findAll(@Query() paginationParams: PaginationParamsDto, @GetUserRequest() account: Account) {
+  findAll(@Query() paginationParams: PaginationDto, @GetUserRequest() account: Account) {
     return this.archiveService.findAll(paginationParams, account);
   }
 
   @Get('search/:text')
   searc(
-    @Query() paginationParams: PaginationParamsDto,
+    @Query() paginationParams: PaginationDto,
     @GetUserRequest() account: Account,
     @Param('text') text: string,
   ) {

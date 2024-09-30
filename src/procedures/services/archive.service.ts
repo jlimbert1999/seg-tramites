@@ -8,7 +8,7 @@ import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Communication, Procedure } from '../schemas';
 import { CreateArchiveDto } from '../dto';
 import { stateProcedure, StatusMail } from '../interfaces';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Account } from 'src/modules/administration/schemas';
 
 @Injectable()
@@ -101,7 +101,7 @@ export class ArchiveService {
     }
   }
 
-  async findAll({ limit, offset }: PaginationParamsDto, account: Account) {
+  async findAll({ limit, offset }: PaginationDto, account: Account) {
     const unit = await this.accountModel
       .find({ dependencia: account.dependencia._id })
       .select('_id');
@@ -123,7 +123,7 @@ export class ArchiveService {
   }
 
   async search(
-    { limit, offset }: PaginationParamsDto,
+    { limit, offset }: PaginationDto,
     text: string,
     id_dependency: string,
   ) {

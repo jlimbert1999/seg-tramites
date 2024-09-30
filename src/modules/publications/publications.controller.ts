@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dtos/post.dto';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { GetUserRequest } from 'src/auth/decorators';
 import { PublicationPriority } from './schemas/publication.schema';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
@@ -27,20 +27,20 @@ export class PostsController {
   }
 
   @Get()
-  findAll(@Query() params: PaginationParamsDto) {
+  findAll(@Query() params: PaginationDto) {
     return this.postsService.findAll(params);
   }
 
   @Get('user')
   findByUser(
     @GetUserRequest() user: User,
-    @Query() pagination: PaginationParamsDto,
+    @Query() pagination: PaginationDto,
   ) {
     return this.postsService.findByUser(user._id, pagination);
   }
 
   @Get('news')
-  getNews(@Query() pagination: PaginationParamsDto) {
+  getNews(@Query() pagination: PaginationDto) {
     return this.postsService.getNews(pagination);
   }
 }

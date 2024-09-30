@@ -8,12 +8,6 @@ import { UserDocument } from 'src/modules/users/schemas';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Get('repair')
-  @Public()
-  repair() {
-    return this.authService.repairColection();
-  }
-
   @Post()
   @Public()
   login(@Body() body: AuthDto, @Ip() ip: string) {

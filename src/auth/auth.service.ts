@@ -17,35 +17,10 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService<EnvConfig>,
-    // @InjectModel(Account.name) private accountModel: Model<AccountDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async repairColection() {
-    // const accounts = await this.accountModel.find({}).populate({
-    //   path: 'funcionario',
-    //   populate: {
-    //     path: 'cargo',
-    //   },
-    // });
-    // for (const account of accounts) {
-    //   let newJob = '';
-    //   if (!account.funcionario) {
-    //     newJob = 'SIN DESIGNAR';
-    //   } else {
-    //     if (!account.funcionario.cargo) {
-    //       newJob = 'SIN DESIGNAR';
-    //     } else {
-    //       newJob = account.funcionario.cargo.nombre;
-    //     }
-    //   }
-    //   await this.accountModel.updateOne(
-    //     { _id: account._id },
-    //     { jobtitle: newJob },
-    //   );
-    // }
-  }
-
+ 
   async login({ login, password }: AuthDto, ip: string) {
     const user = await this.userModel.findOne({ login });
     if (!user) {

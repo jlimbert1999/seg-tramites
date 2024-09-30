@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 import { Role } from '../../users/schemas';
-import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from '../dtos';
+import { CreateRoleDto, UpdateRoleDto } from '../dtos';
+import { PaginationDto } from 'src/common';
 
 @Injectable()
 export class RoleService {
   constructor(@InjectModel(Role.name) private roleModel: Model<Role>) {}
 
-  async findAll({ limit, offset, term }: FilterRoleDto) {
+  async findAll({ limit, offset, term }: PaginationDto) {
     const query: FilterQuery<Role> = {
       ...(term && { name: new RegExp(term, 'i') }),
     };

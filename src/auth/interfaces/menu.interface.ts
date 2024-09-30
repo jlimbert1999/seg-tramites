@@ -1,4 +1,4 @@
-import { VALID_RESOURCES } from '../constants';
+import { SystemResource } from '../constants';
 
 export interface Menu {
   resource: string;
@@ -9,7 +9,7 @@ export interface Menu {
 }
 
 interface SubMemu {
-  resource: VALID_RESOURCES;
+  resource: SystemResource;
   text: string;
   icon: string;
   routerLink: string;

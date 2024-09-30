@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { CreateInternalDetailDto, CreateProcedureDto, UpdateInternalDetailDto, UpdateProcedureDto } from '../dto';
 import { InternalService } from '../services';
 import { OfficerService, TypeProcedureService } from 'src/modules/administration/services';
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { SystemResource } from 'src/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
 
-@ResourceProtected(VALID_RESOURCES.internal)
+@ResourceProtected(SystemResource.internal)
 @Controller('internal')
 export class InternalController {
   constructor(
@@ -28,14 +28,14 @@ export class InternalController {
   async search(
     @GetUserRequest('_id') id_account: string,
     @Param('text') text: string,
-    @Query() paginationParamsDto: PaginationParamsDto,
+    @Query() PaginationDto: PaginationDto,
   ) {
-    return await this.internalService.search(paginationParamsDto, id_account, text);
+    return await this.internalService.search(PaginationDto, id_account, text);
   }
 
   @Get()
-  async get(@GetUserRequest('_id') id_account: string, @Query() paginationParamsDto: PaginationParamsDto) {
-    return await this.internalService.findAll(paginationParamsDto, id_account);
+  async get(@GetUserRequest('_id') id_account: string, @Query() PaginationDto: PaginationDto) {
+    return await this.internalService.findAll(PaginationDto, id_account);
   }
 
   @Post()

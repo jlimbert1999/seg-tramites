@@ -15,20 +15,26 @@ import {
   InstitutionService,
   JobService,
 } from 'src/modules/administration/services';
-import { ResourceProtected } from 'src/auth/decorators';
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { Public, ResourceProtected } from 'src/auth/decorators';
+import { SystemResource } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
-import { CreateAccountDto, CreateOfficerDto, UpdateAccountDto } from 'src/modules/administration/dtos';
+import { CreateAccountDto, CreateOfficerDto, FilterAccountDto, UpdateAccountDto } from 'src/modules/administration/dtos';
 
-@ResourceProtected(VALID_RESOURCES.accounts)
+// @ResourceProtected(SystemResource.accounts)
 @Controller('accounts')
 export class AccountController {
   constructor(
-    // private readonly accountService: AccountService,
+    private readonly accountService: AccountService,
     private readonly institutionService: InstitutionService,
     private readonly dependencieService: DependencieService,
     private readonly jobService: JobService,
   ) {}
+
+  @Get('repair')
+  @Public()
+  repair() {
+    return this.accountService.repairColection();
+  }
 
   @Get('institutions')
   getInstitutions() {
@@ -62,8 +68,9 @@ export class AccountController {
   }
 
   @Get()
-  findAll(@Query() params: any) {
-    // return this.accountService.findAll(params);
+  @Public()
+  findAll(@Query() params: FilterAccountDto) {
+    return this.accountService.search(params);
   }
 
   @Post()

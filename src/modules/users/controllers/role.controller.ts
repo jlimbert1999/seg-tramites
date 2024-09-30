@@ -8,23 +8,25 @@ import {
   Query,
 } from '@nestjs/common';
 
-import { SYSTEM_RESOURCES, VALID_RESOURCES } from 'src/auth/constants';
+import { SYSTEM_RESOURCES, SystemResource } from 'src/auth/constants';
+import { ResourceProtected } from 'src/auth/decorators';
+import { PaginationDto } from 'src/common';
+
+import { CreateRoleDto, UpdateRoleDto } from '../dtos';
 import { RoleService } from '../services';
 
-import { ResourceProtected } from 'src/auth/decorators';
-import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from '../dtos';
-
-@ResourceProtected(VALID_RESOURCES.roles)
 @Controller('roles')
+@ResourceProtected(SystemResource.ROLES)
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
+
   @Get('resources')
   getResources() {
     return SYSTEM_RESOURCES;
   }
 
   @Get()
-  findAll(@Query() filterParams: FilterRoleDto) {
+  findAll(@Query() filterParams: PaginationDto) {
     return this.roleService.findAll(filterParams);
   }
 
@@ -34,7 +36,7 @@ export class RoleController {
   }
 
   @Patch(':id')
-  async edit(@Param('id') id: string, @Body() role: UpdateRoleDto) {
-    return await this.roleService.edit(id, role);
+   edit(@Param('id') id: string, @Body() role: UpdateRoleDto) {
+    return  this.roleService.edit(id, role);
   }
 }

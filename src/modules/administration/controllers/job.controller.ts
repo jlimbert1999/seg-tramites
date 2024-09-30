@@ -1,22 +1,22 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { JobService } from '../services';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { ResourceProtected } from 'src/auth/decorators';
-import { VALID_RESOURCES } from 'src/auth/constants';
+import { SystemResource } from 'src/auth/constants';
 import { CreateJobDto, UpdateJobDto } from '../dtos';
 
-@ResourceProtected(VALID_RESOURCES.jobs)
+@ResourceProtected(SystemResource.jobs)
 @Controller('jobs')
 export class JobController {
   constructor(private readonly jobService: JobService) {}
 
   @Get('search/:term')
-  search(@Query() { limit, offset }: PaginationParamsDto, @Param('term') term: string) {
+  search(@Query() { limit, offset }: PaginationDto, @Param('term') term: string) {
     return this.jobService.search(limit, offset, term);
   }
 
   @Get()
-  get(@Query() { limit, offset }: PaginationParamsDto) {
+  get(@Query() { limit, offset }: PaginationDto) {
     return this.jobService.findAll(limit, offset);
   }
 

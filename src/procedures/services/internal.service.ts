@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
 import { InternalDetail, InternalProcedure, Procedure } from '../schemas';
 
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import {
   CreateInternalDetailDto,
   CreateProcedureDto,
@@ -97,7 +97,7 @@ export class InternalService {
       session.endSession();
     }
   }
-  async findAll({ limit, offset }: PaginationParamsDto, id_account: string) {
+  async findAll({ limit, offset }: PaginationDto, id_account: string) {
     const [procedures, length] = await Promise.all([
       this.newModel
         .find({
@@ -118,7 +118,7 @@ export class InternalService {
     return { procedures, length };
   }
   async search(
-    { limit, offset }: PaginationParamsDto,
+    { limit, offset }: PaginationDto,
     id_account: string,
     text: string,
   ) {

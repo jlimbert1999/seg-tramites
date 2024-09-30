@@ -4,7 +4,7 @@ import mongoose, { FilterQuery, Model } from 'mongoose';
 
 import { Account, Dependency } from 'src/modules/administration/schemas';
 import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
-import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { groupProcedure, StatusMail } from 'src/procedures/interfaces';
 
@@ -20,7 +20,7 @@ export class ReportsService {
 
   async searchProcedureByApplicant(
     { by, properties }: SearchProcedureByApplicantDto,
-    { limit, offset }: PaginationParamsDto,
+    { limit, offset }: PaginationDto,
   ) {
     const query: FilterQuery<ExternalDetail> = Object.entries(properties).reduce((acc, [key, value]) => {
       if (key === 'nombre') value = new RegExp(value, 'i');
@@ -40,7 +40,7 @@ export class ReportsService {
   }
 
   async searchProcedureByProperties(
-    { limit, offset }: PaginationParamsDto,
+    { limit, offset }: PaginationDto,
     properties: SearchProcedureByPropertiesDto,
   ) {
     const { start, end, ...values } = properties;

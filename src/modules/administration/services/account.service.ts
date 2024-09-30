@@ -6,62 +6,91 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
 import { OfficerService } from './officer.service';
 import { Account } from '../schemas';
-import { CreateAccountDto, CreateOfficerDto, UpdateAccountDto } from '../dtos';
+import {
+  CreateAccountDto,
+  CreateOfficerDto,
+  FilterAccountDto,
+  UpdateAccountDto,
+} from '../dtos';
 
 @Injectable()
 export class AccountService {
   constructor(
-    private configService: ConfigService,
     private officerService: OfficerService,
     @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectConnection() private connection: mongoose.Connection,
   ) {}
 
-  async findAll({ id_dependency, limit, offset }: any) {
-    const query: FilterQuery<Account> = {
-      _id: { $ne: this.configService.get('id_root') },
-      ...(id_dependency && { dependencia: id_dependency }),
-    };
-    const [accounts, length] = await Promise.all([
-      this.accountModel
-        .find(query, { password: 0 })
-        .lean()
-        .skip(offset)
-        .limit(limit)
-        .sort({ _id: -1 })
-        .populate('dependencia', 'nombre')
-        .populate({
-          path: 'funcionario',
-          populate: {
-            path: 'cargo',
-            select: 'nombre',
-          },
-        }),
-      this.accountModel.count(query),
-    ]);
-    return { accounts, length };
+  async repairColection() {
+    // const accounts = await this.accountModel.find({}).populate({
+    //   path: 'funcionario',
+    //   populate: {
+    //     path: 'cargo',
+    //   },
+    // });
+    // for (const account of accounts) {
+    //   let newJob = '';
+    //   if (!account.funcionario) {
+    //     newJob = 'SIN DESIGNAR';
+    //   } else {
+    //     if (!account.funcionario.cargo) {
+    //       newJob = 'SIN DESIGNAR';
+    //     } else {
+    //       newJob = account.funcionario.cargo.nombre;
+    //     }
+    //   }
+    //   await this.accountModel.updateOne(
+    //     { _id: account._id },
+    //     { jobtitle: newJob },
+    //   );
+    // }
   }
 
-  async search(term: string, { id_dependency, limit, offset }: any) {
+  // async findAll({ dependency, limit, offset }: FilterAccountDto) {
+  //   const query: FilterQuery<Account> = {
+  //     ...(id_dependency && { dependencia: id_dependency }),
+  //   };
+  //   const [accounts, length] = await Promise.all([
+  //     this.accountModel
+  //       .find(query, { password: 0 })
+  //       .lean()
+  //       .skip(offset)
+  //       .limit(limit)
+  //       .sort({ _id: -1 })
+  //       .populate('dependencia', 'nombre')
+  //       .populate({
+  //         path: 'funcionario',
+  //         populate: {
+  //           path: 'cargo',
+  //           select: 'nombre',
+  //         },
+  //       }),
+  //     this.accountModel.count(query),
+  //   ]);
+  //   return { accounts, length };
+  // }
+
+  async search({ dependency, limit, offset, term }: FilterAccountDto) {
     const regex = new RegExp(term, 'i');
     const query: FilterQuery<Account> = {
-      ...(id_dependency && {
-        dependencia: new mongoose.Types.ObjectId(id_dependency),
+      ...(dependency && {
+        dependencia: new mongoose.Types.ObjectId(dependency),
       }),
-      $or: [
-        { 'funcionario.fullname': regex },
-        { 'funcionario.dni': regex },
-        { 'funcionario.cargo.nombre': regex },
-      ],
+      ...(term && {
+        $or: [
+          { 'funcionario.fullname': regex },
+          { 'funcionario.dni': regex },
+          { jobtitle: regex },
+        ],
+      }),
     };
     const data = await this.accountModel
       .aggregate()
-      .match({ funcionario: { $ne: null } })
+      // .match({ ...(term && { funcionario: { $ne: null } }) })
       .lookup({
         from: 'funcionarios',
         localField: 'funcionario',
@@ -72,28 +101,15 @@ export class AccountService {
         path: '$funcionario',
         preserveNullAndEmptyArrays: true,
       })
-      .lookup({
-        from: 'cargos',
-        localField: 'funcionario.cargo',
-        foreignField: '_id',
-        as: 'funcionario.cargo',
-      })
-      .unwind({ path: '$funcionario.cargo', preserveNullAndEmptyArrays: true })
       .addFields({
-        'funcionario.fullname': {
-          $cond: {
-            if: { $eq: [{ $type: '$funcionario' }, 'object'] },
-            then: {
-              $concat: [
-                '$funcionario.nombre',
-                ' ',
-                { $ifNull: ['$funcionario.paterno', ''] },
-                ' ',
-                { $ifNull: ['$funcionario.materno', ''] },
-              ],
-            },
-            else: '$$REMOVE',
-          },
+        fullname: {
+          $concat: [
+            { $ifNull: ['$funcionario.nombre', ''] },
+            ' ',
+            { $ifNull: ['$funcionario.paterno', ''] },
+            ' ',
+            { $ifNull: ['$funcionario.materno', ''] },
+          ],
         },
       })
       .match(query)
