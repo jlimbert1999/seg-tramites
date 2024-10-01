@@ -16,12 +16,12 @@ export class OfficerController {
     @Query('offset', ParseIntPipe) offset: number,
     @Param('text') text: string,
   ) {
-    return await this.officerService.search(limit, offset, text);
+    // return await this.officerService.search(limit, offset, text);
   }
 
   @Get()
   async get(@Query() { limit, offset }: PaginationDto) {
-    return await this.officerService.get(limit, offset);
+    // return await this.officerService.get(limit, offset);
   }
 
   @Post()
@@ -36,12 +36,12 @@ export class OfficerController {
 
   @Delete('/:id')
   delete(@Param('id') id_officer: string) {
-    return this.officerService.changeOfficerStatus(id_officer);
+    // return this.officerService.changeOfficerStatus(id_officer);
   }
 
   @Get('history/:id')
   getWorkHistory(@Param('id') id_officer: string, @Query('offset', ParseIntPipe) offset: number) {
-    return this.officerService.getOfficerWorkHistory(id_officer, offset);
+    // return this.officerService.getOfficerWorkHistory(id_officer, offset);
   }
 
   @Get('jobs/:text')

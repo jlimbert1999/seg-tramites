@@ -14,6 +14,6 @@ import { RoleService, UserService } from './services';
       { name: Role.name, schema: RoleSchema },
     ]),
   ],
-  exports: [MongooseModule, UserService],
+  exports: [MongooseModule, UserService, RoleService],
 })
 export class UsersModule {}

@@ -24,12 +24,6 @@ export class UserController {
     private roleService: RoleService,
   ) {}
 
-  @Get('generate')
-  @Public()
-  generate() {
-    return this.userService.generate();
-  }
-
   // @Get('search/:term')
   // search(
   //   @Query() { limit, offset }: PaginationDto,

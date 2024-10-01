@@ -39,18 +39,12 @@ export class DependencieService {
       .populate('institucion');
   }
 
-  public async getActiveDependenciesOfInstitution(
-    id_institution: string,
-    text?: string,
-    limit?: number,
-  ) {
+  public async getActiveDependenciesOfInstitution(institutionId: string) {
     return await this.dependencyModel
       .find({
-        institucion: id_institution,
         activo: true,
-        ...(text && { nombre: RegExp(text, 'i') }),
+        institucion: institutionId,
       })
-      .limit(limit ?? 0)
       .lean();
   }
 }

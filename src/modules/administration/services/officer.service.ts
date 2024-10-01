@@ -100,6 +100,12 @@ export class OfficerService {
       .populate('cargo');
   }
 
+  async getOfficer(id: string) {
+    const officer = await this.officerModel.findById(id);
+    if (!officer) throw new NotFoundException(`User ${id} don't exist`);
+    return officer;
+  }
+
   async unlinkOfficerJob(id_officer: string) {
     const queryResult = await this.officerModel.updateOne(
       { _id: id_officer },
@@ -112,16 +118,16 @@ export class OfficerService {
     return { message: 'El cargo del funcionario se ha removido' };
   }
 
-  async searchOfficersWithoutAccount(text: string, limit = 7) {
+  async searchOfficersWithoutAccount(text: string, limit = 5) {
     const regex = new RegExp(text, 'i');
-    const officers = await this.officerModel
+    return await this.officerModel
       .aggregate()
       .addFields({
         fullname: {
           $concat: [
-            '$nombre',
+            { $ifNull: ['$nombre', ''] },
             ' ',
-            '$paterno',
+            { $ifNull: ['$paterno', ''] },
             ' ',
             { $ifNull: ['$materno', ''] },
           ],
@@ -129,15 +135,14 @@ export class OfficerService {
       })
       .match({ fullname: regex, activo: true })
       .lookup({
-        from: 'cuentas',
+        from: 'accounts',
         localField: '_id',
         foreignField: 'funcionario',
-        as: 'cuenta',
+        as: 'account',
       })
-      .match({ cuenta: { $size: 0 } })
-      .project({ cuenta: 0, fullname: 0 })
+      .match({ account: { $size: 0 } })
+      .project({ account: 0, fullname: 0 })
       .limit(limit);
-    return await this.officerModel.populate(officers, { path: 'cargo' });
   }
 
   private async checkDuplicateDni(dni: string): Promise<void> {

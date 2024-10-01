@@ -8,7 +8,7 @@ import { SystemResource } from 'src/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
 
 @Controller('external')
-@ResourceProtected(SystemResource.external)
+@ResourceProtected(SystemResource.EXTERNAL)
 export class ExternalController {
   constructor(
     private readonly externalService: ExternalService,

@@ -7,11 +7,11 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
 
 import { OfficerService } from './officer.service';
 import { Account } from '../schemas';
 import {
+  AssingAccountDto,
   CreateAccountDto,
   CreateOfficerDto,
   FilterAccountDto,
@@ -25,6 +25,7 @@ import { UserService } from 'src/modules/users/services';
 export class AccountService {
   constructor(
     @InjectModel(Account.name) private accountModel: Model<Account>,
+    @InjectModel(User.name) private userModel: Model<User>,
 
     // !Delete after update
     @InjectConnection() private connection: mongoose.Connection,
@@ -58,36 +59,36 @@ export class AccountService {
   }
 
   async generate() {
-    const accounts = await this.accountModel.find({}).populate('funcionario');
-    for (const element of accounts) {
-      const { login, password, updatedPassword, activo, rol } = element;
-      const fullname = element.funcionario
-        ? [
-            element.funcionario.nombre,
-            element.funcionario.paterno,
-            element.funcionario.materno,
-          ]
-            .filter(Boolean)
-            .join(' ')
-        : 'Unknown';
-      const user = new this.userModel({
-        fullname,
-        login,
-        password,
-        updatedPassword,
-        isActive: activo,
-        role: rol,
-      });
-      await user.save();
-      if (!element.isRoot) {
-        await this.accountModel.updateOne(
-          { _id: element._id },
-          { user: user._id },
-        );
-      } else {
-        console.log('un usuario root', element);
-      }
-    }
+    // const accounts = await this.accountModel.find({}).populate('funcionario');
+    // for (const element of accounts) {
+    //   const { login, password, updatedPassword, activo, rol } = element;
+    //   const fullname = element.funcionario
+    //     ? [
+    //         element.funcionario.nombre,
+    //         element.funcionario.paterno,
+    //         element.funcionario.materno,
+    //       ]
+    //         .filter(Boolean)
+    //         .join(' ')
+    //     : 'Unknown';
+    //   const user = new this.userModel({
+    //     fullname,
+    //     login,
+    //     password,
+    //     updatedPassword,
+    //     isActive: activo,
+    //     role: rol,
+    //   });
+    //   await user.save();
+    //   if (!element.isRoot) {
+    //     await this.accountModel.updateOne(
+    //       { _id: element._id },
+    //       { user: user._id },
+    //     );
+    //   } else {
+    //     console.log('un usuario root', element);
+    //   }
+    // }
   }
 
   async findAll({ dependency, limit, offset, term }: FilterAccountDto) {
@@ -138,10 +139,11 @@ export class AccountService {
         ],
       });
     const accounts = data[0].paginatedResults;
-    await this.accountModel.populate(accounts, {
-      path: 'dependencia',
-      select: 'nombre',
-    });
+    await this.accountModel.populate(accounts, [
+      { path: 'dependencia' },
+      { path: 'funcionario' },
+      { path: 'user', select: 'login role isActive' },
+    ]);
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { accounts, length };
   }
@@ -156,15 +158,19 @@ export class AccountService {
       session.startTransaction();
       const user = await this.userService.create(userDto, session);
       const officer = await this.officerService.create(officerDto, session);
-
       const createdAccount = new this.accountModel({
         user: user._id,
         funcionario: officer._id,
+        ...accountDto,
       });
       await createdAccount.save({ session });
-      await createdAccount.populate(this.populateOptions);
       await session.commitTransaction();
-      return this.removePasswordField(createdAccount);
+      await createdAccount.populate([
+        { path: 'dependencia' },
+        { path: 'funcionario' },
+        { path: 'user', select: 'login role isActive' },
+      ]);
+      return createdAccount;
     } catch (error) {
       await session.abortTransaction();
       if (error instanceof HttpException) throw error;
@@ -174,42 +180,62 @@ export class AccountService {
     }
   }
 
-  async update(id: string, account: UpdateAccountDto) {
+  async update(
+    id: string,
+    { jobtitle, isVisible, officer, ...props }: UpdateAccountDto,
+  ) {
     const accountDB = await this.accountModel.findById(id);
     if (!accountDB) throw new NotFoundException(`La cuenta ${id} no existe`);
-    if (accountDB.login !== account.login)
-      await this.checkDuplicateLogin(account.login);
-    if (account.password)
-      account['password'] = this.encryptPassword(account.password);
-    const updated = await this.accountModel
-      .findByIdAndUpdate(id, account, { new: true })
-      .populate(this.populateOptions);
-    return this.removePasswordField(updated);
-  }
-
-  async assign(account: CreateAccountDto) {
-    if (account.funcionario) {
-      const duplicate = await this.accountModel.findOne({
-        funcionario: account.funcionario,
-      });
-      if (duplicate)
-        throw new BadRequestException(
-          'El funcionario seleccionado ya esta asignado a una cuenta',
-        );
+    const session = await this.connection.startSession();
+    try {
+      session.startTransaction();
+      await this.userService.update(accountDB.user._id, props, session);
+      const updatedAccount = await this.accountModel
+        .findByIdAndUpdate(
+          id,
+          { jobtitle, ...(officer && { funcionario: officer }), isVisible },
+          { new: true },
+        )
+        .populate([
+          { path: 'dependencia' },
+          { path: 'funcionario' },
+          { path: 'user', select: 'login role isActive' },
+        ]);
+      await session.commitTransaction();
+      return updatedAccount;
+    } catch (error) {
+      await session.abortTransaction();
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException();
+    } finally {
+      session.endSession();
     }
-    await this.checkDuplicateLogin(account.login);
-    const ecryptedPassword = this.encryptPassword(account.password);
-    const createdAccount = new this.accountModel({
-      ...account,
-      password: ecryptedPassword,
-    });
-    await createdAccount.save();
-    await createdAccount.populate(this.populateOptions);
-    return this.removePasswordField(createdAccount);
   }
 
-  async searchOfficersWithoutAccount(text: string) {
-    return await this.officerService.searchOfficersWithoutAccount(text);
+  async assign({ jobtitle, officer, dependency, ...props }: AssingAccountDto) {
+    const session = await this.connection.startSession();
+    try {
+      session.startTransaction();
+      const userDb = await this.userService.create(props, session);
+      const createdAccount = new this.accountModel({
+        funcionario: officer,
+        dependencia: dependency,
+        user: userDb._id,
+        jobtitle,
+      });
+      await createdAccount.save({ session });
+      await session.commitTransaction();
+      return await createdAccount.populate([
+        { path: 'funcionario' },
+        { path: 'dependencia' },
+      ]);
+    } catch (error) {
+      await session.abortTransaction();
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException('Error al crear cuenta');
+    } finally {
+      session.endSession();
+    }
   }
 
   async getAccountsForSend(id_dependency: string, id_account: string) {
@@ -257,43 +283,5 @@ export class AccountService {
     if (result.matchedCount === 0)
       throw new NotFoundException(`La cuenta ${id} no existe`);
     return { message: 'Cuenta desvinculada' };
-  }
-
-  private get populateOptions(): mongoose.PopulateOptions[] {
-    return [
-      {
-        path: 'dependencia',
-        select: 'nombre institucion',
-        populate: {
-          path: 'institucion',
-          select: 'nombre',
-        },
-      },
-      {
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-          select: 'nombre',
-        },
-      },
-    ];
-  }
-
-  private encryptPassword(password: string): string {
-    const salt = bcrypt.genSaltSync();
-    return bcrypt.hashSync(password, salt);
-  }
-
-  private async checkDuplicateLogin(login: string) {
-    const duplicate = await this.userModel.findOne({ login });
-    if (duplicate) {
-      throw new BadRequestException(`El login ya existre ${login}`);
-    }
-  }
-
-  private removePasswordField(account: Account) {
-    const result = { ...account.toObject() };
-    delete result.password;
-    return result;
   }
 }

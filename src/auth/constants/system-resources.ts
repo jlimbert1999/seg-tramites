@@ -1,16 +1,15 @@
-
-
 export enum SystemResource {
   INSTITUTIONS = 'institutions',
   DEPENDENCIES = 'dependencies',
   USERS = 'user',
   ROLES = 'roles',
 
+  EXTERNAL = 'external',
+  INTERNAL = 'internal',
+
   communication = 'communication',
   typeProcedures = 'types-procedures',
   groupware = 'groupware',
-  external = 'external',
-  internal = 'internal',
   officers = 'officers',
   archived = 'archived',
   accounts = 'accounts',
@@ -101,28 +100,6 @@ export const SYSTEM_RESOURCES = [
     actions: [{ value: 'manage', label: 'Administrar' }],
   },
   {
-    value: SystemResource.external,
-
-    label: 'TRAMITES EXTERNOS',
-    actions: [
-      { value: 'create', label: 'Crear' },
-      { value: 'read', label: 'Ver' },
-      { value: 'update', label: 'Editar' },
-      { value: 'delete', label: 'Eliminar' },
-    ],
-  },
-  {
-    value: SystemResource.internal,
-
-    label: 'TRAMITES INTERNOS',
-    actions: [
-      { value: 'create', label: 'Crear' },
-      { value: 'read', label: 'Ver' },
-      { value: 'update', label: 'Editar' },
-      { value: 'delete', label: 'Eliminar' },
-    ],
-  },
-  {
     value: SystemResource.archived,
 
     label: 'ARCHIVOS',
@@ -152,6 +129,28 @@ export const SYSTEM_RESOURCES = [
       { value: 'search', label: 'Busquedas' },
       { value: 'dependents', label: 'Dependientes' },
       { value: 'unit', label: 'Unidades' },
+    ],
+  },
+];
+export const PROCEDURES = [
+  {
+    value: SystemResource.EXTERNAL,
+    label: 'TRAMITES EXTERNOS',
+    actions: [
+      { value: 'create', label: 'Crear' },
+      { value: 'read', label: 'Ver' },
+      { value: 'update', label: 'Editar' },
+      { value: 'delete', label: 'Eliminar' },
+    ],
+  },
+  {
+    value: SystemResource.INTERNAL,
+    label: 'TRAMITES INTERNOS',
+    actions: [
+      { value: 'create', label: 'Crear' },
+      { value: 'read', label: 'Ver' },
+      { value: 'update', label: 'Editar' },
+      { value: 'delete', label: 'Eliminar' },
     ],
   },
 ];

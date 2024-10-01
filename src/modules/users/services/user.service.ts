@@ -37,7 +37,7 @@ export class UserService {
   async update(id: string, userDto: UpdateUserDto, session?: ClientSession) {
     const userDb = await this.userModel.findById(id);
     if (!userDb) throw new NotFoundException(`El usuario ${id} no existe`);
-    if (userDb.login !== userDto.login) {
+    if (userDto.login && userDb.login !== userDto.login) {
       await this._checkDuplicateLogin(userDto.login);
     }
     if (userDto.password) {

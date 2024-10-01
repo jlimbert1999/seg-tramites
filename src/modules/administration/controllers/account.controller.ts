@@ -4,21 +4,24 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
 } from '@nestjs/common';
-import {} from '../../users/services';
+import { RoleService } from '../../users/services';
 import {
   AccountService,
   DependencieService,
   InstitutionService,
   JobService,
+  OfficerService,
 } from 'src/modules/administration/services';
 import { Public, ResourceProtected } from 'src/auth/decorators';
-import { SystemResource } from 'src/auth/constants';
+import { PROCEDURES, SystemResource } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
 import {
+  AssingAccountDto,
   CreateAccountDto,
   CreateOfficerDto,
   FilterAccountDto,
@@ -33,39 +36,14 @@ export class AccountController {
     private readonly accountService: AccountService,
     private readonly institutionService: InstitutionService,
     private readonly dependencieService: DependencieService,
-    private readonly jobService: JobService,
+    private readonly officerService: OfficerService,
+    private readonly roleService: RoleService,
   ) {}
 
   @Get('repair')
   @Public()
   repair() {
     return this.accountService.repairColection();
-  }
-
-  @Get('institutions')
-  getInstitutions() {
-    return this.institutionService.getActiveInstitutions();
-  }
-
-  @Get('jobs/:text')
-  async getJob(@Param('text') text: string) {
-    return await this.jobService.searchJobForUser(text);
-  }
-
-  @Get('dependencie/:id_institucion')
-  async getDependencies(
-    @Param('id_institucion', IsMongoidPipe) id_institucion: string,
-    @Query('text') text: string,
-  ) {
-    return await this.dependencieService.getActiveDependenciesOfInstitution(
-      id_institucion,
-      text,
-    );
-  }
-
-  @Get('assign/:text')
-  searchOfficersWithoutAccount(@Param('text') text: string) {
-    // return this.accountService.searchOfficersWithoutAccount(text);
   }
 
   @Get('search/:term')
@@ -85,17 +63,18 @@ export class AccountController {
     @Body('account') account: CreateAccountDto,
     @Body('user') user: CreateUserDto,
   ) {
-    return this.accountService.create(account, officer);
+    return this.accountService.create(account, officer, user);
   }
 
   @Post('assign')
-  assign(@Body() account: CreateAccountDto) {
-    // return this.accountService.assign(account);
+  assign(@Body() account: AssingAccountDto) {
+    return this.accountService.assign(account);
   }
 
-  @Put(':id')
+  @Patch(':id')
   update(@Param('id') id: string, @Body() account: UpdateAccountDto) {
-    // return this.accountService.update(id, account);
+    console.log(account);
+    return this.accountService.update(id, account);
   }
 
   @Delete('unlink/:id')
@@ -111,5 +90,29 @@ export class AccountController {
   @Put('visibility/:id')
   toggleVisibility(@Param('id') id: string) {
     // return this.accountService.toggleVisibility(id);
+  }
+
+  @Get('institutions')
+  getInstitutions() {
+    return this.institutionService.getActiveInstitutions();
+  }
+
+  @Get('dependencies/:institutionId')
+  getDependencies(
+    @Param('institutionId', IsMongoidPipe) institutionId: string,
+  ) {
+    return this.dependencieService.getActiveDependenciesOfInstitution(
+      institutionId,
+    );
+  }
+
+  @Get('assign')
+  searchOfficersWithoutAccount(@Query('term') text: string) {
+    return this.officerService.searchOfficersWithoutAccount(text);
+  }
+
+  @Get('roles')
+  getRoles() {
+    return this.roleService.getActiveRoles();
   }
 }

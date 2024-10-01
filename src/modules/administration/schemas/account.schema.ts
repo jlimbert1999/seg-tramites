@@ -4,20 +4,16 @@ import { Role, User } from 'src/modules/users/schemas';
 import { Dependency } from './dependencie.schema';
 import { Officer } from './officer.schema';
 
-
 export type AccountDocument = HydratedDocument<Account>;
 @Schema()
 export class Account extends Document {
   @Prop({
     type: String,
-    required: true,
-    unique: true,
   })
   login: string;
 
   @Prop({
     type: String,
-    required: true,
   })
   password: string;
 
