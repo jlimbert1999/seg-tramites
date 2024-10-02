@@ -1,15 +1,15 @@
 import { SystemResource } from '../constants';
 
 export interface Menu {
-  resource: string;
+  resource?: string;
   text: string;
   icon: string;
-  routerLink: string;
-  children?: SubMemu[];
+  routerLink?: string;
+  children?: Menu[];
 }
 
 interface SubMemu {
-  resource: SystemResource;
+  resource: string;
   text: string;
   icon: string;
   routerLink: string;

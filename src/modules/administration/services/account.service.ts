@@ -193,7 +193,7 @@ export class AccountService {
       const updatedAccount = await this.accountModel
         .findByIdAndUpdate(
           id,
-          { jobtitle, ...(officer && { funcionario: officer }), isVisible },
+          { jobtitle, funcionario: officer, isVisible },
           { new: true },
         )
         .populate([
@@ -238,6 +238,17 @@ export class AccountService {
     }
   }
 
+  async unlink(id: string) {
+    const result = await this.accountModel.updateOne(
+      { _id: id },
+      { $unset: { funcionario: 1 } },
+    );
+    if (result.matchedCount === 0) {
+      throw new NotFoundException(`La cuenta ${id} no existe`);
+    }
+    return { message: 'Cuenta desvinculada' };
+  }
+
   async getAccountsForSend(id_dependency: string, id_account: string) {
     return await this.accountModel
       .find({
@@ -273,15 +284,5 @@ export class AccountService {
       { new: true },
     );
     return isVisible;
-  }
-
-  async unlink(id: string) {
-    const result = await this.accountModel.updateOne(
-      { _id: id },
-      { $unset: { funcionario: 1 } },
-    );
-    if (result.matchedCount === 0)
-      throw new NotFoundException(`La cuenta ${id} no existe`);
-    return { message: 'Cuenta desvinculada' };
   }
 }

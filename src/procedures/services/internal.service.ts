@@ -6,9 +6,8 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
-import { InternalDetail, InternalProcedure, Procedure } from '../schemas';
+import { InternalDetail, Procedure } from '../schemas';
 
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import {
   CreateInternalDetailDto,
   CreateProcedureDto,
@@ -21,16 +20,17 @@ import {
   stateProcedure,
   groupProcedure,
 } from '../interfaces';
+
+import { PaginationDto } from 'src/common';
 import { Account } from 'src/modules/administration/schemas';
 
-
 @Injectable()
-export class InternalService {
+export class InternalService implements ValidProcedureService {
   constructor(
     @InjectConnection() private readonly connection: mongoose.Connection,
-    // @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
-    @InjectModel(InternalProcedure.name)
-    private newModel: Model<InternalProcedure>,
+    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
+    @InjectModel(InternalDetail.name)
+    private internalModel: Model<InternalDetail>,
     private readonly configService: ConfigService,
   ) {}
 
@@ -42,22 +42,22 @@ export class InternalService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      // const createdDetail = new this.internalModel(details);
-      // await createdDetail.save({ session });
+      const createdDetail = new this.internalModel(details);
+      await createdDetail.save({ session });
       const { segment, ...procedureProps } = procedure;
-      const code = 'TEST_2';
-      const createdProcedure = new this.newModel({
-        group: InternalProcedure.name,
+      const code = await this.generateCode(account, segment);
+      const createdProcedure = new this.procedureModel({
+        group: groupProcedure.INTERNAL,
+        details: createdDetail._id,
         account: account._id,
         code: code,
         ...procedureProps,
-        ...details,
       });
       await createdProcedure.save({ session });
+      await createdProcedure.populate('details');
       await session.commitTransaction();
       return createdProcedure;
     } catch (error) {
-      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException(
         'No se puedo registrar el tramite correctamente',
@@ -75,14 +75,14 @@ export class InternalService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      // await this.newModel.updateOne(
-      //   {
-      //     _id: procedureDB.details._id,
-      //   },
-      //   details,
-      //   { session },
-      // );
-      const updatedProcedure = await this.newModel
+      await this.internalModel.updateOne(
+        {
+          _id: procedureDB.details._id,
+        },
+        details,
+        { session },
+      );
+      const updatedProcedure = await this.procedureModel
         .findByIdAndUpdate(id, procedure, {
           session,
           new: true,
@@ -99,20 +99,21 @@ export class InternalService {
   }
   async findAll({ limit, offset }: PaginationDto, id_account: string) {
     const [procedures, length] = await Promise.all([
-      this.newModel
+      this.procedureModel
         .find({
           account: id_account,
-          // group: groupProcedure.INTERNAL,
-          // state: { $ne: 'ANULADO' },
+          group: groupProcedure.INTERNAL,
+          state: { $ne: 'ANULADO' },
         })
         .sort({ _id: -1 })
         .skip(offset)
         .limit(limit)
+        .populate('details')
         .lean(),
-      this.newModel.count({
+      this.procedureModel.count({
         account: id_account,
-        // group: groupProcedure.INTERNAL,
-        // state: { $ne: 'ANULADO' },
+        group: groupProcedure.INTERNAL,
+        state: { $ne: 'ANULADO' },
       }),
     ]);
     return { procedures, length };
@@ -123,7 +124,7 @@ export class InternalService {
     text: string,
   ) {
     const regex = new RegExp(text, 'i');
-    const data = await this.newModel
+    const data = await this.procedureModel
       .aggregate()
       .match({
         group: groupProcedure.INTERNAL,
@@ -158,7 +159,7 @@ export class InternalService {
     return { procedures, length };
   }
   async getDetail(id: string) {
-    const procedureDB = await this.newModel
+    const procedureDB = await this.procedureModel
       .findById(id)
       .populate('details')
       .populate('type', 'nombre')
@@ -179,26 +180,29 @@ export class InternalService {
     return procedureDB;
   }
   private async generateCode(account: Account, segmentProcedure: string) {
-    // const { dependencia } = await account.populate({
-    //   path: 'dependencia',
-    //   select: 'institucion',
-    //   populate: {
-    //     path: 'institucion',
-    //     select: 'sigla',
-    //   },
-    // });
-    // if (!dependencia) throw new InternalServerErrorException('Error al generar el codigo alterno');
-    // const code = `${segmentProcedure}-${dependencia.institucion.sigla}-${this.configService.get('YEAR')}`.toUpperCase();
-    // const correlative = await this.procedureModel.count({
-    //   group: groupProcedure.INTERNAL,
-    //   code: new RegExp(code, 'i'),
-    // });
-    // return `${code}-${String(correlative + 1).padStart(5, '0')}`;
+    const { dependencia } = await account.populate({
+      path: 'dependencia',
+      select: 'institucion',
+      populate: {
+        path: 'institucion',
+        select: 'sigla',
+      },
+    });
+    if (!dependencia)
+      throw new InternalServerErrorException(
+        'Error al generar el codigo alterno',
+      );
+    const code = `${segmentProcedure}-${
+      dependencia.institucion.sigla
+    }-${this.configService.get('YEAR')}`.toUpperCase();
+    const correlative = await this.procedureModel.count({
+      group: groupProcedure.INTERNAL,
+      code: new RegExp(code, 'i'),
+    });
+    return `${code}-${String(correlative + 1).padStart(5, '0')}`;
   }
-  private async checkIsEditable(
-    id_procedure: string,
-  ): Promise<InternalProcedure> {
-    const procedureDB = await this.newModel.findById(id_procedure);
+  private async checkIsEditable(id_procedure: string): Promise<Procedure> {
+    const procedureDB = await this.procedureModel.findById(id_procedure);
     if (!procedureDB)
       throw new BadRequestException('El tramite solicitado no existe');
     if (procedureDB.state !== stateProcedure.INSCRITO)

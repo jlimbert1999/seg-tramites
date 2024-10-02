@@ -4,13 +4,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import * as fs from 'fs';
 
 import { AuthDto, UpdateMyAccountDto } from './dto';
 import { EnvConfig, JwtPayload, Menu } from './interfaces';
 
 import { logger } from 'src/config/logger';
 import { User, UserDocument, Role } from 'src/modules/users/schemas';
+import { FRONTEND_MENU } from './constants';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +20,6 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
- 
   async login({ login, password }: AuthDto, ip: string) {
     const user = await this.userModel.findOne({ login });
     if (!user) {
@@ -96,8 +95,7 @@ export class AuthService {
   }
 
   private _getFrontMenu({ permissions }: Role) {
-    const json = fs.readFileSync('src/config/menu.json', 'utf8');
-    const SystemMenu: Menu[] = JSON.parse(json);
+    const SystemMenu = FRONTEND_MENU;
     return SystemMenu.filter((menu) => {
       if (!menu.children)
         return permissions.some(({ resource }) => resource === menu.resource);

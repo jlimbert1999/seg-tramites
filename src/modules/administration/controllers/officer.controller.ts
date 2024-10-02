@@ -1,56 +1,36 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
-import { JobService, OfficerService } from '../services';
-import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { ResourceProtected } from 'src/auth/decorators';
 import { SystemResource } from 'src/auth/constants';
 
-@ResourceProtected(SystemResource.officers)
+import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
+import { OfficerService } from '../services';
+
+@ResourceProtected(SystemResource.OFFICERS)
 @Controller('officers')
 export class OfficerController {
-  constructor(private readonly officerService: OfficerService, private readonly jobService: JobService) {}
-
-  @Get('search/:text')
-  async search(
-    @Query('limit', ParseIntPipe) limit: number,
-    @Query('offset', ParseIntPipe) offset: number,
-    @Param('text') text: string,
-  ) {
-    // return await this.officerService.search(limit, offset, text);
-  }
+  constructor(private readonly officerService: OfficerService) {}
 
   @Get()
-  async get(@Query() { limit, offset }: PaginationDto) {
-    // return await this.officerService.get(limit, offset);
+  async findAll(@Query() params: PaginationDto) {
+    return await this.officerService.findAll(params);
   }
 
   @Post()
-  add(@Body() body: CreateOfficerDto) {
+  create(@Body() body: CreateOfficerDto) {
     return this.officerService.create(body);
   }
 
-  @Put('/:id')
-  edit(@Param('id') id_officer: string, @Body() officer: UpdateOfficerDto) {
-    return this.officerService.edit(id_officer, officer);
-  }
-
-  @Delete('/:id')
-  delete(@Param('id') id_officer: string) {
-    // return this.officerService.changeOfficerStatus(id_officer);
-  }
-
-  @Get('history/:id')
-  getWorkHistory(@Param('id') id_officer: string, @Query('offset', ParseIntPipe) offset: number) {
-    // return this.officerService.getOfficerWorkHistory(id_officer, offset);
-  }
-
-  @Get('jobs/:text')
-  searchJobs(@Param('text') term: string) {
-    return this.jobService.searchJobForUser(term);
-  }
-
-  @Put('unlink/:id_officer')
-  unlinkOfficerJob(@Param('id_officer') id_officer: string) {
-    return this.officerService.unlinkOfficerJob(id_officer);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() officer: UpdateOfficerDto) {
+    return this.officerService.edit(id, officer);
   }
 }

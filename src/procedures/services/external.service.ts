@@ -7,7 +7,7 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Connection, Model, Types } from 'mongoose';
-import { ExternalDetail, ExternalProcedure, Procedure } from '../schemas';
+import { ExternalDetail, Procedure } from '../schemas';
 
 import {
   CreateExternalDetailDto,
@@ -15,25 +15,23 @@ import {
   UpdateExternalDto,
   UpdateProcedureDto,
 } from '../dto';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 import {
   ValidProcedureService,
   groupProcedure,
   stateProcedure,
 } from '../interfaces';
+import { PaginationDto } from 'src/common';
 import { Account } from 'src/modules/administration/schemas';
 
 @Injectable()
-export class ExternalService {
+export class ExternalService implements ValidProcedureService {
   constructor(
     @InjectConnection() private connection: Connection,
-    // @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
-    // @InjectModel(ExternalDetail.name)
-    // private externalDetailModel: Model<ExternalDetail>,
+    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
+    @InjectModel(ExternalDetail.name)
+    private externalDetailModel: Model<ExternalDetail>,
     private configService: ConfigService,
-    @InjectModel(ExternalProcedure.name)
-    private readonly procedureModel: Model<ExternalProcedure>,
   ) {}
 
   async search(
@@ -92,22 +90,23 @@ export class ExternalService {
   }
   async findAll({ limit, offset }: PaginationDto, id_account: string) {
     const [procedures, length] = await Promise.all([
-      this.procedureModel
+      await this.procedureModel
         .find({
           account: id_account,
-          // state: { $ne: stateProcedure.ANULADO },
+          group: groupProcedure.EXTERNAL,
+          state: { $ne: stateProcedure.ANULADO },
         })
         .sort({ _id: -1 })
         .limit(limit)
-        .skip(offset),
-
-      this.procedureModel.count({
+        .skip(offset)
+        .populate('details'),
+      await this.procedureModel.count({
         account: id_account,
-        // group: groupProcedure.EXTERNAL,
-        // state: { $ne: stateProcedure.ANULADO },
+        group: groupProcedure.EXTERNAL,
+        state: { $ne: stateProcedure.ANULADO },
       }),
     ]);
-    return { procedures: procedures, length };
+    return { procedures, length };
   }
 
   async create(
@@ -118,19 +117,21 @@ export class ExternalService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      // const code = await this.generateCode(account, segment);
+      const createdDetail = new this.externalDetailModel(details);
+      const { _id } = await createdDetail.save({ session });
+      const code = await this.generateCode(account, segment);
       const createdProcedure = new this.procedureModel({
-        group: ExternalProcedure.name,
+        group: groupProcedure.EXTERNAL,
         account: account._id,
-        code: 'TEST_2',
-        pin: 323,
+        code: code,
+        details: _id,
         ...procedureProps,
       });
       await createdProcedure.save({ session });
+      await createdProcedure.populate('details');
       await session.commitTransaction();
       return createdProcedure;
     } catch (error) {
-      console.log(error);
       await session.abortTransaction();
       throw new InternalServerErrorException(
         'Error al registrar el tramite externo',
@@ -139,7 +140,6 @@ export class ExternalService {
       session.endSession();
     }
   }
-  
   async update(
     id: string,
     procedure: UpdateProcedureDto,
@@ -149,9 +149,11 @@ export class ExternalService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.procedureModel.updateOne({ _id: procedureDB }, details, {
-        session,
-      });
+      await this.externalDetailModel.updateOne(
+        { _id: procedureDB.details._id },
+        details,
+        { session },
+      );
       const updatedProcedure = await this.procedureModel
         .findByIdAndUpdate(id, procedure, {
           session,
@@ -168,30 +170,29 @@ export class ExternalService {
     }
   }
 
-  // async getDetail(id: string) {
-  //   const procedureDB = await this.procedureModel
-  //     .findById(id)
-  //     .populate('details')
-  //     .populate('type', 'nombre')
-  //     .populate({
-  //       path: 'account',
-  //       select: '_id',
-  //       populate: {
-  //         path: 'funcionario',
-  //         select: 'nombre paterno materno cargo',
-  //         populate: {
-  //           path: 'cargo',
-  //           select: 'nombre',
-  //         },
-  //       },
-  //     });
-  //   if (!procedureDB) throw new NotFoundException(`El tramite ${id} no existe.`);
-  //   return procedureDB;
-  // }
+  async getDetail(id: string) {
+    const procedureDB = await this.procedureModel
+      .findById(id)
+      .populate('details')
+      .populate('type', 'nombre')
+      .populate({
+        path: 'account',
+        select: '_id',
+        populate: {
+          path: 'funcionario',
+          select: 'nombre paterno materno cargo',
+          populate: {
+            path: 'cargo',
+            select: 'nombre',
+          },
+        },
+      });
+    if (!procedureDB)
+      throw new NotFoundException(`El tramite ${id} no existe.`);
+    return procedureDB;
+  }
 
-  private async checkIsEditable(
-    id_procedure: string,
-  ): Promise<ExternalProcedure> {
+  private async checkIsEditable(id_procedure: string): Promise<Procedure> {
     const procedureDB = await this.procedureModel.findById(id_procedure);
     if (!procedureDB)
       throw new NotFoundException('El tramite solicitado no existe');

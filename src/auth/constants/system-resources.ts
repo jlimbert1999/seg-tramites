@@ -3,6 +3,7 @@ export enum SystemResource {
   DEPENDENCIES = 'dependencies',
   USERS = 'user',
   ROLES = 'roles',
+  OFFICERS = 'officers',
 
   EXTERNAL = 'external',
   INTERNAL = 'internal',
@@ -10,7 +11,6 @@ export enum SystemResource {
   communication = 'communication',
   typeProcedures = 'types-procedures',
   groupware = 'groupware',
-  officers = 'officers',
   archived = 'archived',
   accounts = 'accounts',
   reports = 'reports',
@@ -38,8 +38,29 @@ export const SYSTEM_RESOURCES = [
     ],
   },
   {
+    value: SystemResource.OFFICERS,
+    label: 'Funcionarios',
+    actions: [
+      { value: 'create', label: 'Crear' },
+      { value: 'read', label: 'Ver' },
+      { value: 'update', label: 'Editar' },
+      { value: 'delete', label: 'Eliminar' },
+    ],
+  },
+
+  {
     value: SystemResource.accounts,
-    label: 'CUENTAS',
+    label: 'Cuentas',
+    actions: [
+      { value: 'create', label: 'Crear' },
+      { value: 'read', label: 'Ver' },
+      { value: 'update', label: 'Editar' },
+      { value: 'delete', label: 'Eliminar' },
+    ],
+  },
+  {
+    value: SystemResource.USERS,
+    label: 'Usuarios',
     actions: [
       { value: 'create', label: 'Crear' },
       { value: 'read', label: 'Ver' },
@@ -49,7 +70,7 @@ export const SYSTEM_RESOURCES = [
   },
   {
     value: SystemResource.ROLES,
-    label: 'ROLES',
+    label: 'Roles',
     actions: [
       { value: 'create', label: 'Crear' },
       { value: 'read', label: 'Ver' },
@@ -57,27 +78,17 @@ export const SYSTEM_RESOURCES = [
       { value: 'delete', label: 'Eliminar' },
     ],
   },
-  {
-    value: SystemResource.officers,
-    label: 'FUNCIONARIOS',
-    actions: [
-      { value: 'create', label: 'Crear' },
-      { value: 'read', label: 'Ver' },
-      { value: 'update', label: 'Editar' },
-      { value: 'delete', label: 'Eliminar' },
-    ],
-  },
-  {
-    value: SystemResource.jobs,
+  // {
+  //   value: SystemResource.jobs,
 
-    label: 'CARGOS',
-    actions: [
-      { value: 'create', label: 'Crear' },
-      { value: 'read', label: 'Ver' },
-      { value: 'update', label: 'Editar' },
-      { value: 'delete', label: 'Eliminar' },
-    ],
-  },
+  //   label: 'CARGOS',
+  //   actions: [
+  //     { value: 'create', label: 'Crear' },
+  //     { value: 'read', label: 'Ver' },
+  //     { value: 'update', label: 'Editar' },
+  //     { value: 'delete', label: 'Eliminar' },
+  //   ],
+  // },
   {
     value: SystemResource.typeProcedures,
 

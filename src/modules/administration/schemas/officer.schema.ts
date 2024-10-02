@@ -30,7 +30,7 @@ export class Officer extends Document {
   telefono: number;
 
   @Prop({
-    type: Number,
+    type: String,
     required: true,
     unique: true,
   })

@@ -1,12 +1,19 @@
 import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
-import { GetUserRequest } from 'src/auth/decorators';
+import {
+  SearchProcedureByApplicantDto,
+  SearchProcedureByPropertiesDto,
+} from './dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { DependencieService, InstitutionService, TypeProcedureService } from 'src/modules/administration/services';
+import {
+  DependencieService,
+  InstitutionService,
+  TypeProcedureService,
+} from 'src/modules/administration/services';
 
 import { IsMongoidPipe } from 'src/common/pipes';
 import { Account } from 'src/modules/administration/schemas';
+import { GetAccountRequest } from 'src/procedures/decorators/get-account-request.decorator';
 
 @Controller('reports')
 export class ReportsController {
@@ -18,7 +25,10 @@ export class ReportsController {
   ) {}
 
   @Get('types-procedures/:term')
-  getTypeProceduresByText(@Param('term') term: string, @Query('type') type: string | undefined) {
+  getTypeProceduresByText(
+    @Param('term') term: string,
+    @Query('type') type: string | undefined,
+  ) {
     return this.typeProcedureService.getTypesByText(term, type, true);
   }
 
@@ -28,8 +38,12 @@ export class ReportsController {
   }
 
   @Get('dependencies/:id_institution')
-  async getDependencies(@Param('id_institution', IsMongoidPipe) id_institution: string) {
-    return await this.dependencyService.getActiveDependenciesOfInstitution(id_institution);
+  async getDependencies(
+    @Param('id_institution', IsMongoidPipe) id_institution: string,
+  ) {
+    return await this.dependencyService.getActiveDependenciesOfInstitution(
+      id_institution,
+    );
   }
 
   @Post('applicant')
@@ -37,7 +51,10 @@ export class ReportsController {
     @Body() searchDto: SearchProcedureByApplicantDto,
     @Query() paginationParams: PaginationDto,
   ) {
-    return this.reportsService.searchProcedureByApplicant(searchDto, paginationParams);
+    return this.reportsService.searchProcedureByApplicant(
+      searchDto,
+      paginationParams,
+    );
   }
 
   @Post('procedure')
@@ -45,11 +62,14 @@ export class ReportsController {
     @Body() searchDto: SearchProcedureByPropertiesDto,
     @Query() paginationParams: PaginationDto,
   ) {
-    return this.reportsService.searchProcedureByProperties(paginationParams, searchDto);
+    return this.reportsService.searchProcedureByProperties(
+      paginationParams,
+      searchDto,
+    );
   }
 
   @Get('unlink')
-  getAccountInbox(@GetUserRequest() account: Account) {
+  getAccountInbox(@GetAccountRequest() account: Account) {
     return this.reportsService.getUnlinkData(account);
   }
 

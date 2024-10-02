@@ -1,13 +1,13 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { ClientSession, Model } from 'mongoose';
 import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
 import { Officer } from '../schemas';
+import { PaginationDto } from 'src/common';
 
 @Injectable()
 export class OfficerService {
@@ -47,14 +47,14 @@ export class OfficerService {
       });
   }
 
-  async findAll(limit: number, offset: number, text: string) {
-    const regex = new RegExp(text, 'i');
+  async findAll({ limit, offset, term }: PaginationDto) {
+    const regex = new RegExp(term, 'i');
     const dataPaginated = await this.officerModel
       .aggregate()
       .addFields({
         fullname: {
           $concat: [
-            { $ifNull: ['$paterno', ''] },
+            { $ifNull: ['$nombre', ''] },
             ' ',
             { $ifNull: ['$paterno', ''] },
             ' ',
@@ -92,30 +92,13 @@ export class OfficerService {
     if (!officerDB) {
       throw new NotFoundException(`El funcionario ${id} no existe`);
     }
-    if (data.dni && data.dni !== officerDB.dni) {
+    if (data.dni && data.dni != officerDB.dni) {
       await this.checkDuplicateDni(data.dni);
     }
-    return await this.officerModel
-      .findByIdAndUpdate(id, data, { new: true, session })
-      .populate('cargo');
-  }
-
-  async getOfficer(id: string) {
-    const officer = await this.officerModel.findById(id);
-    if (!officer) throw new NotFoundException(`User ${id} don't exist`);
-    return officer;
-  }
-
-  async unlinkOfficerJob(id_officer: string) {
-    const queryResult = await this.officerModel.updateOne(
-      { _id: id_officer },
-      { $unset: { cargo: 1 } },
-    );
-    if (queryResult.modifiedCount === 0)
-      throw new BadRequestException(
-        'El cargo del funcionario ya ha sido removido',
-      );
-    return { message: 'El cargo del funcionario se ha removido' };
+    return await this.officerModel.findByIdAndUpdate(id, data, {
+      new: true,
+      session,
+    });
   }
 
   async searchOfficersWithoutAccount(text: string, limit = 5) {

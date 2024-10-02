@@ -24,18 +24,7 @@ export class UserController {
     private roleService: RoleService,
   ) {}
 
-  // @Get('search/:term')
-  // search(
-  //   @Query() { limit, offset }: PaginationDto,
-  //   @Param('term') term: string,
-  // ) {
-  //   return this.jobService.search(limit, offset, term);
-  // }
-
-  
-
   @Get()
-  @Public()
   findAll(@Query() params: PaginationDto) {
     return this.userService.findAll(params);
   }

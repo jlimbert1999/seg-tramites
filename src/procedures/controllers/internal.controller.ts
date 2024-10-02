@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
+import { ResourceProtected } from 'src/auth/decorators';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import {
   CreateInternalDetailDto,
@@ -14,8 +14,11 @@ import {
 } from 'src/modules/administration/services';
 import { SystemResource } from 'src/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
+import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
+import { GetAccountRequest } from '../decorators/get-account-request.decorator';
 
 @ResourceProtected(SystemResource.INTERNAL)
+@onlyAssignedAccount()
 @Controller('internal')
 export class InternalController {
   constructor(
@@ -34,7 +37,7 @@ export class InternalController {
 
   @Get('search/:text')
   async search(
-    @GetUserRequest('_id') id_account: string,
+    @GetAccountRequest('_id') id_account: string,
     @Param('text') text: string,
     @Query() PaginationDto: PaginationDto,
   ) {
@@ -43,7 +46,7 @@ export class InternalController {
 
   @Get()
   async get(
-    @GetUserRequest('_id') id_account: string,
+    @GetAccountRequest('_id') id_account: string,
     @Query() PaginationDto: PaginationDto,
   ) {
     return await this.internalService.findAll(PaginationDto, id_account);
@@ -51,7 +54,7 @@ export class InternalController {
 
   @Post()
   async add(
-    @GetUserRequest() account: Account,
+    @GetAccountRequest() account: Account,
     @Body('procedure') procedure: CreateProcedureDto,
     @Body('details') details: CreateInternalDetailDto,
   ) {

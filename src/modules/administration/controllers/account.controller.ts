@@ -73,13 +73,12 @@ export class AccountController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() account: UpdateAccountDto) {
-    console.log(account);
     return this.accountService.update(id, account);
   }
 
   @Delete('unlink/:id')
   unlink(@Param('id') id: string) {
-    // return this.accountService.unlink(id);
+    return this.accountService.unlink(id);
   }
 
   @Delete(':id')

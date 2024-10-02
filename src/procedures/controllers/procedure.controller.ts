@@ -1,14 +1,29 @@
-import { Body, Controller, Get, InternalServerErrorException, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  InternalServerErrorException,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 
-import { GetUserRequest } from 'src/auth/decorators';
-import { ObservationService, ExternalService, InternalService, OutboxService } from '../services';
+import {
+  ObservationService,
+  ExternalService,
+  InternalService,
+  OutboxService,
+} from '../services';
 import { ValidProcedureService, groupProcedure } from '../interfaces';
 import { CreateObservationDto, GetProcedureParamsDto } from '../dto';
 import { IsMongoidPipe } from 'src/common/pipes';
 import { Account } from 'src/modules/administration/schemas';
+import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
+import { GetAccountRequest } from '../decorators/get-account-request.decorator';
 
 @Controller('procedure')
+@onlyAssignedAccount()
 export class ProcedureController {
   constructor(
     private outboxService: OutboxService,
@@ -38,13 +53,15 @@ export class ProcedureController {
       case groupProcedure.INTERNAL:
         return this.moduleRef.get(InternalService);
       default:
-        throw new InternalServerErrorException('Group procedure is not defined');
+        throw new InternalServerErrorException(
+          'Group procedure is not defined',
+        );
     }
   }
 
   @Post('observation/:id_procedure')
   addObservation(
-    @GetUserRequest() account: Account,
+    @GetAccountRequest() account: Account,
     @Param('id_procedure') id_procedure: string,
     @Body() observationDto: CreateObservationDto,
   ) {

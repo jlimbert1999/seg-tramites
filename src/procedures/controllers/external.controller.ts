@@ -1,14 +1,22 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { GetUserRequest, ResourceProtected } from 'src/auth/decorators';
 import { TypeProcedureService } from 'src/modules/administration/services/type-procedure.service';
-import { CreateExternalDetailDto, CreateProcedureDto, UpdateExternalDto, UpdateProcedureDto } from '../dto';
+import {
+  CreateExternalDetailDto,
+  CreateProcedureDto,
+  UpdateExternalDto,
+  UpdateProcedureDto,
+} from '../dto';
 import { ExternalService } from '../services';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { SystemResource } from 'src/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
+import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
+import { GetAccountRequest } from '../decorators/get-account-request.decorator';
+import { ResourceProtected } from 'src/auth/decorators';
 
 @Controller('external')
 @ResourceProtected(SystemResource.EXTERNAL)
+@onlyAssignedAccount()
 export class ExternalController {
   constructor(
     private readonly externalService: ExternalService,
@@ -21,12 +29,15 @@ export class ExternalController {
   }
   @Get('types-procedures/:segment')
   async getTypesProceduresBySegment(@Param('segment') segment: string) {
-    return await this.typeProcedure.getEnabledTypesBySegment(segment, 'EXTERNO');
+    return await this.typeProcedure.getEnabledTypesBySegment(
+      segment,
+      'EXTERNO',
+    );
   }
 
   @Get('search/:text')
   async search(
-    @GetUserRequest('_id') id_account: string,
+    @GetAccountRequest('_id') id_account: string,
     @Query() PaginationDto: PaginationDto,
     @Param('text') text: string,
   ) {
@@ -34,13 +45,16 @@ export class ExternalController {
   }
 
   @Get()
-  async get(@GetUserRequest('_id') id_account: string, @Query() PaginationDto: PaginationDto) {
+  async get(
+    @GetAccountRequest('_id') id_account: string,
+    @Query() PaginationDto: PaginationDto,
+  ) {
     return await this.externalService.findAll(PaginationDto, id_account);
   }
 
   @Post()
   async add(
-    @GetUserRequest() account: Account,
+    @GetAccountRequest() account: Account,
     @Body('procedure') procedure: CreateProcedureDto,
     @Body('details') details: CreateExternalDetailDto,
   ) {
