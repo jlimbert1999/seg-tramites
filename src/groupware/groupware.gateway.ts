@@ -70,6 +70,10 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     this.server.to(id_dependency).emit('unarchive-mail', id_mail);
   }
 
+  notifyNew(publication: any) {
+    this.server.emit('news', publication);
+  }
+
   @SubscribeMessage('expel')
   handleExpel(@ConnectedSocket() socket: Socket, @MessageBody() { id_account, message }: expelClientProps) {
     const client = this.groupwareService.remove(id_account);

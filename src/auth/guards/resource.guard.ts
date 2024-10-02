@@ -7,13 +7,18 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Account } from 'src/users/schemas';
-import { META_RESOURCE } from '../decorators';
+import { IS_PUBLIC_KEY, META_RESOURCE } from '../decorators';
 import { VALID_RESOURCES } from '../constants';
 
 @Injectable()
 export class ResourceGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
   canActivate(context: ExecutionContext): boolean {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
     const validResource: VALID_RESOURCES | undefined = this.reflector.get(META_RESOURCE, context.getClass());
     if (!validResource) return true;
     const req = context.switchToHttp().getRequest();

@@ -7,4 +7,5 @@ export const EnvConfiguration = (): EnvConfig => ({
   port: parseInt(process.env.PORT) || 3000,
   year: +process.env.YEAR,
   jwt_public_key: process.env.JWT_PUBLIC_KEY,
+  host: process.env.HOST,
 });

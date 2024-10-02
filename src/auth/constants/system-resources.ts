@@ -133,4 +133,14 @@ export const SYSTEM_RESOURCES = [
       { value: 'unit', label: 'Unidades' },
     ],
   },
+  {
+    value: VALID_RESOURCES.publications,
+    label: 'PUBLICACIONES',
+    actions: [
+      { value: 'create', label: 'Crear' },
+      { value: 'read', label: 'Ver' },
+      { value: 'update', label: 'Editar ' },
+      { value: 'delete', label: 'Actualizar' },
+    ],
+  },
 ];

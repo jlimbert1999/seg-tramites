@@ -11,8 +11,8 @@ import { ProceduresModule } from './procedures/procedures.module';
 import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
-
-import { FilesModule } from './files/files.module';
+import { FilesModule } from './modules/files/files.module';
+import { PublicationsModule } from './modules/publications/publications.module';
 
 @Module({
   imports: [
@@ -34,8 +34,9 @@ import { FilesModule } from './files/files.module';
     ProceduresModule,
     GroupwareModule,
     ReportsModule,
-    FilesModule,
     ApplicantModule,
+    FilesModule,
+    PublicationsModule,
   ],
   controllers: [],
   providers: [],
