@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { existsSync } from 'fs';
-import { unlink, writeFile } from 'fs/promises';
+import { unlink, writeFile, access } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuid } from 'uuid';
 
+type Groups = 'posts';
 @Injectable()
 export class FilesService {
   private readonly folders: Record<string, string[]> = {
@@ -26,15 +27,18 @@ export class FilesService {
     }
   }
 
-  async deleteFile(files: string[], group: 'posts') {
+  async deleteFiles(files: string[], group: Groups) {
     const tempDir = join(__dirname, '..', '..', '..', 'static', 'uploads', group);
-    for (const file of files) {
-      const extension = file.split('.')[1];
-      const folder = this._getUploadFileFolder(extension);
-      const filePath = join(tempDir, folder, file);
-      if (existsSync(filePath)) {
+    try {
+      for (const file of files) {
+        const extension = file.split('.')[1];
+        const folder = this._getUploadFileFolder(extension);
+        const filePath = join(tempDir, folder, file);
+        await access(filePath);
         await unlink(filePath);
       }
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
   }
 

@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Query, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Delete, Param, Patch } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
-import { CreatePublicationDto } from './dtos/post.dto';
+import { CreatePublicationDto, UpdatePublicationDto } from './dtos/post.dto';
 
 import { GetUserRequest, Public, ResourceProtected } from 'src/auth/decorators';
 import { PublicationPriority } from './schemas/publication.schema';
@@ -21,6 +21,13 @@ export class PostsController {
       this.groupwareGateway.notifyNew(publication);
     }
     return publication;
+  }
+
+  @Patch(':id')
+  @Public()
+  update(@Param('id') id: string, @Body() publicationDto: UpdatePublicationDto) {
+    console.log(publicationDto);
+    return this.postsService.update(id, publicationDto);
   }
 
   @Get()

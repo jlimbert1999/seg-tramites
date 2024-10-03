@@ -1,12 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Document, FilterQuery } from 'mongoose';
 
-import { CreatePublicationDto, UpdatePublicationDto } from './dtos/post.dto';
-import { FilesService } from '../files/files.service';
 import { Publication, PublicationPriority } from './schemas/publication.schema';
-import { Account } from 'src/users/schemas';
+import { CreatePublicationDto, UpdatePublicationDto } from './dtos/post.dto';
 import { PaginationParamsDto } from 'src/common/dto/pagination.dto';
+import { FilesService } from '../files/files.service';
+import { Account } from 'src/users/schemas';
 
 @Injectable()
 export class PublicationsService {
@@ -31,10 +31,35 @@ export class PublicationsService {
     return this._plainPublication(createdPublication);
   }
 
+  async update(id: string, publicationDto: UpdatePublicationDto) {
+    console.log(publicationDto);
+    const document = await this.publicationModel.findById(id);
+    if (!document) {
+      throw new BadRequestException(`Publication ${id} don't exist`);
+    }
+    let filesToDelete: string[] = [];
+    if (publicationDto.attachments) {
+      const savedFiles = document.attachments.map(({ filename }) => filename);
+      const newFiles = publicationDto.attachments.map(({ filename }) => filename);
+      filesToDelete = savedFiles.filter((file) => !newFiles.includes(file));
+    }
+    const { image } = publicationDto;
+    if (image !== undefined && document.image && image !== document.image) {
+      filesToDelete.push(document.image);
+    }
+    const updated = await this.publicationModel.findByIdAndUpdate(
+      id,
+      { ...publicationDto, ...(image === '' && { image: null }) },
+      { new: true },
+    );
+    await this.fileService.deleteFiles(filesToDelete, 'posts');
+    return this._plainPublication(updated);
+  }
+
   async delete(id: string) {
     const deleted = await this.publicationModel.findByIdAndDelete(id);
     if (!deleted) throw new NotFoundException();
-    await this.fileService.deleteFile(
+    await this.fileService.deleteFiles(
       deleted.attachments.map(({ filename }) => filename),
       'posts',
     );
@@ -90,7 +115,10 @@ export class PublicationsService {
     const news = await this.publicationModel
       .find({
         priority: { $ne: PublicationPriority.Low },
+        startDate: { $lte: today },
+        // <=
         expirationDate: { $gte: today },
+        // >=
       })
       .populate({
         path: 'user',
@@ -109,8 +137,9 @@ export class PublicationsService {
     if (publication instanceof Document) {
       publication = publication.toObject();
     }
-    const { attachments, ...props } = publication;
+    const { attachments, image, ...props } = publication;
     return {
+      image: image ? this.fileService.buildFileUrl(image, 'post') : null,
       attachments: attachments.map((file) => ({
         title: file.title,
         filename: this.fileService.buildFileUrl(file.filename, 'post'),

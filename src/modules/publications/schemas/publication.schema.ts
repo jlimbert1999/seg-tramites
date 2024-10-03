@@ -50,6 +50,12 @@ export class Publication extends Document {
 
   @Prop({ type: Date })
   expirationDate: Date;
+
+  @Prop()
+  image: string | null;
+
+  @Prop({ type: Date, default: Date.now })
+  startDate: Date;
 }
 
 export const PublicationSchema = SchemaFactory.createForClass(Publication);
