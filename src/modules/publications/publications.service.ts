@@ -32,7 +32,6 @@ export class PublicationsService {
   }
 
   async update(id: string, publicationDto: UpdatePublicationDto) {
-    console.log(publicationDto);
     const document = await this.publicationModel.findById(id);
     if (!document) {
       throw new BadRequestException(`Publication ${id} don't exist`);
@@ -46,12 +45,9 @@ export class PublicationsService {
     const { image } = publicationDto;
     if (image !== undefined && document.image && image !== document.image) {
       filesToDelete.push(document.image);
+      publicationDto.image = image === '' ? null : image;
     }
-    const updated = await this.publicationModel.findByIdAndUpdate(
-      id,
-      { ...publicationDto, ...(image === '' && { image: null }) },
-      { new: true },
-    );
+    const updated = await this.publicationModel.findByIdAndUpdate(id, publicationDto, { new: true });
     await this.fileService.deleteFiles(filesToDelete, 'posts');
     return this._plainPublication(updated);
   }

@@ -26,7 +26,6 @@ export class PostsController {
   @Patch(':id')
   @Public()
   update(@Param('id') id: string, @Body() publicationDto: UpdatePublicationDto) {
-    console.log(publicationDto);
     return this.postsService.update(id, publicationDto);
   }
 
