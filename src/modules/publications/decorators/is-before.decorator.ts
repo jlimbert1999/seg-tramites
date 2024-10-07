@@ -10,7 +10,7 @@ import {
 export class IsStartDateBeforeExpirationConstraint implements ValidatorConstraintInterface {
   validate(startDate: Date, args: ValidationArguments) {
     const expirationDate = (args.object as any).expirationDate;
-    return startDate < expirationDate;
+    return startDate <= expirationDate;
   }
 
   defaultMessage(args: ValidationArguments) {
