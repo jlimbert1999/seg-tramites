@@ -16,11 +16,9 @@ export class AttachmentDto {
 
 export class CreatePublicationDto {
   @IsString()
-  @IsNotEmpty()
   title: string;
 
   @IsString()
-  @IsNotEmpty()
   content: string;
 
   @IsArray()
