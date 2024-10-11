@@ -7,18 +7,8 @@ import {
 } from 'class-validator';
 import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { PaginationDto } from 'src/common';
-import { CreateUserDto } from 'src/modules/users/dtos';
 
 export class CreateAccountDto {
-  @IsMongoId()
-  dependencia: string;
-
-  @IsNotEmpty()
-  @IsString()
-  jobtitle: string;
-}
-
-export class AssingAccountDto extends CreateUserDto {
   @IsString()
   @IsNotEmpty()
   jobtitle: string;
@@ -35,9 +25,11 @@ export class AssingAccountDto extends CreateUserDto {
 }
 
 export class UpdateAccountDto extends PartialType(
-  OmitType(AssingAccountDto, ['dependency'] as const),
+  OmitType(CreateAccountDto, ['dependency'] as const),
 ) {}
 
 export class FilterAccountDto extends PaginationDto {
-  dependency: string;
+  @IsMongoId()
+  @IsOptional()
+  dependency?: string;
 }

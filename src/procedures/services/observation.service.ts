@@ -42,7 +42,7 @@ export class ObservationService {
           { session },
         );
       }
-      const { funcionario } = await this.accountModel.populate(account, {
+      const { officer } = await this.accountModel.populate(account, {
         path: 'funcionario',
       });
 

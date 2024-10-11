@@ -32,7 +32,7 @@ export class ArchiveService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      const { funcionario } = await account.populate('funcionario');
+      const { officer } = await account.populate('funcionario');
 
       // TODO repair fullname officer
       await this.communicationModel.updateOne(
@@ -197,7 +197,7 @@ export class ArchiveService {
     const inboundDate = new Date();
     const outboundDate = new Date(inboundDate.getTime() + 1000);
     const { receiver, attachmentQuantity, internalNumber } = currentMail;
-    const { funcionario } = await participant.populate({
+    const { officer } = await participant.populate({
       path: 'funcionario',
       populate: { path: 'cargo', select: 'nombre' },
     });
@@ -208,7 +208,7 @@ export class ArchiveService {
         cuenta: participant._id,
         // TODO repair user fullane
         fullname: '',
-        ...(funcionario.cargo && { jobtitle: funcionario.cargo.nombre }),
+        ...(officer.cargo && { jobtitle: officer.cargo.nombre }),
       },
       outboundDate,
       inboundDate,

@@ -27,7 +27,7 @@ export class AccountGuard implements CanActivate {
     if (!account) {
       throw new ForbiddenException(`La cuenta no existe`);
     }
-    if (!account.funcionario) {
+    if (!account.officer) {
       throw new ForbiddenException(`La cuenta no esta asignada`);
     }
     request['account'] = account;

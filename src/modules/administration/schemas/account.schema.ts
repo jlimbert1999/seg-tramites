@@ -45,7 +45,7 @@ export class Account extends Document {
     type: mongoose.Schema.Types.ObjectId,
     ref: Officer.name,
   })
-  funcionario?: Officer;
+  officer?: Officer;
 
   @Prop({ type: String })
   jobtitle: string;

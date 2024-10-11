@@ -14,20 +14,17 @@ import {
   AccountService,
   DependencieService,
   InstitutionService,
-  JobService,
   OfficerService,
 } from 'src/modules/administration/services';
 import { Public, ResourceProtected } from 'src/auth/decorators';
 import { PROCEDURES, SystemResource } from 'src/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
 import {
-  AssingAccountDto,
   CreateAccountDto,
-  CreateOfficerDto,
   FilterAccountDto,
   UpdateAccountDto,
 } from 'src/modules/administration/dtos';
-import { CreateUserDto } from 'src/modules/users/dtos';
+import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dtos';
 
 // @ResourceProtected(SystemResource.accounts)
 @Controller('accounts')
@@ -46,11 +43,6 @@ export class AccountController {
     return this.accountService.repairColection();
   }
 
-  @Get('search/:term')
-  search(@Param('term') term: string, @Query() params: any) {
-    // return this.accountService.search(term, params);
-  }
-
   @Get()
   @Public()
   findAll(@Query() params: FilterAccountDto) {
@@ -59,21 +51,19 @@ export class AccountController {
 
   @Post()
   create(
-    @Body('officer') officer: CreateOfficerDto,
     @Body('account') account: CreateAccountDto,
     @Body('user') user: CreateUserDto,
   ) {
-    return this.accountService.create(account, officer, user);
-  }
-
-  @Post('assign')
-  assign(@Body() account: AssingAccountDto) {
-    return this.accountService.assign(account);
+    return this.accountService.create(user, account);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() account: UpdateAccountDto) {
-    return this.accountService.update(id, account);
+  update(
+    @Param('id') id: string,
+    @Body('user') user: UpdateUserDto,
+    @Body('account') account: UpdateAccountDto,
+  ) {
+    return this.accountService.update(id, user, account);
   }
 
   @Delete('unlink/:id')

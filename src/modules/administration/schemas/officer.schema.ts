@@ -43,12 +43,6 @@ export class Officer extends Document {
   cargo?: Job;
 
   @Prop({
-    type: String,
-  })
-  //   ! DELETE AFTER UPDATE
-  oldcargo: string;
-
-  @Prop({
     type: Boolean,
     default: true,
   })
@@ -59,11 +53,6 @@ export class Officer extends Document {
     // default: false,
   })
   cuenta: boolean;
-
-  @Prop({
-    type: String,
-  })
-  imgUrl?: string;
 }
 
 export const OfficerSchema = SchemaFactory.createForClass(Officer);

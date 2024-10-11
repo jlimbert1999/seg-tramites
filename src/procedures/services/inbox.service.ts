@@ -161,8 +161,8 @@ export class InboxService {
     const emitter = {
       cuenta: account._id,
       fullname: '',
-      ...(account.funcionario.cargo && {
-        jobtitle: account.funcionario.cargo.nombre,
+      ...(account.officer.cargo && {
+        jobtitle: account.officer.cargo.nombre,
       }),
     };
     const outboundDate = new Date();
@@ -204,7 +204,7 @@ export class InboxService {
     try {
       session.startTransaction();
       const { procedure, emitter } = mailDB;
-      const { funcionario } = await account.populate('funcionario');
+      const { officer } = await account.populate('funcionario');
       const date = new Date();
       await this.commModel.updateOne(
         { _id: id },

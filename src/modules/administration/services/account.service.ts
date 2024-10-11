@@ -11,14 +11,13 @@ import mongoose, { FilterQuery, Model } from 'mongoose';
 import { OfficerService } from './officer.service';
 import { Account } from '../schemas';
 import {
-  AssingAccountDto,
   CreateAccountDto,
   CreateOfficerDto,
   FilterAccountDto,
   UpdateAccountDto,
 } from '../dtos';
 import { User, UserDocument } from 'src/modules/users/schemas';
-import { CreateUserDto } from 'src/modules/users/dtos';
+import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dtos';
 import { UserService } from 'src/modules/users/services';
 
 @Injectable()
@@ -100,7 +99,7 @@ export class AccountService {
       ...(term && {
         $or: [
           { fullname: regex },
-          { 'funcionario.dni': regex },
+          { 'officer.dni': regex },
           { jobtitle: regex },
         ],
       }),
@@ -141,64 +140,29 @@ export class AccountService {
     const accounts = data[0].paginatedResults;
     await this.accountModel.populate(accounts, [
       { path: 'dependencia' },
-      { path: 'funcionario' },
-      { path: 'user', select: 'login role isActive' },
+      { path: 'officer' },
+      { path: 'user', select: '-password' },
     ]);
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
     return { accounts, length };
   }
 
-  async create(
-    accountDto: CreateAccountDto,
-    officerDto: CreateOfficerDto,
-    userDto: CreateUserDto,
-  ) {
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      const user = await this.userService.create(userDto, session);
-      const officer = await this.officerService.create(officerDto, session);
-      const createdAccount = new this.accountModel({
-        user: user._id,
-        funcionario: officer._id,
-        ...accountDto,
-      });
-      await createdAccount.save({ session });
-      await session.commitTransaction();
-      await createdAccount.populate([
-        { path: 'dependencia' },
-        { path: 'funcionario' },
-        { path: 'user', select: 'login role isActive' },
-      ]);
-      return createdAccount;
-    } catch (error) {
-      await session.abortTransaction();
-      if (error instanceof HttpException) throw error;
-      throw new InternalServerErrorException('Error al crear cuenta');
-    } finally {
-      session.endSession();
-    }
-  }
-
   async update(
     id: string,
-    { jobtitle, isVisible, officer, ...props }: UpdateAccountDto,
+    userDto: UpdateUserDto,
+    accountDto: UpdateAccountDto,
   ) {
     const accountDB = await this.accountModel.findById(id);
     if (!accountDB) throw new NotFoundException(`La cuenta ${id} no existe`);
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.userService.update(accountDB.user._id, props, session);
+      await this.userService.update(accountDB.user._id, userDto, session);
       const updatedAccount = await this.accountModel
-        .findByIdAndUpdate(
-          id,
-          { jobtitle, funcionario: officer, isVisible },
-          { new: true },
-        )
+        .findByIdAndUpdate(id, accountDto, { new: true, session })
         .populate([
           { path: 'dependencia' },
-          { path: 'funcionario' },
+          { path: 'officer' },
           { path: 'user', select: 'login role isActive' },
         ]);
       await session.commitTransaction();
@@ -212,22 +176,21 @@ export class AccountService {
     }
   }
 
-  async assign({ jobtitle, officer, dependency, ...props }: AssingAccountDto) {
+  async create(userDto: CreateUserDto, accountDto: CreateAccountDto) {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      const userDb = await this.userService.create(props, session);
+      const userDb = await this.userService.create(userDto, session);
       const createdAccount = new this.accountModel({
-        funcionario: officer,
-        dependencia: dependency,
+        ...accountDto,
         user: userDb._id,
-        jobtitle,
       });
       await createdAccount.save({ session });
       await session.commitTransaction();
       return await createdAccount.populate([
         { path: 'funcionario' },
         { path: 'dependencia' },
+        { path: 'user', select: 'login role isActive' },
       ]);
     } catch (error) {
       await session.abortTransaction();
@@ -268,21 +231,5 @@ export class AccountService {
       });
   }
 
-  async disable(id: string) {
-    const { activo } = await this.accountModel.findOneAndUpdate(
-      { _id: id },
-      [{ $set: { activo: { $eq: [false, '$activo'] } } }],
-      { new: true },
-    );
-    return activo;
-  }
 
-  async toggleVisibility(id: string) {
-    const { isVisible } = await this.accountModel.findOneAndUpdate(
-      { _id: id },
-      [{ $set: { isVisible: { $eq: [false, '$isVisible'] } } }],
-      { new: true },
-    );
-    return isVisible;
-  }
 }
