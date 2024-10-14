@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ArchiveService } from '../services/archive.service';
-import { ResourceProtected } from 'src/auth/decorators';
+import { ResourceProtected } from 'src/modules/auth/decorators';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
-import { SystemResource } from 'src/auth/constants';
+import { SystemResource } from 'src/modules/auth/constants';
 import { CreateArchiveDto } from '../dto';
 import { IsMongoidPipe } from 'src/common/pipes';
 import { Account } from 'src/modules/administration/schemas';

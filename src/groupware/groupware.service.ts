@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { userSocket } from './interfaces/user-socket.interface';
-import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
+import { JwtPayload } from 'src/modules/auth/interfaces/jwt.interface';
 
 @Injectable()
 export class GroupwareService {

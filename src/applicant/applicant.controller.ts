@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { Public } from 'src/auth/decorators';
+import { Public } from 'src/modules/auth/decorators';
 import { ApplicantService } from './applicant.service';
 import { ApplicantQueryDto } from './dto/query.dto';
 

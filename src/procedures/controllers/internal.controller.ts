@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { ResourceProtected } from 'src/auth/decorators';
+import { ResourceProtected } from 'src/modules/auth/decorators';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import {
   CreateInternalDetailDto,
@@ -12,7 +12,7 @@ import {
   OfficerService,
   TypeProcedureService,
 } from 'src/modules/administration/services';
-import { SystemResource } from 'src/auth/constants';
+import { SystemResource } from 'src/modules/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
 import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
 import { GetAccountRequest } from '../decorators/get-account-request.decorator';

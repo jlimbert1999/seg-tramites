@@ -1,55 +1,54 @@
 import { Menu } from '../interfaces';
+import { SystemResource } from './system-resources';
 
 export const FRONTEND_MENU: Menu[] = [
   {
-    resource: 'institutions',
-    text: 'Instituciones',
-    icon: 'apartment',
-    routerLink: 'institutions',
-  },
-  {
-    resource: 'dependencies',
-    text: 'Dependencias',
-    icon: 'holiday_village',
-    routerLink: 'dependencies',
-  },
-  {
-    resource: 'officers',
-    text: 'Funcionarios',
-    icon: 'person',
-    routerLink: 'officers',
-  },
-  {
-    resource: 'accounts',
-    text: 'Cuentas',
-    icon: 'account_circle',
-    routerLink: 'accounts',
-  },
-  {
-    resource: 'accounts',
+    resource: SystemResource.USERS,
     text: 'Usuarios',
     icon: 'account_circle',
     routerLink: 'usuarios',
   },
   {
-    resource: 'roles',
+    resource: SystemResource.ROLES,
     text: 'Roles',
     icon: 'verified_user',
     routerLink: 'roles',
   },
   {
-    resource: 'types-procedures',
-    text: 'Tipos de tramite',
-    icon: 'summarize',
-    routerLink: 'types-procedures',
+    text: 'Configuraciones',
+    children: [
+      {
+        resource: 'institutions',
+        text: 'Instituciones',
+        icon: 'apartment',
+        routerLink: 'institutions',
+      },
+      {
+        resource: 'dependencies',
+        text: 'Dependencias',
+        icon: 'holiday_village',
+        routerLink: 'dependencies',
+      },
+      {
+        resource: 'officers',
+        text: 'Funcionarios',
+        icon: 'person',
+        routerLink: 'officers',
+      },
+      {
+        resource: 'accounts',
+        text: 'Cuentas',
+        icon: 'assignment_ind',
+        routerLink: 'accounts',
+      },
+      {
+        resource: 'types-procedures',
+        text: 'Tramites',
+        icon: 'summarize',
+        routerLink: 'types-procedures',
+      },
+    ],
   },
-
-  // {
-  //   resource: 'jobs',
-  //   text: 'Cargos',
-  //   icon: 'badge',
-  //   routerLink: 'jobs',
-  // },
 
   {
     resource: 'external',

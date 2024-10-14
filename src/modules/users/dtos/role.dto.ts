@@ -8,7 +8,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { SystemResource } from 'src/auth/constants';
+import { SystemResource } from 'src/modules/auth/constants';
 
 export class CreateRoleDto {
   @IsNotEmpty()

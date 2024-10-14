@@ -8,8 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { ResourceProtected } from 'src/auth/decorators';
-import { SystemResource } from 'src/auth/constants';
+import { ResourceProtected } from 'src/modules/auth/decorators';
+import { SystemResource } from 'src/modules/auth/constants';
 
 import { CreateOfficerDto, UpdateOfficerDto } from '../dtos';
 import { OfficerService } from '../services';

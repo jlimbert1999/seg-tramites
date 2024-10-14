@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  JobController,
   OfficerController,
   DependencyController,
   InstitutionController,
@@ -28,7 +27,6 @@ import {
   AccountService,
   DependencieService,
   InstitutionService,
-  JobService,
   OfficerService,
   TypeProcedureService,
 } from './services';
@@ -40,7 +38,6 @@ import { UsersModule } from '../users/users.module';
     InstitutionController,
     TypeProcedureController,
     OfficerController,
-    JobController,
     AccountController,
   ],
   providers: [
@@ -48,13 +45,12 @@ import { UsersModule } from '../users/users.module';
     InstitutionService,
     TypeProcedureService,
     OfficerService,
-    JobService,
     AccountService,
   ],
   imports: [
     UsersModule,
     MongooseModule.forFeature([
-      { name: Job.name, schema: JobSchema },
+      // { name: Job.name, schema: JobSchema },
       { name: Account.name, schema: AccountSchema },
       { name: Officer.name, schema: OfficerSchema },
       { name: Dependency.name, schema: DependencySchema },
@@ -68,7 +64,6 @@ import { UsersModule } from '../users/users.module';
     InstitutionService,
     DependencieService,
     OfficerService,
-    JobService,
     AccountService,
   ],
 })

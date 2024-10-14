@@ -1,6 +1,5 @@
 import {
   Injectable,
-  BadRequestException,
   InternalServerErrorException,
   NotFoundException,
   HttpException,
@@ -108,22 +107,22 @@ export class AccountService {
       .aggregate()
       .lookup({
         from: 'funcionarios',
-        localField: 'funcionario',
+        localField: 'officer',
         foreignField: '_id',
-        as: 'funcionario',
+        as: 'officer',
       })
       .unwind({
-        path: '$funcionario',
+        path: '$officer',
         preserveNullAndEmptyArrays: true,
       })
       .addFields({
         fullname: {
           $concat: [
-            { $ifNull: ['$funcionario.nombre', ''] },
+            { $ifNull: ['$officer.nombre', ''] },
             ' ',
-            { $ifNull: ['$funcionario.paterno', ''] },
+            { $ifNull: ['$officer.paterno', ''] },
             ' ',
-            { $ifNull: ['$funcionario.materno', ''] },
+            { $ifNull: ['$officer.materno', ''] },
           ],
         },
       })
@@ -140,7 +139,6 @@ export class AccountService {
     const accounts = data[0].paginatedResults;
     await this.accountModel.populate(accounts, [
       { path: 'dependencia' },
-      { path: 'officer' },
       { path: 'user', select: '-password' },
     ]);
     const length = data[0].totalCount[0] ? data[0].totalCount[0].count : 0;
@@ -163,7 +161,7 @@ export class AccountService {
         .populate([
           { path: 'dependencia' },
           { path: 'officer' },
-          { path: 'user', select: 'login role isActive' },
+          { path: 'user', select: '-password' },
         ]);
       await session.commitTransaction();
       return updatedAccount;
@@ -201,17 +199,6 @@ export class AccountService {
     }
   }
 
-  async unlink(id: string) {
-    const result = await this.accountModel.updateOne(
-      { _id: id },
-      { $unset: { funcionario: 1 } },
-    );
-    if (result.matchedCount === 0) {
-      throw new NotFoundException(`La cuenta ${id} no existe`);
-    }
-    return { message: 'Cuenta desvinculada' };
-  }
-
   async getAccountsForSend(id_dependency: string, id_account: string) {
     return await this.accountModel
       .find({
@@ -230,6 +217,4 @@ export class AccountService {
         },
       });
   }
-
-
 }

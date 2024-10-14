@@ -10,8 +10,8 @@ import {
 
 import { InstitutionService, DependencieService } from '../services';
 import { UpdateDependencyDto, CreateDependencyDto } from '../dtos';
-import { ResourceProtected } from 'src/auth/decorators';
-import { SystemResource } from 'src/auth/constants';
+import { ResourceProtected } from 'src/modules/auth/decorators';
+import { SystemResource } from 'src/modules/auth/constants';
 import { PaginationDto } from 'src/common';
 
 @Controller('dependencies')

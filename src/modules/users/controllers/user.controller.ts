@@ -8,8 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 
-import { Public, ResourceProtected } from 'src/auth/decorators';
-import { SystemResource } from 'src/auth/constants';
+import { Public, ResourceProtected } from 'src/modules/auth/decorators';
+import { SystemResource } from 'src/modules/auth/constants';
 import { PaginationDto } from 'src/common';
 
 

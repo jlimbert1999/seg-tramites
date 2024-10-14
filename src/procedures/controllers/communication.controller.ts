@@ -14,7 +14,7 @@ import {
 } from 'src/modules/administration/services';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { InboxService, OutboxService } from '../services';
-import { ResourceProtected } from 'src/auth/decorators';
+import { ResourceProtected } from 'src/modules/auth/decorators';
 import {
   CancelMailsDto,
   CreateCommunicationDto,
@@ -23,7 +23,7 @@ import {
 } from '../dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
-import { SystemResource } from 'src/auth/constants';
+import { SystemResource } from 'src/modules/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
 import { AccountService } from 'src/modules/administration/services/account.service';
 import { Account } from 'src/modules/administration/schemas';

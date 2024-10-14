@@ -1,4 +1,4 @@
-import { EnvConfig } from 'src/auth/interfaces';
+import { EnvConfig } from 'src/modules/auth/interfaces';
 
 export const EnvConfiguration = (): EnvConfig => ({
   mongodb_url: process.env.MONGODB_URL,

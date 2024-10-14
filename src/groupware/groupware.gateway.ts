@@ -10,7 +10,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { GroupwareService } from './groupware.service';
-import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
+import { JwtPayload } from 'src/modules/auth/interfaces/jwt.interface';
 import { Communication } from 'src/procedures/schemas';
 
 interface expelClientProps {

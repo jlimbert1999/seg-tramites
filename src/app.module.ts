@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { join } from 'path';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { AdministrationModule } from './modules/administration/administration.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { ProceduresModule } from './procedures/procedures.module';

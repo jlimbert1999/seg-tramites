@@ -16,8 +16,8 @@ import {
   InstitutionService,
   OfficerService,
 } from 'src/modules/administration/services';
-import { Public, ResourceProtected } from 'src/auth/decorators';
-import { PROCEDURES, SystemResource } from 'src/auth/constants';
+import { Public, ResourceProtected } from 'src/modules/auth/decorators';
+import { PROCEDURES, SystemResource } from 'src/modules/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
 import {
   CreateAccountDto,
@@ -64,21 +64,6 @@ export class AccountController {
     @Body('account') account: UpdateAccountDto,
   ) {
     return this.accountService.update(id, user, account);
-  }
-
-  @Delete('unlink/:id')
-  unlink(@Param('id') id: string) {
-    return this.accountService.unlink(id);
-  }
-
-  @Delete(':id')
-  disable(@Param('id') id: string) {
-    // return this.accountService.disable(id);
-  }
-
-  @Put('visibility/:id')
-  toggleVisibility(@Param('id') id: string) {
-    // return this.accountService.toggleVisibility(id);
   }
 
   @Get('institutions')

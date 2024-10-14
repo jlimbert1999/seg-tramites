@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dtos/post.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { GetUserRequest } from 'src/auth/decorators';
+import { GetUserRequest } from 'src/modules/auth/decorators';
 import { PublicationPriority } from './schemas/publication.schema';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { User } from '../users/schemas';

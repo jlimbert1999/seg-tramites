@@ -8,11 +8,11 @@ import {
 } from '../dto';
 import { ExternalService } from '../services';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { SystemResource } from 'src/auth/constants';
+import { SystemResource } from 'src/modules/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
 import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
 import { GetAccountRequest } from '../decorators/get-account-request.decorator';
-import { ResourceProtected } from 'src/auth/decorators';
+import { ResourceProtected } from 'src/modules/auth/decorators';
 
 @Controller('external')
 @ResourceProtected(SystemResource.EXTERNAL)
