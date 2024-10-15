@@ -6,7 +6,7 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { AuthDto, UpdateMyAccountDto } from './dto';
-import { EnvConfig, JwtPayload, Menu } from './interfaces';
+import { EnvConfig, JwtPayload } from './interfaces';
 
 import { logger } from 'src/config/logger';
 import { User, UserDocument, Role } from 'src/modules/users/schemas';
@@ -97,10 +97,13 @@ export class AuthService {
   private _getFrontMenu({ permissions }: Role) {
     const SystemMenu = FRONTEND_MENU;
     return SystemMenu.filter((menu) => {
-      if (!menu.children)
-        return permissions.some(({ resource }) => resource === menu.resource);
+      if (!menu.children) {
+        return permissions.some(({ resource }) =>
+          menu.resource.includes(resource),
+        );
+      }
       menu.children = menu.children.filter((submenu) =>
-        permissions.some(({ resource }) => resource === submenu.resource),
+        permissions.some(({ resource }) => submenu.resource.includes(resource)),
       );
       return menu.children.length > 0;
     });

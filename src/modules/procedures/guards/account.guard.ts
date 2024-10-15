@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   InternalServerErrorException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -23,12 +24,13 @@ export class AccountGuard implements CanActivate {
     }
     const account = await this.accountModel
       .findOne({ user: user._id })
-      .populate('funcionario dependencia');
+      .populate(['officer', 'dependencia']);
+
     if (!account) {
-      throw new ForbiddenException(`La cuenta no existe`);
+      throw new ForbiddenException(`No esta vinculado a ninguna cuenta`);
     }
     if (!account.officer) {
-      throw new ForbiddenException(`La cuenta no esta asignada`);
+      throw new BadRequestException(`La cuenta no esta asignada`);
     }
     request['account'] = account;
     return true;

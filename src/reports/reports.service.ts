@@ -3,10 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 
 import { Account, Dependency } from 'src/modules/administration/schemas';
-import { Communication, ExternalDetail, Procedure } from 'src/procedures/schemas';
+import { Communication, ExternalDetail, Procedure } from 'src/modules/procedures/schemas';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
-import { groupProcedure, StatusMail } from 'src/procedures/interfaces';
+import { groupProcedure, StatusMail } from 'src/modules/procedures/interfaces';
 
 @Injectable()
 export class ReportsService {

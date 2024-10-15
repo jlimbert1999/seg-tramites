@@ -6,8 +6,8 @@ import { Module } from '@nestjs/common';
 import { join } from 'path';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdministrationModule } from './modules/administration/administration.module';
-import { GroupwareModule } from './groupware/groupware.module';
-import { ProceduresModule } from './procedures/procedures.module';
+import { GroupwareModule } from './modules/groupware/groupware.module';
+import { ProceduresModule } from './modules/procedures/procedures.module';
 import { EnvConfiguration } from './config/env.configuration';
 import { ReportsModule } from './reports/reports.module';
 

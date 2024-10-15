@@ -12,7 +12,7 @@ import {
   InstitutionService,
   DependencieService,
 } from 'src/modules/administration/services';
-import { GroupwareGateway } from 'src/groupware/groupware.gateway';
+import { GroupwareGateway } from 'src/modules/groupware/groupware.gateway';
 import { InboxService, OutboxService } from '../services';
 import { ResourceProtected } from 'src/modules/auth/decorators';
 import {

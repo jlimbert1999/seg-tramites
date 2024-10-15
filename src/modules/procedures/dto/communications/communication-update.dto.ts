@@ -1,5 +1,5 @@
 import { ArrayMinSize, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { StatusMail } from 'src/procedures/interfaces';
+import { StatusMail } from 'src/modules/procedures/interfaces';
 
 export class UpdateCommunicationDto {
   @IsString()

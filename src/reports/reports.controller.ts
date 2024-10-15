@@ -13,7 +13,7 @@ import {
 
 import { IsMongoidPipe } from 'src/common/pipes';
 import { Account } from 'src/modules/administration/schemas';
-import { GetAccountRequest } from 'src/procedures/decorators/get-account-request.decorator';
+import { GetAccountRequest } from 'src/modules/procedures/decorators/get-account-request.decorator';
 
 @Controller('reports')
 export class ReportsController {

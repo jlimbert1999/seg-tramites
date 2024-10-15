@@ -1,18 +1,19 @@
 export enum SystemResource {
-  INSTITUTIONS = 'institutions',
-  DEPENDENCIES = 'dependencies',
   USERS = 'user',
   ROLES = 'roles',
+
+  INSTITUTIONS = 'institutions',
+  DEPENDENCIES = 'dependencies',
   OFFICERS = 'officers',
+  ACCOUNTS = 'accounts',
+  TYPES_PROCEDURES = 'types-procedures',
 
   EXTERNAL = 'external',
   INTERNAL = 'internal',
 
   communication = 'communication',
-  typeProcedures = 'types-procedures',
   groupware = 'groupware',
   archived = 'archived',
-  accounts = 'accounts',
   reports = 'reports',
   jobs = 'jobs',
   publications = 'publications',
@@ -49,7 +50,7 @@ export const SYSTEM_RESOURCES = [
   },
 
   {
-    value: SystemResource.accounts,
+    value: SystemResource.ACCOUNTS,
     label: 'Cuentas',
     actions: [
       { value: 'create', label: 'Crear' },
@@ -90,8 +91,7 @@ export const SYSTEM_RESOURCES = [
   //   ],
   // },
   {
-    value: SystemResource.typeProcedures,
-
+    value: SystemResource.TYPES_PROCEDURES,
     label: 'TIPOS DE TRAMITES',
     actions: [
       { value: 'create', label: 'Crear' },

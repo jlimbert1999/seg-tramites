@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
+import mongoose from 'mongoose';
 import { Account, TypeProcedure } from 'src/modules/administration/schemas';
 import { stateProcedure } from '../interfaces';
 import { ExternalProcedure } from './external-procedure.schema';
@@ -45,7 +45,7 @@ export class ProcedureBase {
     type: String,
     required: true,
   })
-  amount: string;
+  numberOfDocuments: string;
 
   @Prop({ type: Boolean, default: false })
   send: boolean;

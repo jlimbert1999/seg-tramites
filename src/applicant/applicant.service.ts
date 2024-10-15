@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Communication, ExternalDetail, Observation, Procedure } from 'src/procedures/schemas';
+import { Communication, ExternalDetail, Observation, Procedure } from 'src/modules/procedures/schemas';
 import { ApplicantQueryDto } from './dto/query.dto';
-import { StatusMail } from 'src/procedures/interfaces';
+import { StatusMail } from 'src/modules/procedures/interfaces';
 
 @Injectable()
 export class ApplicantService {

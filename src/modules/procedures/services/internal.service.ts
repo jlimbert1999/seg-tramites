@@ -6,7 +6,7 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import mongoose, { Model } from 'mongoose';
-import { InternalDetail, Procedure } from '../schemas';
+import { InternalDetail, InternalProcedure, Procedure } from '../schemas';
 
 import {
   CreateInternalDetailDto,
@@ -30,8 +30,10 @@ export class InternalService implements ValidProcedureService {
     @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(InternalDetail.name)
-    private internalModel: Model<InternalDetail>,
+    private internalDetailModel: Model<InternalDetail>,
     private readonly configService: ConfigService,
+    @InjectModel(InternalProcedure.name)
+    private internalModel: Model<InternalProcedure>,
   ) {}
 
   async create(
@@ -39,33 +41,44 @@ export class InternalService implements ValidProcedureService {
     details: CreateInternalDetailDto,
     account: Account,
   ) {
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      const createdDetail = new this.internalModel(details);
-      await createdDetail.save({ session });
-      const { segment, ...procedureProps } = procedure;
-      const code = await this.generateCode(account, segment);
-      const createdProcedure = new this.procedureModel({
-        group: groupProcedure.INTERNAL,
-        details: createdDetail._id,
-        account: account._id,
-        code: code,
-        ...procedureProps,
-      });
-      await createdProcedure.save({ session });
-      await createdProcedure.populate('details');
-      await session.commitTransaction();
-      return createdProcedure;
-    } catch (error) {
-      await session.abortTransaction();
-      throw new InternalServerErrorException(
-        'No se puedo registrar el tramite correctamente',
-      );
-    } finally {
-      session.endSession();
-    }
+    // const session = await this.connection.startSession();
+    // try {
+    //   session.startTransaction();
+    //   const createdDetail = new this.internalDetailModel(details);
+    //   await createdDetail.save({ session });
+    //   const { segment, ...procedureProps } = procedure;
+    //   const code = await this.generateCode(account, segment);
+    //   const createdProcedure = new this.procedureModel({
+    //     group: groupProcedure.INTERNAL,
+    //     details: createdDetail._id,
+    //     account: account._id,
+    //     code: code,
+    //     ...procedureProps,
+    //   });
+    //   await createdProcedure.save({ session });
+    //   await createdProcedure.populate('details');
+    //   await session.commitTransaction();
+    //   return createdProcedure;
+    // } catch (error) {
+    //   await session.abortTransaction();
+    //   throw new InternalServerErrorException(
+    //     'No se puedo registrar el tramite correctamente',
+    //   );
+    // } finally {
+    //   session.endSession();
+    // }
+    const { segment, ...procedureProps } = procedure;
+    const code = await this.generateCode(account, segment);
+    const createdProcedure = new this.internalModel({
+      account: account._id,
+      code: code,
+      ...procedureProps,
+      ...details,
+    });
+    await createdProcedure.save();
+    return createdProcedure;
   }
+
   async update(
     id: string,
     procedure: UpdateProcedureDto,
@@ -97,25 +110,24 @@ export class InternalService implements ValidProcedureService {
       session.endSession();
     }
   }
+
   async findAll({ limit, offset }: PaginationDto, id_account: string) {
     const [procedures, length] = await Promise.all([
-      this.procedureModel
+      this.internalModel
         .find({
           account: id_account,
-          group: groupProcedure.INTERNAL,
           state: { $ne: 'ANULADO' },
         })
         .sort({ _id: -1 })
         .skip(offset)
         .limit(limit)
-        .populate('details')
         .lean(),
-      this.procedureModel.count({
+      this.internalModel.count({
         account: id_account,
-        group: groupProcedure.INTERNAL,
         state: { $ne: 'ANULADO' },
       }),
     ]);
+    console.log(procedures);
     return { procedures, length };
   }
   async search(
@@ -195,8 +207,7 @@ export class InternalService implements ValidProcedureService {
     const code = `${segmentProcedure}-${
       dependencia.institucion.sigla
     }-${this.configService.get('YEAR')}`.toUpperCase();
-    const correlative = await this.procedureModel.count({
-      group: groupProcedure.INTERNAL,
+    const correlative = await this.internalModel.count({
       code: new RegExp(code, 'i'),
     });
     return `${code}-${String(correlative + 1).padStart(5, '0')}`;

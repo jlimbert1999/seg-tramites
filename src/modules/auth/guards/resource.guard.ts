@@ -6,9 +6,10 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+
+import { User } from 'src/modules/users/schemas';
 import { META_RESOURCE } from '../decorators';
 import { SystemResource } from '../constants';
-import { User } from 'src/modules/users/schemas';
 
 @Injectable()
 export class ResourceGuard implements CanActivate {

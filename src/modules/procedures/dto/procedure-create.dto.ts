@@ -13,7 +13,7 @@ export class CreateProcedureDto {
 
   @IsString()
   @IsNotEmpty()
-  amount: string;
+  numberOfDocuments: string;
 
   @IsString()
   @IsNotEmpty()

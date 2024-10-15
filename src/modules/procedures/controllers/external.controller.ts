@@ -13,6 +13,7 @@ import { Account } from 'src/modules/administration/schemas';
 import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
 import { GetAccountRequest } from '../decorators/get-account-request.decorator';
 import { ResourceProtected } from 'src/modules/auth/decorators';
+import { CreateExternalProcedureDto } from '../dtos';
 
 @Controller('external')
 @ResourceProtected(SystemResource.EXTERNAL)
@@ -27,6 +28,7 @@ export class ExternalController {
   getSegments() {
     return this.typeProcedure.getSegments('EXTERNO');
   }
+
   @Get('types-procedures/:segment')
   async getTypesProceduresBySegment(@Param('segment') segment: string) {
     return await this.typeProcedure.getEnabledTypesBySegment(
@@ -53,12 +55,11 @@ export class ExternalController {
   }
 
   @Post()
-  async add(
+  create(
     @GetAccountRequest() account: Account,
-    @Body('procedure') procedure: CreateProcedureDto,
-    @Body('details') details: CreateExternalDetailDto,
+    @Body() procedureDto: CreateExternalProcedureDto,
   ) {
-    return await this.externalService.create(procedure, details, account);
+    return this.externalService.create(procedureDto, account);
   }
 
   @Put('/:id_procedure')

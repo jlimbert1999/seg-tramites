@@ -4,7 +4,7 @@ import { CreatePublicationDto } from './dtos/post.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { GetUserRequest } from 'src/modules/auth/decorators';
 import { PublicationPriority } from './schemas/publication.schema';
-import { GroupwareGateway } from 'src/groupware/groupware.gateway';
+import { GroupwareGateway } from 'src/modules/groupware/groupware.gateway';
 import { User } from '../users/schemas';
 
 @Controller('posts')

@@ -1,5 +1,5 @@
 import { IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { groupProcedure, stateProcedure } from 'src/procedures/interfaces';
+import { groupProcedure, stateProcedure } from 'src/modules/procedures/interfaces';
 
 export class SearchProcedureByPropertiesDto {
   @IsString()

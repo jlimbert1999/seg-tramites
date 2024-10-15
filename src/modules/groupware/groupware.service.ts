@@ -7,11 +7,9 @@ export class GroupwareService {
   private clients: Record<string, userSocket> = {};
 
   onClientConnected(sockerId: string, payload: JwtPayload): void {
-    if (this.clients[payload.userId]) {
-      this.clients[payload.userId].socketIds.push(sockerId);
-      return;
-    }
-    this.clients[payload.userId] = { ...payload, socketIds: [sockerId] };
+    const { socketIds } = this.clients[payload.userId] ?? { socketIds: [] };
+    socketIds.push(sockerId);
+    this.clients[payload.userId] = { ...payload, socketIds };
   }
 
   onClientDisconnected(id_socket: string) {
@@ -36,7 +34,7 @@ export class GroupwareService {
     return this.clients[id_account];
   }
 
-  getClients() {
+  getClients(): userSocket[] {
     return Object.values(this.clients);
   }
 }

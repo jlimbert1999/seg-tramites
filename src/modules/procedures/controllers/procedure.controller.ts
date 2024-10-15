@@ -77,4 +77,9 @@ export class ProcedureController {
   getObservations(@Param('id', IsMongoidPipe) id_procedure: string) {
     return this.observationService.getObservations(id_procedure);
   }
+
+  @Get('account')
+  checkAccount(@GetAccountRequest() acount: Account) {
+    return acount;
+  }
 }

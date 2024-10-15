@@ -1,12 +1,10 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Patch,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import { RoleService } from '../../users/services';
@@ -17,16 +15,13 @@ import {
   OfficerService,
 } from 'src/modules/administration/services';
 import { Public, ResourceProtected } from 'src/modules/auth/decorators';
-import { PROCEDURES, SystemResource } from 'src/modules/auth/constants';
+import { SystemResource } from 'src/modules/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
-import {
-  CreateAccountDto,
-  FilterAccountDto,
-  UpdateAccountDto,
-} from 'src/modules/administration/dtos';
 import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dtos';
 
-// @ResourceProtected(SystemResource.accounts)
+import { CreateAccountDto, FilterAccountDto, UpdateAccountDto } from '../dtos';
+
+@ResourceProtected(SystemResource.ACCOUNTS)
 @Controller('accounts')
 export class AccountController {
   constructor(

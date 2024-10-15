@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { stateProcedure } from 'src/procedures/interfaces';
+import { stateProcedure } from 'src/modules/procedures/interfaces';
 
 export class CreateArchiveDto {
   @IsString()

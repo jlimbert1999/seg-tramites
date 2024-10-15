@@ -36,7 +36,7 @@ import {
   ExternalProcedure,
   ExternalProcedureSchema,
 } from './schemas/index';
-import { GroupwareModule } from 'src/groupware/groupware.module';
+import { GroupwareModule } from 'src/modules/groupware/groupware.module';
 import { UsersModule } from 'src/modules/users/users.module';
 
 
