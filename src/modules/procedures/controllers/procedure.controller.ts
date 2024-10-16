@@ -80,6 +80,7 @@ export class ProcedureController {
 
   @Get('account')
   checkAccount(@GetAccountRequest() acount: Account) {
+    console.log('call');
     return acount;
   }
 }

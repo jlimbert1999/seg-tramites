@@ -3,22 +3,22 @@ import { Account, TypeProcedure } from 'src/modules/administration/schemas';
 import { stateProcedure } from '../interfaces';
 
 @Schema({ _id: false })
-class Person {
+class Worker {
   @Prop({
     type: String,
     required: true,
     uppercase: true,
   })
-  nombre: string;
+  fullname: string;
 
   @Prop({
     type: String,
     required: true,
     uppercase: true,
   })
-  cargo: string;
+  jobtitle: string;
 }
-const PersonSchema = SchemaFactory.createForClass(Person);
+const WorkerSchema = SchemaFactory.createForClass(Worker);
 
 @Schema()
 export class InternalProcedure {
@@ -28,20 +28,20 @@ export class InternalProcedure {
   account: Account;
   state: stateProcedure;
   reference: string;
-  amount: string;
+  numberOfDocuments: string;
   group: string;
 
   @Prop({
-    type: PersonSchema,
+    type: WorkerSchema,
     required: true,
   })
-  remitente: Person;
+  emitter: Worker;
 
   @Prop({
-    type: PersonSchema,
+    type: WorkerSchema,
     required: true,
   })
-  destinatario: Person;
+  receiver: Worker;
 }
 
 export const InternalProcedureSchema =

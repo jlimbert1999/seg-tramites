@@ -68,17 +68,23 @@ export const FRONTEND_MENU: Menu[] = [
     ],
   },
   {
-    resource: [SystemResource.EXTERNAL],
-    text: 'Tramites externos',
-    icon: 'folder_shared',
-    routerLink: 'external',
+    text: 'Administracion',
+    children: [
+      {
+        resource: [SystemResource.EXTERNAL],
+        text: 'Tramites externos',
+        icon: 'folder_shared',
+        routerLink: 'manage/external',
+      },
+      {
+        resource: [SystemResource.INTERNAL],
+        text: 'Tramites internos',
+        icon: 'folder',
+        routerLink: 'manage/internal',
+      },
+    ],
   },
-  {
-    resource: [SystemResource.INTERNAL],
-    text: 'Tramites internos',
-    icon: 'folder',
-    routerLink: 'internal',
-  },
+
   {
     resource: [SystemResource.EXTERNAL, SystemResource.INTERNAL],
     text: 'Bandeja de entrada',
@@ -91,6 +97,7 @@ export const FRONTEND_MENU: Menu[] = [
     icon: 'mark_as_unread',
     routerLink: 'outbox',
   },
+
   // {
   //   resource: 'archived',
   //   text: 'Archivos',

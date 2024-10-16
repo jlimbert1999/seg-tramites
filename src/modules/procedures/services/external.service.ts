@@ -28,7 +28,10 @@ import {
 } from '../interfaces';
 import { PaginationDto } from 'src/common';
 import { Account } from 'src/modules/administration/schemas';
-import { CreateExternalProcedureDto } from '../dtos';
+import {
+  CreateExternalProcedureDto,
+  UpdateExternalProcedureDto,
+} from '../dtos';
 
 @Injectable()
 export class ExternalService implements ValidProcedureService {
@@ -106,6 +109,7 @@ export class ExternalService implements ValidProcedureService {
     const [procedures, length] = await Promise.all([
       this.externaProcedurelModel
         .find(query)
+        .populate('account')
         .sort({ _id: -1 })
         .limit(limit)
         .skip(offset),
@@ -120,39 +124,25 @@ export class ExternalService implements ValidProcedureService {
     const createdProcedure = new this.externaProcedurelModel({
       account: account._id,
       code: code,
-      props,
+      pin: Math.floor(100000 + Math.random() * 900000),
+      ...props,
     });
     return await createdProcedure.save();
   }
 
-  async update(
-    id: string,
-    procedure: UpdateProcedureDto,
-    details: UpdateExternalDto,
-  ) {
-    const procedureDB = await this.checkIsEditable(id);
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      await this.externalDetailModel.updateOne(
-        { _id: procedureDB.details._id },
-        details,
-        { session },
-      );
-      const updatedProcedure = await this.procedureModel
-        .findByIdAndUpdate(id, procedure, {
-          session,
-          new: true,
-        })
-        .populate('details');
-      await session.commitTransaction();
-      return updatedProcedure;
-    } catch (error) {
-      await session.abortTransaction();
-      throw new InternalServerErrorException();
-    } finally {
-      session.endSession();
+  async update(id: string, procedureDto: UpdateExternalProcedureDto) {
+    const procedureDB = await this.externaProcedurelModel.findById(id);
+    if (!procedureDB) {
+      throw new NotFoundException('El tramite no existe');
     }
+    if (procedureDB.state !== stateProcedure.INSCRITO) {
+      throw new BadRequestException('El tramite ya esta en curso');
+    }
+    return await this.externaProcedurelModel.findByIdAndUpdate(
+      id,
+      procedureDto,
+      { new: true },
+    );
   }
 
   async getDetail(id: string) {
@@ -177,10 +167,13 @@ export class ExternalService implements ValidProcedureService {
     return procedureDB;
   }
 
-  private async checkIsEditable(id_procedure: string): Promise<Procedure> {
-    const procedureDB = await this.procedureModel.findById(id_procedure);
-    if (!procedureDB)
-      throw new NotFoundException('El tramite solicitado no existe');
+  private async checkIsEditable(
+    procedureId: string,
+  ): Promise<ExternalProcedure> {
+    const procedureDB = await this.externaProcedurelModel.findById(procedureId);
+    if (!procedureDB) {
+      throw new NotFoundException('El tramite no existe');
+    }
     if (procedureDB.state !== stateProcedure.INSCRITO) {
       throw new BadRequestException(
         'El tramite ya esta en proceso de evaluacion',
@@ -194,22 +187,12 @@ export class ExternalService implements ValidProcedureService {
     segment: string,
   ): Promise<string> {
     const { dependencia } = await account.populate({
-      path: 'dependencia',
-      select: 'institucion',
-      populate: {
-        path: 'institucion',
-        select: 'sigla',
-      },
+      path: 'dependencia.institucion',
     });
-    if (!dependencia)
-      throw new InternalServerErrorException(
-        'Error al generar el codigo alterno',
-      );
     const code = `${segment}-${
       dependencia.institucion.sigla
     }-${this.configService.get('YEAR')}`.toUpperCase();
-    const correlative = await this.procedureModel.count({
-      group: groupProcedure.EXTERNAL,
+    const correlative = await this.externaProcedurelModel.count({
       code: new RegExp(code),
     });
     return `${code}-${String(correlative + 1).padStart(6, '0')}`;

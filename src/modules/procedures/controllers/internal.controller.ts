@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ResourceProtected } from 'src/modules/auth/decorators';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import {
@@ -16,6 +25,10 @@ import { SystemResource } from 'src/modules/auth/constants';
 import { Account } from 'src/modules/administration/schemas';
 import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
 import { GetAccountRequest } from '../decorators/get-account-request.decorator';
+import {
+  CreateInternalProcedureDto,
+  UpdateInternalProcedureDto,
+} from '../dtos';
 
 @ResourceProtected(SystemResource.INTERNAL)
 @onlyAssignedAccount()
@@ -53,20 +66,18 @@ export class InternalController {
   }
 
   @Post()
-  async add(
+  create(
     @GetAccountRequest() account: Account,
-    @Body('procedure') procedure: CreateProcedureDto,
-    @Body('details') details: CreateInternalDetailDto,
+    @Body() procedureDto: CreateInternalProcedureDto,
   ) {
-    return await this.internalService.create(procedure, details, account);
+    return this.internalService.create(procedureDto, account);
   }
 
-  @Put('/:id_procedure')
-  async edit(
-    @Param('id_procedure') id_procedure: string,
-    @Body('procedure') procedure: UpdateProcedureDto,
-    @Body('details') details: UpdateInternalDetailDto,
+  @Patch(':id')
+  update(
+    @Param('id') procedureId: string,
+    @Body() procedureDto: UpdateInternalProcedureDto,
   ) {
-    return await this.internalService.update(id_procedure, procedure, details);
+    return this.internalService.update(procedureId, procedureDto);
   }
 }

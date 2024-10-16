@@ -52,6 +52,7 @@ export class ExternalProcedure {
 
   @Prop({
     type: RepresentativeSchema,
+    default: null,
   })
   representative?: Representative;
 

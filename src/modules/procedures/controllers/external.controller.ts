@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { TypeProcedureService } from 'src/modules/administration/services/type-procedure.service';
 import {
   CreateExternalDetailDto,
@@ -13,7 +22,10 @@ import { Account } from 'src/modules/administration/schemas';
 import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
 import { GetAccountRequest } from '../decorators/get-account-request.decorator';
 import { ResourceProtected } from 'src/modules/auth/decorators';
-import { CreateExternalProcedureDto } from '../dtos';
+import {
+  CreateExternalProcedureDto,
+  UpdateExternalProcedureDto,
+} from '../dtos';
 
 @Controller('external')
 @ResourceProtected(SystemResource.EXTERNAL)
@@ -62,12 +74,11 @@ export class ExternalController {
     return this.externalService.create(procedureDto, account);
   }
 
-  @Put('/:id_procedure')
-  async edit(
-    @Param('id_procedure') id_procedure: string,
-    @Body('procedure') procedure: UpdateProcedureDto,
-    @Body('details') details: UpdateExternalDto,
+  @Patch(':id')
+  update(
+    @Param('id') procedureId: string,
+    @Body() procedureDto: UpdateExternalProcedureDto,
   ) {
-    return await this.externalService.update(id_procedure, procedure, details);
+    return this.externalService.update(procedureId, procedureDto);
   }
 }
