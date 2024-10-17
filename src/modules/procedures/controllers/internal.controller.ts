@@ -18,6 +18,7 @@ import {
 } from '../dto';
 import { InternalService } from '../services';
 import {
+  AccountService,
   OfficerService,
   TypeProcedureService,
 } from 'src/modules/administration/services';
@@ -35,7 +36,7 @@ import {
 @Controller('internal')
 export class InternalController {
   constructor(
-    private readonly officerService: OfficerService,
+    private readonly accountService: AccountService,
     private readonly internalService: InternalService,
     private readonly typeProcedureService: TypeProcedureService,
   ) {}
@@ -45,7 +46,7 @@ export class InternalController {
   }
   @Get('participant/:text')
   findParticipantForProcess(@Param('text') text: string) {
-    return this.officerService.findOfficersForProcess(text);
+    return this.accountService.searchActiveAccounts(text);
   }
 
   @Get('search/:text')

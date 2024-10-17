@@ -199,6 +199,37 @@ export class AccountService {
     }
   }
 
+  async searchActiveAccounts(term: string, limit = 5) {
+    const regex = new RegExp(term);
+    const s = await this.accountModel
+      .aggregate()
+      .lookup({
+        from: 'funcionarios',
+        localField: 'officer',
+        foreignField: '_id',
+        as: 'officer',
+      })
+      .unwind({
+        path: '$officer',
+      })
+      .addFields({
+        fullname: {
+          $concat: [
+            { $ifNull: ['$officer.nombre', ''] },
+            ' ',
+            { $ifNull: ['$officer.paterno', ''] },
+            ' ',
+            { $ifNull: ['$officer.materno', ''] },
+          ],
+        },
+      })
+      .match({ fullname: regex, activo: true })
+      .limit(limit)
+      .project({ fullname: 0 });
+    console.log(s);
+    return s;
+  }
+
   async getAccountsForSend(id_dependency: string, id_account: string) {
     return await this.accountModel
       .find({
