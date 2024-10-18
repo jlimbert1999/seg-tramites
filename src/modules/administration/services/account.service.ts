@@ -200,9 +200,10 @@ export class AccountService {
   }
 
   async searchActiveAccounts(term: string, limit = 5) {
-    const regex = new RegExp(term);
-    const s = await this.accountModel
+    const regex = new RegExp(term, 'i');
+    return await this.accountModel
       .aggregate()
+      .match({ officer: { $ne: null } })
       .lookup({
         from: 'funcionarios',
         localField: 'officer',
@@ -226,8 +227,6 @@ export class AccountService {
       .match({ fullname: regex, activo: true })
       .limit(limit)
       .project({ fullname: 0 });
-    console.log(s);
-    return s;
   }
 
   async getAccountsForSend(id_dependency: string, id_account: string) {

@@ -21,8 +21,8 @@ import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dtos';
 
 import { CreateAccountDto, FilterAccountDto, UpdateAccountDto } from '../dtos';
 
-@ResourceProtected(SystemResource.ACCOUNTS)
 @Controller('accounts')
+@ResourceProtected(SystemResource.ACCOUNTS)
 export class AccountController {
   constructor(
     private readonly accountService: AccountService,
@@ -39,7 +39,6 @@ export class AccountController {
   }
 
   @Get()
-  @Public()
   findAll(@Query() params: FilterAccountDto) {
     return this.accountService.findAll(params);
   }

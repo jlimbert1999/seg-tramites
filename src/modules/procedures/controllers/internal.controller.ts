@@ -40,10 +40,12 @@ export class InternalController {
     private readonly internalService: InternalService,
     private readonly typeProcedureService: TypeProcedureService,
   ) {}
+  
   @Get('types-procedures')
   async getTypesProcedures() {
     return await this.typeProcedureService.getEnabledTypesByGroup('INTERNO');
   }
+
   @Get('participant/:text')
   findParticipantForProcess(@Param('text') text: string) {
     return this.accountService.searchActiveAccounts(text);

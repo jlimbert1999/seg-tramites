@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { InternalDetail, InternalProcedure, Procedure } from '../schemas';
 
 import {
@@ -68,24 +68,25 @@ export class InternalService implements ValidProcedureService {
     );
   }
 
-  async findAll({ limit, offset }: PaginationDto, id_account: string) {
+  async findAll({ limit, offset, term }: PaginationDto, accountId: string) {
+    const regex = new RegExp(term, 'i');
+    const query: FilterQuery<InternalProcedure> = {
+      account: accountId,
+      code: regex,
+      reference: regex,
+    };
     const [procedures, length] = await Promise.all([
       this.internalProcedureModel
-        .find({
-          account: id_account,
-          state: { $ne: 'ANULADO' },
-        })
+        .find(query)
         .sort({ _id: -1 })
-        .skip(offset)
         .limit(limit)
+        .skip(offset)
         .lean(),
-      this.internalProcedureModel.count({
-        account: id_account,
-        state: { $ne: 'ANULADO' },
-      }),
+      this.internalProcedureModel.count(query),
     ]);
     return { procedures, length };
   }
+
   async search(
     { limit, offset }: PaginationDto,
     id_account: string,
