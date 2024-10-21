@@ -5,11 +5,11 @@ import { GroupwareGateway } from 'src/modules/groupware/groupware.gateway';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 import { SystemResource } from 'src/modules/auth/constants';
-import { CreateArchiveDto } from '../dto';
+import { CreateArchiveDto } from '../../procedures/dto';
 import { IsMongoidPipe } from 'src/common/pipes';
 import { Account } from 'src/modules/administration/schemas';
-import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
-import { GetAccountRequest } from '../decorators/get-account-request.decorator';
+import { onlyAssignedAccount } from '../../procedures/decorators/only-assigned-account.decorator';
+import { GetAccountRequest } from '../../procedures/decorators/get-account-request.decorator';
 
 @ResourceProtected(SystemResource.archived)
 @onlyAssignedAccount()

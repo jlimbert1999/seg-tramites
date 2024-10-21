@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Communication, Procedure } from '../schemas';
+import { Procedure } from '../../procedures/schemas';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { StatusMail, workflow } from '../interfaces';
+import { StatusMail, workflow } from '../../procedures/interfaces';
 import { HumanizeTime } from 'src/common/helpers';
+import { Communication } from '../schemas/communication.schema';
 
 @Injectable()
 export class OutboxService {
@@ -42,11 +43,17 @@ export class OutboxService {
         ],
       });
     const mails = dataPaginated[0].paginatedResults;
-    const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
+    const length = dataPaginated[0].totalCount[0]
+      ? dataPaginated[0].totalCount[0].count
+      : 0;
     return { mails, length };
   }
 
-  async search(id_account: string, text: string, { limit, offset }: PaginationDto) {
+  async search(
+    id_account: string,
+    text: string,
+    { limit, offset }: PaginationDto,
+  ) {
     const regex = new RegExp(text, 'i');
     const dataPaginated = await this.commModel
       .aggregate()
@@ -69,7 +76,12 @@ export class OutboxService {
         as: '_id.procedure',
       })
       .unwind('_id.procedure')
-      .match({ $or: [{ '_id.procedure.code': regex }, { '_id.procedure.reference': regex }] })
+      .match({
+        $or: [
+          { '_id.procedure.code': regex },
+          { '_id.procedure.reference': regex },
+        ],
+      })
       .facet({
         paginatedResults: [{ $skip: offset }, { $limit: limit }],
         totalCount: [
@@ -79,7 +91,9 @@ export class OutboxService {
         ],
       });
     const mails = dataPaginated[0].paginatedResults;
-    const length = dataPaginated[0].totalCount[0] ? dataPaginated[0].totalCount[0].count : 0;
+    const length = dataPaginated[0].totalCount[0]
+      ? dataPaginated[0].totalCount[0].count
+      : 0;
     return { mails, length };
   }
 
@@ -99,17 +113,26 @@ export class OutboxService {
   }
 
   private async timedWorkflow(workflow: workflow[], id_procedure: string) {
-    const { startDate } = await this.procedureModel.findById(id_procedure, 'startDate');
+    const { startDate } = await this.procedureModel.findById(
+      id_procedure,
+      'startDate',
+    );
     const receptionList: Record<string, Date> = {};
     const stages = workflow.map(({ _id, dispatches }) => {
-      dispatches.forEach((el) => (receptionList[el.receiver.cuenta] = el.inboundDate));
+      dispatches.forEach(
+        (el) => (receptionList[el.receiver.cuenta] = el.inboundDate),
+      );
       const start = receptionList[_id.emitter.cuenta] ?? startDate;
       return {
         ..._id,
-        duration: start ? HumanizeTime(_id.outboundDate.getTime() - start.getTime()) : 'No calculado',
+        duration: start
+          ? HumanizeTime(_id.outboundDate.getTime() - start.getTime())
+          : 'No calculado',
         dispatches: dispatches.map((dispatch) => {
           const duration = dispatch.inboundDate
-            ? HumanizeTime(dispatch.inboundDate.getTime() - _id.outboundDate.getTime())
+            ? HumanizeTime(
+                dispatch.inboundDate.getTime() - _id.outboundDate.getTime(),
+              )
             : 'Pendiente';
           return { ...dispatch, duration };
         }),

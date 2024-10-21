@@ -59,11 +59,11 @@ export class ExternalController {
   }
 
   @Get()
-  async get(
+  findAll(
     @GetAccountRequest('_id') id_account: string,
     @Query() PaginationDto: PaginationDto,
   ) {
-    return await this.externalService.findAll(PaginationDto, id_account);
+    return this.externalService.findAll(PaginationDto, id_account);
   }
 
   @Post()

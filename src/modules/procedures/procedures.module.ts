@@ -6,17 +6,12 @@ import { AdministrationModule } from 'src/modules/administration/administration.
 import {
   InternalController,
   ExternalController,
-  ArchiveController,
   ProcedureController,
-  CommunicationController,
 } from './controllers';
 import {
   ExternalService,
   InternalService,
-  InboxService,
   ObservationService,
-  ArchiveService,
-  OutboxService,
 } from './services';
 import {
   ExternalDetail,
@@ -27,8 +22,6 @@ import {
   InternalDetailSchema,
   Observation,
   ObservationSchema,
-  Communication,
-  CommunicationSchema,
   ProcedureBase,
   ProcedureBaseSchema,
   InternalProcedure,
@@ -39,7 +32,6 @@ import {
 import { GroupwareModule } from 'src/modules/groupware/groupware.module';
 import { UsersModule } from 'src/modules/users/users.module';
 
-
 @Module({
   imports: [
     ConfigModule,
@@ -47,7 +39,7 @@ import { UsersModule } from 'src/modules/users/users.module';
       { name: Procedure.name, schema: ProcedureSchema },
       { name: InternalDetail.name, schema: InternalDetailSchema },
       { name: ExternalDetail.name, schema: ExternalDetailSchema },
-      { name: Communication.name, schema: CommunicationSchema },
+      // { name: Communication.name, schema: CommunicationSchema },
       { name: Observation.name, schema: ObservationSchema },
       {
         name: ProcedureBase.name,
@@ -62,21 +54,8 @@ import { UsersModule } from 'src/modules/users/users.module';
     AdministrationModule,
     GroupwareModule,
   ],
-  controllers: [
-    InternalController,
-    ExternalController,
-    ProcedureController,
-    CommunicationController,
-    ArchiveController,
-  ],
-  providers: [
-    ExternalService,
-    InternalService,
-    InboxService,
-    ObservationService,
-    ArchiveService,
-    OutboxService,
-  ],
+  controllers: [InternalController, ExternalController, ProcedureController],
+  providers: [ExternalService, InternalService, ObservationService],
   exports: [MongooseModule],
 })
 export class ProceduresModule {}

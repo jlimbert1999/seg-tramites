@@ -13,22 +13,22 @@ import {
   DependencieService,
 } from 'src/modules/administration/services';
 import { GroupwareGateway } from 'src/modules/groupware/groupware.gateway';
-import { InboxService, OutboxService } from '../services';
+import { InboxService, OutboxService } from '../../procedures/services';
 import { ResourceProtected } from 'src/modules/auth/decorators';
 import {
   CancelMailsDto,
   CreateCommunicationDto,
   GetInboxParamsDto,
   UpdateCommunicationDto,
-} from '../dto';
+} from '../../procedures/dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 import { SystemResource } from 'src/modules/auth/constants';
 import { IsMongoidPipe } from 'src/common/pipes';
 import { AccountService } from 'src/modules/administration/services/account.service';
 import { Account } from 'src/modules/administration/schemas';
-import { onlyAssignedAccount } from '../decorators/only-assigned-account.decorator';
-import { GetAccountRequest } from '../decorators/get-account-request.decorator';
+import { onlyAssignedAccount } from '../../procedures/decorators/only-assigned-account.decorator';
+import { GetAccountRequest } from '../../procedures/decorators/get-account-request.decorator';
 
 @Controller('communication')
 @ResourceProtected(SystemResource.communication)

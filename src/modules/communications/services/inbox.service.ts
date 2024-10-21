@@ -9,15 +9,16 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Connection, FilterQuery, Model } from 'mongoose';
 
-import { Procedure, Communication } from '../schemas';
-import { stateProcedure, StatusMail } from '../interfaces';
+import { Procedure } from '../../procedures/schemas';
+import { stateProcedure, StatusMail } from '../../procedures/interfaces';
 import {
   CreateCommunicationDto,
   GetInboxParamsDto,
   ReceiverDto,
   UpdateCommunicationDto,
-} from '../dto';
+} from '../../procedures/dto';
 import { Account } from 'src/modules/administration/schemas';
+import { Communication } from '../schemas/communication.schema';
 
 @Injectable()
 export class InboxService {

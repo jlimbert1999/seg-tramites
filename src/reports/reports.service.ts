@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 
 import { Account, Dependency } from 'src/modules/administration/schemas';
-import { Communication, ExternalDetail, Procedure } from 'src/modules/procedures/schemas';
+import {  ExternalDetail, Procedure } from 'src/modules/procedures/schemas';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { SearchProcedureByApplicantDto, SearchProcedureByPropertiesDto } from './dto';
 import { groupProcedure, StatusMail } from 'src/modules/procedures/interfaces';
@@ -14,7 +14,7 @@ export class ReportsService {
     @InjectModel(Account.name) private accountModel: Model<Account>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
     @InjectModel(Dependency.name) private dependencyModel: Model<Dependency>,
-    @InjectModel(Communication.name) private communicationModel: Model<Communication>,
+    // @InjectModel(Communication.name) private communicationModel: Model<Communication>,
     @InjectModel(ExternalDetail.name) private externalModel: Model<ExternalDetail>,
   ) {}
 
@@ -73,80 +73,80 @@ export class ReportsService {
         select: 'nombre',
       },
     ]);
-    const inbox = await this.communicationModel
-      .find({ 'receiver.cuenta': account._id, status: { $in: [StatusMail.Received, StatusMail.Pending] } })
-      .lean()
-      .populate('procedure');
-    return { account, inbox };
+    // const inbox = await this.communicationModel
+    //   .find({ 'receiver.cuenta': account._id, status: { $in: [StatusMail.Received, StatusMail.Pending] } })
+    //   .lean()
+    //   .populate('procedure');
+    return { account };
   }
 
   async getWorkDetails(id_account: string) {
-    return await this.communicationModel
-      .aggregate()
-      .match({
-        'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
-      })
-      .group({
-        _id: '$status',
-        count: { $sum: 1 },
-      });
+    // return await this.communicationModel
+    //   .aggregate()
+    //   .match({
+    //     'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
+    //   })
+    //   .group({
+    //     _id: '$status',
+    //     count: { $sum: 1 },
+    //   });
   }
 
   async getTotalCommunications(id_account: string) {
-    return await this.communicationModel
-      .aggregate()
-      .match({
-        'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
-      })
-      .group({
-        _id: '$status',
-        count: { $sum: 1 },
-      });
+    // return await this.communicationModel
+    //   .aggregate()
+    //   .match({
+    //     'receiver.cuenta': new mongoose.Types.ObjectId(id_account),
+    //   })
+    //   .group({
+    //     _id: '$status',
+    //     count: { $sum: 1 },
+    //   });
   }
 
   async getPendingsByUnit(dependencyId: string) {
     const unit = await this.accountModel.find({ dependencia: dependencyId }, '_id');
-    const results = await this.communicationModel
-      .aggregate()
-      .match({ 'receiver.cuenta': { $in: unit.map((account) => account._id) } })
-      .group({
-        _id: {
-          account: '$receiver.cuenta',
-          status: '$status',
-        },
-        count: { $sum: 1 },
-      })
-      .group({
-        _id: '$_id.account',
-        details: {
-          $push: {
-            status: '$_id.status',
-            total: '$count',
-          },
-        },
-      });
-    return await this.accountModel.populate(results, {
-      path: '_id',
-      select: 'funcionario',
-      populate: {
-        path: 'funcionario',
-        select: '-_id nombre paterno materno cargo',
-        populate: { path: 'cargo', select: 'nombre -_id' },
-      },
-    });
+    // const results = await this.communicationModel
+    //   .aggregate()
+    //   .match({ 'receiver.cuenta': { $in: unit.map((account) => account._id) } })
+    //   .group({
+    //     _id: {
+    //       account: '$receiver.cuenta',
+    //       status: '$status',
+    //     },
+    //     count: { $sum: 1 },
+    //   })
+    //   .group({
+    //     _id: '$_id.account',
+    //     details: {
+    //       $push: {
+    //         status: '$_id.status',
+    //         total: '$count',
+    //       },
+    //     },
+    //   });
+    // return await this.accountModel.populate(results, {
+    //   path: '_id',
+    //   select: 'funcionario',
+    //   populate: {
+    //     path: 'funcionario',
+    //     select: '-_id nombre paterno materno cargo',
+    //     populate: { path: 'cargo', select: 'nombre -_id' },
+    //   },
+    // });
   }
 
   async getPendingsByAccount(id_account: string) {
-    return await this.communicationModel
-      .find({ 'receiver.cuenta': id_account })
-      .populate('procedure', 'code, reference state');
+    // return await this.communicationModel
+    //   .find({ 'receiver.cuenta': id_account })
+    //   .populate('procedure', 'code, reference state');
   }
 
   async getImboxByAccount(accountId: string) {
-    const inbox = await this.communicationModel
-      .find({ 'receiver.cuenta': accountId, status: { $in: [StatusMail.Received, StatusMail.Pending] } })
-      .lean()
-      .populate('procedure');
-    return inbox;
+    // const inbox = await this.communicationModel
+    //   .find({ 'receiver.cuenta': accountId, status: { $in: [StatusMail.Received, StatusMail.Pending] } })
+    //   .lean()
+    //   .populate('procedure');
+    // return inbox;
   }
 }

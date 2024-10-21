@@ -5,11 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model } from 'mongoose';
-import { Communication, Procedure } from '../schemas';
-import { CreateArchiveDto } from '../dto';
-import { stateProcedure, StatusMail } from '../interfaces';
+import { Procedure } from '../../procedures/schemas';
+import { CreateArchiveDto } from '../../procedures/dto';
+import { stateProcedure, StatusMail } from '../../procedures/interfaces';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Account } from 'src/modules/administration/schemas';
+import { Communication } from '../schemas/communication.schema';
 
 @Injectable()
 export class ArchiveService {
@@ -26,32 +27,32 @@ export class ArchiveService {
     account: Account,
     { description, state }: CreateArchiveDto,
   ) {
-    const mail = await this.communicationModel.findById(id);
-    if (mail.status !== StatusMail.Received)
-      throw new BadRequestException(`El tramite no puede archivarse`);
+    // const mail = await this.communicationModel.findById(id);
+    // if (mail.status !== StatusMail.Received)
+    //   throw new BadRequestException(`El tramite no puede archivarse`);
     const session = await this.connection.startSession();
     try {
-      session.startTransaction();
-      const { officer } = await account.populate('funcionario');
+      // session.startTransaction();
+      // const { officer } = await account.populate('funcionario');
 
-      // TODO repair fullname officer
-      await this.communicationModel.updateOne(
-        { _id: id },
-        {
-          status: StatusMail.Archived,
-          eventLog: {
-            manager: '',
-            description: description,
-            date: new Date(),
-          },
-        },
-        { session },
-      );
-      await this.concludeProcedureIfAppropriate(
-        mail.procedure._id,
-        state,
-        session,
-      );
+      // // TODO repair fullname officer
+      // await this.communicationModel.updateOne(
+      //   { _id: id },
+      //   {
+      //     status: StatusMail.Archived,
+      //     eventLog: {
+      //       manager: '',
+      //       description: description,
+      //       date: new Date(),
+      //     },
+      //   },
+      //   { session },
+      // );
+      // await this.concludeProcedureIfAppropriate(
+      //   mail.procedure._id,
+      //   state,
+      //   session,
+      // );
       await session.commitTransaction();
       return { message: 'Tramite archivado.' };
     } catch (error) {

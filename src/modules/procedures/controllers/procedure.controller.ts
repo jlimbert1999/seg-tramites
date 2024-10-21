@@ -26,14 +26,14 @@ import { GetAccountRequest } from '../decorators/get-account-request.decorator';
 @onlyAssignedAccount()
 export class ProcedureController {
   constructor(
-    private outboxService: OutboxService,
+    // private outboxService: OutboxService,
     private observationService: ObservationService,
     private moduleRef: ModuleRef,
   ) {}
 
   @Get('workflow/:id')
   getWorkflow(@Param('id', IsMongoidPipe) id_procedure: string) {
-    return this.outboxService.getWorkflow(id_procedure);
+    // return this.outboxService.getWorkflow(id_procedure);
   }
 
   @Get('detail/:group/:id')
@@ -43,7 +43,7 @@ export class ProcedureController {
 
   @Get('location/:id')
   async getLocation(@Param('id', IsMongoidPipe) id_procedure: string) {
-    return this.outboxService.getLocation(id_procedure);
+    // return this.outboxService.getLocation(id_procedure);
   }
 
   private getServiceByGroup(group: groupProcedure): ValidProcedureService {

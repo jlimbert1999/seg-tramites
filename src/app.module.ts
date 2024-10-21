@@ -14,6 +14,7 @@ import { ReportsModule } from './reports/reports.module';
 import { FilesModule } from './modules/files/files.module';
 import { PublicationsModule } from './modules/publications/publications.module';
 import { UsersModule } from './modules/users/users.module';
+import { CommunicationsModule } from './modules/communications/communications.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { UsersModule } from './modules/users/users.module';
     FilesModule,
     ApplicantModule,
     PublicationsModule,
+    CommunicationsModule,
   ],
   controllers: [],
   providers: [],
