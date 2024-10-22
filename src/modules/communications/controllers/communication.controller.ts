@@ -73,9 +73,9 @@ export class CommunicationController {
     @GetAccountRequest() account: Account,
     @Body() communication: CreateCommunicationDto,
   ) {
-    const mails = await this.inboxService.create(communication, account);
-    this.groupwareGateway.sendMails(mails);
-    return { message: 'Tramite enviado' };
+    // const mails = await this.inboxService.create(communication, account);
+    // this.groupwareGateway.sendMails(mails);
+    // return { message: 'Tramite enviado' };
   }
 
   @Get('inbox')

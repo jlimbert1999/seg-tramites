@@ -34,7 +34,7 @@ class Participant extends Document {
 const ParticipantSchema = SchemaFactory.createForClass(Participant);
 
 @Schema({ _id: false })
-class EventLog extends Document {
+class ActionLog {
   @Prop({ type: String, required: true })
   manager: string;
 
@@ -44,7 +44,7 @@ class EventLog extends Document {
   @Prop({ type: Date, required: true })
   date: Date;
 }
-const EventLogSchema = SchemaFactory.createForClass(EventLog);
+const ActionLogSchema = SchemaFactory.createForClass(ActionLog);
 
 @Schema()
 export class Communication extends Document {
@@ -52,13 +52,13 @@ export class Communication extends Document {
     type: ParticipantSchema,
     required: true,
   })
-  emitter: Participant;
+  sender: Participant;
 
   @Prop({
     type: ParticipantSchema,
     required: true,
   })
-  receiver: Participant;
+  recipient: Participant;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
@@ -77,7 +77,7 @@ export class Communication extends Document {
     type: String,
     required: true,
   })
-  attachmentQuantity: string;
+  attachmentsCount: string;
 
   @Prop({
     type: String,
@@ -88,17 +88,12 @@ export class Communication extends Document {
     type: Date,
     required: true,
   })
-  outboundDate: Date;
+  sentDate: Date;
 
   @Prop({
     type: Date,
   })
-  inboundDate?: Date;
-
-  @Prop({
-    type: String,
-  })
-  rejectionReason?: string;
+  receivedDate?: Date;
 
   @Prop({
     type: String,
@@ -109,9 +104,12 @@ export class Communication extends Document {
   status: StatusMail;
 
   @Prop({
-    type: EventLogSchema,
+    type: ActionLogSchema,
   })
-  eventLog: EventLog;
+  actionLog: ActionLog;
+
+  @Prop({ type: Boolean, default: false })
+  isOriginal: boolean;
 }
 
 export const CommunicationSchema = SchemaFactory.createForClass(Communication);

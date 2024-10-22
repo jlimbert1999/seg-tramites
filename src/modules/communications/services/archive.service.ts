@@ -75,21 +75,21 @@ export class ArchiveService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      let newStatus = StatusMail.Received;
-      if (String(mailDB.receiver.cuenta._id) !== String(account._id)) {
-        await this.insertPartipantInWokflow(mailDB, account, session);
-        newStatus = StatusMail.Completed;
-      }
-      await this.communicationModel.updateOne(
-        { _id: id_mail },
-        { status: newStatus, $unset: { eventLog: 1 } },
-        { session },
-      );
-      await this.procedureModel.updateOne(
-        { _id: mailDB.procedure._id },
-        { state: stateProcedure.EN_REVISION, $unset: { endDate: 1 } },
-        { session },
-      );
+      // let newStatus = StatusMail.Received;
+      // if (String(mailDB.receiver.cuenta._id) !== String(account._id)) {
+      //   await this.insertPartipantInWokflow(mailDB, account, session);
+      //   newStatus = StatusMail.Completed;
+      // }
+      // await this.communicationModel.updateOne(
+      //   { _id: id_mail },
+      //   { status: newStatus, $unset: { eventLog: 1 } },
+      //   { session },
+      // );
+      // await this.procedureModel.updateOne(
+      //   { _id: mailDB.procedure._id },
+      //   { state: stateProcedure.EN_REVISION, $unset: { endDate: 1 } },
+      //   { session },
+      // );
       await session.commitTransaction();
       return { message: 'Tramite desarchivado' };
     } catch (error) {
@@ -197,29 +197,29 @@ export class ArchiveService {
   ): Promise<void> {
     const inboundDate = new Date();
     const outboundDate = new Date(inboundDate.getTime() + 1000);
-    const { receiver, attachmentQuantity, internalNumber } = currentMail;
-    const { officer } = await participant.populate({
-      path: 'funcionario',
-      populate: { path: 'cargo', select: 'nombre' },
-    });
-    const newMail = {
-      procedure: currentMail.procedure._id,
-      emitter: receiver,
-      receiver: {
-        cuenta: participant._id,
-        // TODO repair user fullane
-        fullname: '',
-        ...(officer.cargo && { jobtitle: officer.cargo.nombre }),
-      },
-      outboundDate,
-      inboundDate,
-      reference: 'Solicita desarchivo',
-      attachmentQuantity: attachmentQuantity,
-      internalNumber: internalNumber,
-      status: StatusMail.Received,
-    };
-    const createdMail = new this.communicationModel(newMail);
-    await createdMail.save({ session });
+    // const { receiver, attachmentQuantity, internalNumber } = currentMail;
+    // const { officer } = await participant.populate({
+    //   path: 'funcionario',
+    //   populate: { path: 'cargo', select: 'nombre' },
+    // });
+    // const newMail = {
+    //   procedure: currentMail.procedure._id,
+    //   emitter: receiver,
+    //   receiver: {
+    //     cuenta: participant._id,
+    //     // TODO repair user fullane
+    //     fullname: '',
+    //     ...(officer.cargo && { jobtitle: officer.cargo.nombre }),
+    //   },
+    //   outboundDate,
+    //   inboundDate,
+    //   reference: 'Solicita desarchivo',
+    //   attachmentQuantity: attachmentQuantity,
+    //   internalNumber: internalNumber,
+    //   status: StatusMail.Received,
+    // };
+    // const createdMail = new this.communicationModel(newMail);
+    // await createdMail.save({ session });
   }
 
   private async concludeProcedureIfAppropriate(

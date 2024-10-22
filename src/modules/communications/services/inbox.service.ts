@@ -9,34 +9,36 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Connection, FilterQuery, Model } from 'mongoose';
 
-import { Procedure } from '../../procedures/schemas';
+import { Procedure, ProcedureBase } from '../../procedures/schemas';
 import { stateProcedure, StatusMail } from '../../procedures/interfaces';
 import {
-  CreateCommunicationDto,
   GetInboxParamsDto,
   ReceiverDto,
   UpdateCommunicationDto,
 } from '../../procedures/dto';
 import { Account } from 'src/modules/administration/schemas';
 import { Communication } from '../schemas/communication.schema';
+import { CreateCommunicationDto } from '../dtos/communication.dto';
 
 @Injectable()
 export class InboxService {
   constructor(
-    @InjectModel(Communication.name) private commModel: Model<Communication>,
-    @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
+    @InjectModel(Communication.name)
+    private communicationModel: Model<Communication>,
+    @InjectModel(ProcedureBase.name)
+    private procedureModel: Model<ProcedureBase>,
     @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async getMailDetails(id_mail: string, { _id }: Account) {
-    const mailDB = await this.commModel.findById(id_mail).populate('procedure');
-    if (!mailDB)
-      throw new BadRequestException(
-        'El envio de este tramite ha sido cancelado',
-      );
-    if (String(_id) !== String(mailDB.receiver.cuenta._id))
-      throw new ForbiddenException();
-    return mailDB;
+    // const mailDB = await this.commModel.findById(id_mail).populate('procedure');
+    // if (!mailDB)
+    //   throw new BadRequestException(
+    //     'El envio de este tramite ha sido cancelado',
+    //   );
+    // if (String(_id) !== String(mailDB.receiver.cuenta._id))
+    //   throw new ForbiddenException();
+    // return mailDB;
   }
 
   async findAll(
@@ -51,14 +53,14 @@ export class InboxService {
           { status: StatusMail.Pending },
         ]);
     const [mails, length] = await Promise.all([
-      this.commModel
+      this.communicationModel
         .find(query)
         .skip(offset)
         .limit(limit)
         .sort({ outboundDate: -1 })
         .populate('procedure')
         .lean(),
-      this.commModel.count(query),
+      this.communicationModel.count(query),
     ]);
     return { mails, length };
   }
@@ -76,7 +78,7 @@ export class InboxService {
           { status: StatusMail.Received },
           { status: StatusMail.Pending },
         ]);
-    const [data] = await this.commModel
+    const [data] = await this.communicationModel
       .aggregate()
       .match(query)
       .lookup({
@@ -102,89 +104,77 @@ export class InboxService {
     return { mails, length };
   }
 
-  async create(
-    communication: CreateCommunicationDto,
-    account: Account,
-  ): Promise<Communication[]> {
-    await this.checkIfMailHasDuplicate(
-      communication.id_procedure,
-      communication.receivers,
+  async create(communicationDto: CreateCommunicationDto, account: Account) {
+    const { procecureId, receivers, mailId } = communicationDto;
+    await this._checkIfMailHasDuplicate(
+      procecureId,
+      receivers.map(({ cuenta }) => cuenta),
     );
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      if (communication.id_mail) {
-        await this.commModel.updateOne(
-          { _id: communication.id_mail },
-          { status: StatusMail.Completed },
-          { session },
+      if (mailId) {
+        // await this.communicationModel.updateOne(
+        //   { _id: communication.id_mail },
+        //   { status: StatusMail.Completed },
+        //   { session },
+        // );
+        const current = await this.communicationModel.findById(mailId);
+        if (current.isOriginal) {
+
+        } else {
+          
+        }
+        await this.communicationModel.updateOne(
+          { _id: mailId },
+          {
+            status:
+              current.status === StatusMail.Rejected
+                ? StatusMail.Forwarding
+                : StatusMail.Completed,
+          },
         );
       } else {
-        const result = await this.procedureModel.updateOne(
-          { _id: communication.id_procedure, send: false },
-          { send: true, state: stateProcedure.EN_REVISION },
+        const hasOriginal = receivers.some(({ isOriginal }) => isOriginal);
+        if (!hasOriginal) {
+          throw new BadRequestException('Debe enviar el orininal');
+        }
+        // await this.procedureModel.updateOne(
+        //   { _id: communication.id_procedure, send: false },
+        //   { send: true, state: stateProcedure.EN_REVISION },
+        //   { session },
+        // );
+        // if (result.modifiedCount === 0) {
+        //   throw new BadRequestException('El tramite ha ya sido remitido');
+        // }
+        await this.procedureModel.updateOne(
+          { _id: procecureId },
+          { state: stateProcedure.EN_REVISION },
           { session },
         );
-        if (result.modifiedCount === 0) {
-          throw new BadRequestException('El tramite ha ya sido remitido');
-        }
       }
-      const mails = await this.createModel(account, communication);
-      const createdMails = await this.commModel.insertMany(mails, { session });
-      await this.commModel.populate(createdMails, 'procedure');
+      const models = this._dtoToModel(account, communicationDto);
+      const results = await this.communicationModel.insertMany(models, {
+        session,
+      });
+      await this.communicationModel.populate(results, 'procedure');
       await session.commitTransaction();
-      return mails;
+      return results;
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw new HttpException(error.message, error.getStatus());
-      }
       await session.abortTransaction();
-      throw new InternalServerErrorException('Error al enviar el tramite');
+      throw new InternalServerErrorException();
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 
-  private async createModel(
-    account: Account,
-    communication: CreateCommunicationDto,
-  ): Promise<Communication[]> {
-    const { id_procedure, ...values } = communication;
-    await account.populate({
-      path: 'funcionario',
-      select: 'nombre paterno materno cargo',
-      populate: {
-        path: 'cargo',
-        select: 'nombre',
-      },
-    });
-    // TODO repair fullname
-    const emitter = {
-      cuenta: account._id,
-      fullname: '',
-      ...(account.officer.cargo && {
-        jobtitle: account.officer.cargo.nombre,
-      }),
-    };
-    const outboundDate = new Date();
-    return communication.receivers.map((receiver) => {
-      return new this.commModel({
-        procedure: id_procedure,
-        outboundDate,
-        emitter,
-        receiver,
-        ...values,
-      });
-    });
-  }
-
   async accept(id: string) {
-    const mailDB = await this.commModel.findById(id);
+    const mailDB = await this.communicationModel.findById(id);
     if (!mailDB)
       throw new NotFoundException('El envio del tramite ha sido cancelado');
     if (mailDB.status !== StatusMail.Pending)
       throw new BadRequestException('El tramite ya ha sido aceptado');
-    await this.commModel.updateOne(
+    await this.communicationModel.updateOne(
       { _id: id },
       { status: StatusMail.Received, inboundDate: new Date() },
     );
@@ -196,33 +186,33 @@ export class InboxService {
     account: Account,
     { description }: UpdateCommunicationDto,
   ) {
-    const mailDB = await this.commModel.findById(id);
+    const mailDB = await this.communicationModel.findById(id);
     if (!mailDB)
       throw new NotFoundException('El envio del tramite ha sido cancelado');
     if (mailDB.status !== StatusMail.Pending)
       throw new BadRequestException('El tramite ya fue rechazado');
     const session = await this.connection.startSession();
     try {
-      session.startTransaction();
-      const { procedure, emitter } = mailDB;
-      const { officer } = await account.populate('funcionario');
-      const date = new Date();
-      await this.commModel.updateOne(
-        { _id: id },
-        {
-          status: StatusMail.Rejected,
-          inboundDate: date,
-          eventLog: {
-            // TODO repair fullname
+      // session.startTransaction();
+      // const { procedure, emitter } = mailDB;
+      // const { officer } = await account.populate('funcionario');
+      // const date = new Date();
+      // await this.commModel.updateOne(
+      //   { _id: id },
+      //   {
+      //     status: StatusMail.Rejected,
+      //     inboundDate: date,
+      //     eventLog: {
+      //       // TODO repair fullname
 
-            manager: '',
-            description: description,
-            date: date,
-          },
-        },
-        { session },
-      );
-      await this.restoreStage(procedure._id, emitter.cuenta._id, session);
+      //       manager: '',
+      //       description: description,
+      //       date: date,
+      //     },
+      //   },
+      //   { session },
+      // );
+      // await this.restoreStage(procedure._id, emitter.cuenta._id, session);
       await session.commitTransaction();
       return { message: 'Tramite rechazado.' };
     } catch (error) {
@@ -242,7 +232,10 @@ export class InboxService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this.commModel.deleteMany({ _id: { $in: ids_mails } }, { session });
+      await this.communicationModel.deleteMany(
+        { _id: { $in: ids_mails } },
+        { session },
+      );
       const recoveredMail = await this.restoreStage(
         id_procedure,
         id_emitter,
@@ -265,40 +258,38 @@ export class InboxService {
     }
   }
 
-  private async checkIfMailHasDuplicate(
-    id_procedure: string,
-    receivers: ReceiverDto[],
+  private async _checkIfMailHasDuplicate(
+    procedureId: string,
+    receiversIds: string[],
   ): Promise<void> {
-    const mail = await this.commModel.findOne({
-      procedure: id_procedure,
+    const duplicate = await this.communicationModel.findOne({
+      procedure: procedureId,
       $or: [{ status: StatusMail.Pending }, { status: StatusMail.Received }],
-      'receiver.cuenta': { $in: receivers.map((receiver) => receiver.cuenta) },
+      'receiver.cuenta': { $in: receiversIds },
     });
-    if (!mail) return;
-    const receiver = receivers.find(
-      ({ cuenta }) => cuenta === String(mail.receiver.cuenta._id),
-    );
-    throw new BadRequestException(
-      `${receiver.fullname} ya tiene el tramite en su bandeja.`,
-    );
+    if (!duplicate) {
+      throw new BadRequestException('El tramite ya se encuentra en bandeja');
+    }
   }
 
   private async checkIfMailsHaveBeenReceived(
     ids_mails: string[],
   ): Promise<Communication[]> {
-    const mails = await this.commModel.find({ _id: { $in: ids_mails } });
+    const mails = await this.communicationModel.find({
+      _id: { $in: ids_mails },
+    });
     if (mails.length === 0)
       throw new BadRequestException('Los envios ya han sido cancelados');
     const receivedMail = mails.find(
       (mail) => mail.status !== StatusMail.Pending,
     );
-    if (receivedMail) {
-      throw new BadRequestException(
-        `El tramite ya ha sido ${
-          receivedMail.status === StatusMail.Rejected ? 'rechazado' : 'recibido'
-        } por el funcionario ${receivedMail.receiver.fullname}`,
-      );
-    }
+    // if (receivedMail) {
+    //   throw new BadRequestException(
+    //     `El tramite ya ha sido ${
+    //       receivedMail.status === StatusMail.Rejected ? 'rechazado' : 'recibido'
+    //     } por el funcionario ${receivedMail.receiver.fullname}`,
+    //   );
+    // }
     return mails;
   }
 
@@ -307,7 +298,7 @@ export class InboxService {
     id_emiter: string,
     session: ClientSession,
   ): Promise<Communication | undefined> {
-    const lastStage = await this.commModel.findOneAndUpdate(
+    const lastStage = await this.communicationModel.findOneAndUpdate(
       {
         procedure: id_procedure,
         'receiver.cuenta': id_emiter,
@@ -320,7 +311,7 @@ export class InboxService {
       { session, sort: { _id: -1 }, new: true },
     );
     if (!lastStage) {
-      const isProcessStarted = await this.commModel.findOne(
+      const isProcessStarted = await this.communicationModel.findOne(
         { procedure: id_procedure, status: { $ne: StatusMail.Rejected } },
         null,
         { session },
@@ -335,5 +326,32 @@ export class InboxService {
       );
     }
     return lastStage;
+  }
+
+  private _dtoToModel(
+    { _id, officer, jobtitle }: Account,
+    communication: CreateCommunicationDto,
+  ): Communication[] {
+    const { receivers, procecureId, ...values } = communication;
+    const sentDate = new Date();
+    const sender = {
+      cuenta: _id,
+      fullname: officer.fullName,
+      jobtitle: jobtitle,
+    };
+    return receivers.map(
+      (receiver) =>
+        new this.communicationModel({
+          sender: sender,
+          procedure: procecureId,
+          receiver: {
+            cuenta: receiver.cuenta,
+            fullname: receiver.fullname,
+            jobtitle: receiver.jobtitle,
+          },
+          sentDate,
+          ...values,
+        }),
+    );
   }
 }

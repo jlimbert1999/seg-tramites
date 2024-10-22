@@ -50,26 +50,26 @@ export class GroupwareGateway
 
   sendMails(data: Communication[]) {
     data.forEach((mail) => {
-      const user = this.groupwareService.getUser(
-        String(mail.receiver.cuenta._id),
-      );
-      if (user) {
-        user.socketIds.forEach((socketId) => {
-          this.server.to(socketId).emit('new-mail', mail);
-        });
-      }
+      // const user = this.groupwareService.getUser(
+      //   String(mail.receiver.cuenta._id),
+      // );
+      // if (user) {
+      //   user.socketIds.forEach((socketId) => {
+      //     this.server.to(socketId).emit('new-mail', mail);
+      //   });
+      // }
     });
   }
 
   cancelMails(data: Communication[]) {
-    data.forEach(({ _id, receiver }) => {
-      const user = this.groupwareService.getUser(String(receiver.cuenta._id));
-      if (user) {
-        user.socketIds.forEach((socketId) => {
-          this.server.to(socketId).emit('cancel-mail', _id);
-        });
-      }
-    });
+    // data.forEach(({ _id, receiver }) => {
+    //   const user = this.groupwareService.getUser(String(receiver.cuenta._id));
+    //   if (user) {
+    //     user.socketIds.forEach((socketId) => {
+    //       this.server.to(socketId).emit('cancel-mail', _id);
+    //     });
+    //   }
+    // });
   }
 
   notifyUnarchive(id_dependency: string, id_mail: string) {

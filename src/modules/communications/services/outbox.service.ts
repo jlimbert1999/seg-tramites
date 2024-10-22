@@ -142,29 +142,29 @@ export class OutboxService {
   }
 
   async getLocation(id_procedure: string) {
-    const invalidStatus = [StatusMail.Completed, StatusMail.Rejected];
-    const location = await this.commModel
-      .find({ procedure: id_procedure, status: { $nin: invalidStatus } })
-      .select({ 'receiver.cuenta': 1, status: 1, _id: 0 })
-      .populate({
-        path: 'receiver.cuenta',
-        select: 'funcionario',
-        populate: [
-          {
-            path: 'funcionario',
-            select: 'nombre paterno materno cargo -_id',
-            populate: {
-              path: 'cargo',
-              select: 'nombre -_id',
-            },
-          },
-          {
-            path: 'dependencia',
-            select: 'nombre -_id',
-          },
-        ],
-      })
-      .lean();
-    return location.map((el) => ({ ...el.receiver.cuenta, status: el.status }));
+    // const invalidStatus = [StatusMail.Completed, StatusMail.Rejected];
+    // const location = await this.commModel
+    //   .find({ procedure: id_procedure, status: { $nin: invalidStatus } })
+    //   .select({ 'receiver.cuenta': 1, status: 1, _id: 0 })
+    //   .populate({
+    //     path: 'receiver.cuenta',
+    //     select: 'funcionario',
+    //     populate: [
+    //       {
+    //         path: 'funcionario',
+    //         select: 'nombre paterno materno cargo -_id',
+    //         populate: {
+    //           path: 'cargo',
+    //           select: 'nombre -_id',
+    //         },
+    //       },
+    //       {
+    //         path: 'dependencia',
+    //         select: 'nombre -_id',
+    //       },
+    //     ],
+    //   })
+    //   .lean();
+    // return location.map((el) => ({ ...el.receiver.cuenta, status: el.status }));
   }
 }

@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Job } from './job.schema';
 
@@ -48,11 +48,12 @@ export class Officer extends Document {
   })
   activo: boolean;
 
-  @Prop({
-    type: Boolean,
-    // default: false,
+  @Virtual({
+    get: function (this: Officer) {
+      return `${this.nombre} ${this.paterno} ${this.materno}`;
+    },
   })
-  cuenta: boolean;
+  fullName: string;
 }
 
 export const OfficerSchema = SchemaFactory.createForClass(Officer);
