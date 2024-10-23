@@ -5,7 +5,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model } from 'mongoose';
+import mongoose, { FilterQuery, isValidObjectId, Model, Types } from 'mongoose';
 
 import { OfficerService } from './officer.service';
 import { Account } from '../schemas';
@@ -225,26 +225,47 @@ export class AccountService {
         },
       })
       .match({ fullname: regex, activo: true })
-      .limit(limit)
+      .limit(-1)
       .project({ fullname: 0 });
   }
 
-  async getAccountsForSend(id_dependency: string, id_account: string) {
-    return await this.accountModel
-      .find({
-        dependencia: id_dependency,
-        isVisible: true,
+  async searchRecipients(currentAccountId: string, term: string) {
+    const filterByDependency = isValidObjectId(term);
+    const query = this.accountModel
+      .aggregate()
+      .match({
+        _id: { $ne: currentAccountId },
+        officer: { $ne: null },
         activo: true,
-        funcionario: { $ne: null },
-        _id: { $ne: id_account },
+        isVisible: true,
       })
-      .select('_id')
-      .populate({
-        path: 'funcionario',
-        populate: {
-          path: 'cargo',
-          select: 'nombre',
+      .lookup({
+        from: 'funcionarios',
+        localField: 'officer',
+        foreignField: '_id',
+        as: 'officer',
+      })
+      .unwind({
+        path: '$officer',
+      })
+      .addFields({
+        fullname: {
+          $concat: [
+            { $ifNull: ['$officer.nombre', ''] },
+            ' ',
+            { $ifNull: ['$officer.paterno', ''] },
+            ' ',
+            { $ifNull: ['$officer.materno', ''] },
+          ],
         },
+      })
+      .match({
+        ...(filterByDependency
+          ? { dependencia: new Types.ObjectId(term) }
+          : { fullname: new RegExp(term, 'i') }),
       });
+    if (!filterByDependency) query.limit(7);
+    query.project({ fullname: 0 });
+    return await query;
   }
 }

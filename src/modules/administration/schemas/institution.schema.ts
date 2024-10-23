@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema({ collection: 'instituciones', versionKey: false })
+@Schema({ collection: 'instituciones' })
 export class Institution extends Document {
 
     @Prop({

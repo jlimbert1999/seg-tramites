@@ -110,8 +110,8 @@ export class InboxService {
   }
 
   async create(communicationDto: CreateCommunicationDto, account: Account) {
-    const { procecureId, receivers, mailId } = communicationDto;
-    await this._checkIfMailHasDuplicate(
+    const { procecureId, receivers, mailId, ...props } = communicationDto;
+    await this._checkDuplicateCommunication(
       procecureId,
       receivers.map(({ cuenta }) => cuenta),
     );
@@ -119,7 +119,25 @@ export class InboxService {
     try {
       session.startTransaction();
       await this._setStateProcess({ mailId, procecureId, receivers, session });
-      const models = this._dtoToModel(account, communicationDto);
+      const sentDate = new Date();
+      const models: Communication[] = receivers.map(
+        (receiver) =>
+          new this.communicationModel({
+            sender: {
+              cuenta: account._id,
+              fullname: account.officer.fullName,
+              jobtitle: account.jobtitle,
+            },
+            receiver: {
+              cuenta: receiver.cuenta,
+              fullname: receiver.fullname,
+              jobtitle: receiver.jobtitle,
+            },
+            procedure: procecureId,
+            sentDate,
+            ...props,
+          }),
+      );
       const results = await this.communicationModel.insertMany(models, {
         session,
       });
@@ -224,7 +242,7 @@ export class InboxService {
     }
   }
 
-  private async _checkIfMailHasDuplicate(
+  private async _checkDuplicateCommunication(
     procedureId: string,
     receiversIds: string[],
   ): Promise<void> {
@@ -294,33 +312,6 @@ export class InboxService {
     return lastStage;
   }
 
-  private _dtoToModel(
-    { _id, officer, jobtitle }: Account,
-    communication: CreateCommunicationDto,
-  ): Communication[] {
-    const { receivers, procecureId, ...values } = communication;
-    const sentDate = new Date();
-    const sender = {
-      cuenta: _id,
-      fullname: officer.fullName,
-      jobtitle: jobtitle,
-    };
-    return receivers.map(
-      (receiver) =>
-        new this.communicationModel({
-          sender: sender,
-          procedure: procecureId,
-          receiver: {
-            cuenta: receiver.cuenta,
-            fullname: receiver.fullname,
-            jobtitle: receiver.jobtitle,
-          },
-          sentDate,
-          ...values,
-        }),
-    );
-  }
-
   private async _setStateProcess({
     mailId,
     session,
@@ -350,6 +341,7 @@ export class InboxService {
         { session },
       );
     } else {
+      // First send
       const hasOriginal = receivers.some(({ isOriginal }) => isOriginal);
       if (!hasOriginal) {
         throw new BadRequestException('Debe enviar el orininal');

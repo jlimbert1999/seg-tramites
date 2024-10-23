@@ -17,7 +17,6 @@ import { InboxService, OutboxService } from '../../procedures/services';
 import { ResourceProtected } from 'src/modules/auth/decorators';
 import {
   CancelMailsDto,
-  CreateCommunicationDto,
   GetInboxParamsDto,
   UpdateCommunicationDto,
 } from '../../procedures/dto';
@@ -29,9 +28,9 @@ import { AccountService } from 'src/modules/administration/services/account.serv
 import { Account } from 'src/modules/administration/schemas';
 import { onlyAssignedAccount } from '../../procedures/decorators/only-assigned-account.decorator';
 import { GetAccountRequest } from '../../procedures/decorators/get-account-request.decorator';
+import { CreateCommunicationDto } from '../dtos/communication.dto';
 
 @Controller('communication')
-@ResourceProtected(SystemResource.communication)
 @onlyAssignedAccount()
 export class CommunicationController {
   constructor(
@@ -57,15 +56,12 @@ export class CommunicationController {
     );
   }
 
-  @Get('accounts/:id_dependency')
-  async getAccountsForSend(
-    @GetAccountRequest('_id') id_account: string,
-    @Param('id_dependency', IsMongoidPipe) id_dependency: string,
+  @Get('recipients/:term')
+  searchRecipients(
+    @GetAccountRequest('_id') accountId: string,
+    @Param('term') term: string,
   ) {
-    return await this.accountService.getAccountsForSend(
-      id_dependency,
-      id_account,
-    );
+    return this.accountService.searchRecipients(accountId, term);
   }
 
   @Post()
@@ -73,9 +69,9 @@ export class CommunicationController {
     @GetAccountRequest() account: Account,
     @Body() communication: CreateCommunicationDto,
   ) {
-    // const mails = await this.inboxService.create(communication, account);
+    const mails = await this.inboxService.create(communication, account);
     // this.groupwareGateway.sendMails(mails);
-    // return { message: 'Tramite enviado' };
+    return { message: 'Tramite enviado' };
   }
 
   @Get('inbox')

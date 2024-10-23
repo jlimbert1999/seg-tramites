@@ -27,9 +27,9 @@ import { CommunicationsModule } from './modules/communications/communications.mo
         uri: process.env.MONGODB_URL,
       }),
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'public'),
+    // }),
     AuthModule,
     UsersModule,
     AdministrationModule,
