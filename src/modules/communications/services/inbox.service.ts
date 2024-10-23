@@ -13,13 +13,18 @@ import { Procedure, ProcedureBase } from '../../procedures/schemas';
 import { stateProcedure, StatusMail } from '../../procedures/interfaces';
 import {
   GetInboxParamsDto,
-  ReceiverDto,
   UpdateCommunicationDto,
 } from '../../procedures/dto';
 import { Account } from 'src/modules/administration/schemas';
 import { Communication } from '../schemas/communication.schema';
-import { CreateCommunicationDto } from '../dtos/communication.dto';
+import { CreateCommunicationDto, ReceiverDto } from '../dtos/communication.dto';
 
+interface setProcessStateProps {
+  mailId: string | undefined;
+  receivers: ReceiverDto[];
+  procecureId: string;
+  session: ClientSession;
+}
 @Injectable()
 export class InboxService {
   constructor(
@@ -113,46 +118,7 @@ export class InboxService {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      if (mailId) {
-        // await this.communicationModel.updateOne(
-        //   { _id: communication.id_mail },
-        //   { status: StatusMail.Completed },
-        //   { session },
-        // );
-        const current = await this.communicationModel.findById(mailId);
-        if (current.isOriginal) {
-
-        } else {
-          
-        }
-        await this.communicationModel.updateOne(
-          { _id: mailId },
-          {
-            status:
-              current.status === StatusMail.Rejected
-                ? StatusMail.Forwarding
-                : StatusMail.Completed,
-          },
-        );
-      } else {
-        const hasOriginal = receivers.some(({ isOriginal }) => isOriginal);
-        if (!hasOriginal) {
-          throw new BadRequestException('Debe enviar el orininal');
-        }
-        // await this.procedureModel.updateOne(
-        //   { _id: communication.id_procedure, send: false },
-        //   { send: true, state: stateProcedure.EN_REVISION },
-        //   { session },
-        // );
-        // if (result.modifiedCount === 0) {
-        //   throw new BadRequestException('El tramite ha ya sido remitido');
-        // }
-        await this.procedureModel.updateOne(
-          { _id: procecureId },
-          { state: stateProcedure.EN_REVISION },
-          { session },
-        );
-      }
+      await this._setStateProcess({ mailId, procecureId, receivers, session });
       const models = this._dtoToModel(account, communicationDto);
       const results = await this.communicationModel.insertMany(models, {
         session,
@@ -353,5 +319,46 @@ export class InboxService {
           ...values,
         }),
     );
+  }
+
+  private async _setStateProcess({
+    mailId,
+    session,
+    receivers,
+    procecureId,
+  }: setProcessStateProps) {
+    if (mailId) {
+      const current = await this.communicationModel.findById(mailId);
+      if (current.isOriginal) {
+        const hasOriginal = receivers.some(({ isOriginal }) => isOriginal);
+        if (!hasOriginal) {
+          throw new BadRequestException('Debe enviar el orininal');
+        }
+      } else {
+        if (receivers.length > 1) {
+          throw new BadRequestException('Solo se puede enviar una copia');
+        }
+      }
+      await this.communicationModel.updateOne(
+        { _id: mailId },
+        {
+          status:
+            current.status === StatusMail.Rejected
+              ? StatusMail.Forwarding
+              : StatusMail.Completed,
+        },
+        { session },
+      );
+    } else {
+      const hasOriginal = receivers.some(({ isOriginal }) => isOriginal);
+      if (!hasOriginal) {
+        throw new BadRequestException('Debe enviar el orininal');
+      }
+      await this.procedureModel.updateOne(
+        { _id: procecureId },
+        { state: stateProcedure.EN_REVISION },
+        { session },
+      );
+    }
   }
 }
