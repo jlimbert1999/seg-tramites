@@ -17,12 +17,15 @@ import {
 } from '../../procedures/dto';
 import { Account } from 'src/modules/administration/schemas';
 import { Communication } from '../schemas/communication.schema';
-import { CreateCommunicationDto, ReceiverDto } from '../dtos/communication.dto';
+import {
+  CreateCommunicationDto,
+  RecipientDto,
+} from '../dtos/communication.dto';
 
 interface setProcessStateProps {
   mailId: string | undefined;
-  receivers: ReceiverDto[];
-  procecureId: string;
+  recipients: RecipientDto[];
+  procedureId: string;
   session: ClientSession;
 }
 @Injectable()
@@ -47,10 +50,10 @@ export class InboxService {
   }
 
   async findAll(
-    id_account: string,
+    accountId: string,
     { limit, offset, status }: GetInboxParamsDto,
   ) {
-    const query: FilterQuery<Communication> = { 'receiver.cuenta': id_account };
+    const query: FilterQuery<Communication> = { 'recipient.cuenta': accountId };
     status
       ? (query.status = status)
       : (query.$or = [
@@ -110,17 +113,17 @@ export class InboxService {
   }
 
   async create(communicationDto: CreateCommunicationDto, account: Account) {
-    const { procecureId, receivers, mailId, ...props } = communicationDto;
+    const { procedureId, recipients, mailId, ...props } = communicationDto;
     await this._checkDuplicateCommunication(
-      procecureId,
-      receivers.map(({ cuenta }) => cuenta),
+      procedureId,
+      recipients.map(({ accountId }) => accountId),
     );
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      await this._setStateProcess({ mailId, procecureId, receivers, session });
+      await this._setStateProcess({ mailId, procedureId, recipients, session });
       const sentDate = new Date();
-      const models: Communication[] = receivers.map(
+      const models: Communication[] = recipients.map(
         (receiver) =>
           new this.communicationModel({
             sender: {
@@ -128,12 +131,13 @@ export class InboxService {
               fullname: account.officer.fullName,
               jobtitle: account.jobtitle,
             },
-            receiver: {
-              cuenta: receiver.cuenta,
+            recipient: {
+              cuenta: receiver.accountId,
               fullname: receiver.fullname,
               jobtitle: receiver.jobtitle,
             },
-            procedure: procecureId,
+            procedure: procedureId,
+            isOriginal: receiver.isOriginal,
             sentDate,
             ...props,
           }),
@@ -251,7 +255,7 @@ export class InboxService {
       $or: [{ status: StatusMail.Pending }, { status: StatusMail.Received }],
       'receiver.cuenta': { $in: receiversIds },
     });
-    if (!duplicate) {
+    if (duplicate) {
       throw new BadRequestException('El tramite ya se encuentra en bandeja');
     }
   }
@@ -315,18 +319,18 @@ export class InboxService {
   private async _setStateProcess({
     mailId,
     session,
-    receivers,
-    procecureId,
+    recipients,
+    procedureId,
   }: setProcessStateProps) {
     if (mailId) {
       const current = await this.communicationModel.findById(mailId);
       if (current.isOriginal) {
-        const hasOriginal = receivers.some(({ isOriginal }) => isOriginal);
+        const hasOriginal = recipients.some(({ isOriginal }) => isOriginal);
         if (!hasOriginal) {
           throw new BadRequestException('Debe enviar el orininal');
         }
       } else {
-        if (receivers.length > 1) {
+        if (recipients.length > 1) {
           throw new BadRequestException('Solo se puede enviar una copia');
         }
       }
@@ -342,12 +346,12 @@ export class InboxService {
       );
     } else {
       // First send
-      const hasOriginal = receivers.some(({ isOriginal }) => isOriginal);
+      const hasOriginal = recipients.some(({ isOriginal }) => isOriginal);
       if (!hasOriginal) {
         throw new BadRequestException('Debe enviar el orininal');
       }
       await this.procedureModel.updateOne(
-        { _id: procecureId },
+        { _id: procedureId },
         { state: stateProcedure.EN_REVISION },
         { session },
       );

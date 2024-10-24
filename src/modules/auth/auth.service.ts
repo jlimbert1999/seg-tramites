@@ -95,8 +95,7 @@ export class AuthService {
   }
 
   private _getFrontMenu({ permissions }: Role) {
-    const SystemMenu = FRONTEND_MENU;
-    return SystemMenu.filter((menu) => {
+    return structuredClone(FRONTEND_MENU).filter((menu) => {
       if (!menu.children) {
         return permissions.some(({ resource }) =>
           menu.resource.includes(resource),

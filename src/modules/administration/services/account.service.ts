@@ -264,7 +264,7 @@ export class AccountService {
           ? { dependencia: new Types.ObjectId(term) }
           : { fullname: new RegExp(term, 'i') }),
       });
-    if (!filterByDependency) query.limit(7);
+    if (!filterByDependency) query.limit(5);
     query.project({ fullname: 0 });
     return await query;
   }

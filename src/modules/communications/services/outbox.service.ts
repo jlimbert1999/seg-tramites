@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Procedure } from '../../procedures/schemas';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { StatusMail, workflow } from '../../procedures/interfaces';
@@ -10,42 +10,26 @@ import { Communication } from '../schemas/communication.schema';
 @Injectable()
 export class OutboxService {
   constructor(
-    @InjectModel(Communication.name) private commModel: Model<Communication>,
+    @InjectModel(Communication.name)
+    private communicationModel: Model<Communication>,
     @InjectModel(Procedure.name) private procedureModel: Model<Procedure>,
   ) {}
 
-  async findAll(id_account: string, { limit, offset }: PaginationDto) {
-    const dataPaginated = await this.commModel
-      .aggregate()
-      .match({ 'emitter.cuenta': id_account, status: StatusMail.Pending })
-      .group({
-        _id: {
-          account: '$emitter.cuenta',
-          procedure: '$procedure',
-          outboundDate: '$outboundDate',
-        },
-        sendings: { $push: '$$ROOT' },
-      })
-      .lookup({
-        from: 'procedures',
-        localField: '_id.procedure',
-        foreignField: '_id',
-        as: '_id.procedure',
-      })
-      .unwind('_id.procedure')
-      .sort({ '_id.outboundDate': -1 })
-      .facet({
-        paginatedResults: [{ $skip: offset }, { $limit: limit }],
-        totalCount: [
-          {
-            $count: 'count',
-          },
-        ],
-      });
-    const mails = dataPaginated[0].paginatedResults;
-    const length = dataPaginated[0].totalCount[0]
-      ? dataPaginated[0].totalCount[0].count
-      : 0;
+  async findAll(accountId: string, { limit, offset }: PaginationDto) {
+    const query: FilterQuery<Communication> = {
+      'sender.cuenta': accountId,
+      $or: [{ status: StatusMail.Rejected }, { status: StatusMail.Pending }],
+    };
+    const [mails, length] = await Promise.all([
+      this.communicationModel
+        .find(query)
+        .skip(offset)
+        .limit(limit)
+        .sort({ sentDate: -1 })
+        .populate('procedure')
+        .lean(),
+      this.communicationModel.count(query),
+    ]);
     return { mails, length };
   }
 
@@ -55,7 +39,7 @@ export class OutboxService {
     { limit, offset }: PaginationDto,
   ) {
     const regex = new RegExp(text, 'i');
-    const dataPaginated = await this.commModel
+    const dataPaginated = await this.communicationModel
       .aggregate()
       .match({
         'emitter.cuenta': id_account,
@@ -98,7 +82,7 @@ export class OutboxService {
   }
 
   async getWorkflow(id_procedure: string) {
-    const workflow: workflow[] = await this.commModel
+    const workflow: workflow[] = await this.communicationModel
       .aggregate()
       .match({ procedure: new mongoose.Types.ObjectId(id_procedure) })
       .group({

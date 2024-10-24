@@ -3,6 +3,7 @@ import mongoose, { Document } from 'mongoose';
 import { Procedure } from '../../procedures/schemas/procedure.schema';
 import { StatusMail } from '../../procedures/interfaces/status.enum';
 import { Account, Officer } from 'src/modules/administration/schemas';
+import { ProcedureBase } from 'src/modules/procedures/schemas';
 
 @Schema({ _id: false })
 class Participant extends Document {
@@ -62,10 +63,10 @@ export class Communication extends Document {
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: Procedure.name,
+    ref: ProcedureBase.name,
     required: true,
   })
-  procedure: Procedure;
+  procedure: ProcedureBase;
 
   @Prop({
     type: String,

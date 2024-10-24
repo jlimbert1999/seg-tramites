@@ -10,9 +10,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class ReceiverDto {
+export class RecipientDto {
   @IsMongoId()
-  cuenta: string;
+  accountId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -32,7 +32,7 @@ export class CreateCommunicationDto {
   mailId?: string;
 
   @IsMongoId()
-  procecureId: string;
+  procedureId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -49,6 +49,6 @@ export class CreateCommunicationDto {
   @IsArray()
   @ValidateNested({ each: true })
   @ArrayMinSize(1)
-  @Type(() => ReceiverDto)
-  receivers: ReceiverDto[];
+  @Type(() => RecipientDto)
+  recipients: RecipientDto[];
 }
